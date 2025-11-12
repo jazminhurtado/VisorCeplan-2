@@ -70,10 +70,10 @@ a {
 
 
 # Google Sheets
-URL_PEI_POI_FILE_EDIT = "https://docs.google.com/spreadsheets/d/1pnoMXaLQpYugbR8dIlY8Vq8uPhX3GjykfXSoZrpbfOQ/edit"
-GID_IT_PEI        = "1289302518"   # IT PEI
-GID_DATA_UES      = "2130915882"   # Data_UEs
-GID_REGISTRO_POI  = "879937350"    # Registro POI
+URL_PEI_POI_FILE_EDIT = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit"
+GID_IT_PEI        = "1704733507"   # IT PEI
+GID_DATA_UES      = "1288416966"   # Data_UEs
+GID_REGISTRO_POI  = "1447296183"    # Registro POI
 
 URL_PDC_EDIT      = "https://docs.google.com/spreadsheets/d/1rSDhnTBKjqJfqfi-kxmx699IU375C39e/edit?gid=1778012106#gid=1778012106"
 GID_PDC_ESTADO    = "1778012106"   # ESTADO_PDC
