@@ -84,11 +84,11 @@ st.markdown("""
 # -----------------------------
 # Config
 # -----------------------------
-URL_PEI_POI_FILE_EDIT = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit"
+URL_PEI_POI_FILE_EDIT = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit"             
 GID_DATA_UES     = "1259332810"   # Data_UEs
 GID_IT_PEI       = "1704733507"   # IT PEI
 GID_REGISTRO_POI = "1447296183"    # Registro POI
-GID_RESUMEN_NAC  = "1026835295"   # hoja resumen
+GID_RESUMEN_NAC  = "1288416966"   # hoja resumen
 
 def _edit_to_csv(file_edit: str, gid: str) -> str:
     file_id = file_edit.split("/d/")[1].split("/")[0]
