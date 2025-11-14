@@ -517,26 +517,8 @@ def render_map(plan: str):
             </div>
         </div>
         """, unsafe_allow_html=True)
-         
-
-        # Leyenda personalizada tipo semáforo
-        st.markdown("""
-        <div style="display: flex; gap: 30px; margin-top: -150px; font-size: 14px;">
-            <div style="display: flex; align-items: center;">
-                <div style="width: 18px; height: 18px; background-color: #CC3333; border-radius: 4px; margin-right: 8px;"></div>
-                <span><strong>&lt; 50%</strong> (Bajo)</span>
-            </div>
-            <div style="display: flex; align-items: center;">
-                <div style="width: 18px; height: 18px; background-color: #F1C40F; border-radius: 4px; margin-right: 8px;"></div>
-                <span><strong>50% - 79%</strong> (Medio)</span>
-            </div>
-            <div style="display: flex; align-items: center;">
-                <div style="width: 18px; height: 18px; background-color: #308446; border-radius: 4px; margin-right: 8px;"></div>
-                <span><strong>≥ 80%</strong> (Alto)</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-     
+      
+    
     else:
         st.warning("No se encontró el archivo peru_departa.geojson")
         
