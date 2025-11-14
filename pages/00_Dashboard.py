@@ -84,7 +84,7 @@ st.markdown("""
 # -----------------------------
 # Config
 # -----------------------------
-URL_PEI_POI_FILE_EDIT = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit"           
+URL_PEI_POI_FILE_EDIT = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit"             
 GID_DATA_UES     = "1259332810"   # Data_UEs
 GID_IT_PEI       = "1704733507"   # IT PEI
 GID_REGISTRO_POI = "1447296183"    # Registro POI
@@ -92,7 +92,7 @@ GID_RESUMEN_NAC  = "1288416966"   # hoja resumen
 
 def _edit_to_csv(file_edit: str, gid: str) -> str:
     file_id = file_edit.split("/d/")[1].split("/")[0]
-    return f"https://docs.google.com/spreadsheets/d/e/2PACX-1vR41jJ_0zU2UtGhu1lQ1g8STPxll9_VPwiJTxbwyHoscL2r8DZlfdb8vuv0HnpT3A/pub?gid={gid}&single=true&output=csv"
+    return f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=csv&gid={gid}"
 
 def _norm(s: str) -> str:
     if s is None: return ""
