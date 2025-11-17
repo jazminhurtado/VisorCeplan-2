@@ -1,16 +1,19 @@
-unicodedata2
 streamlit
 pandas
-requests 
-openpyxl
-fpdf
-xlsxwriter
-natsort
-altair
-pydeck>=0.8.0
 numpy
 plotly
+altair
+pydeck>=0.8.0
+openpyxl
+xlsxwriter
+fpdf
+natsort
+requests
 streamlit-folium
+unicodedata2
+geopandas
+python-dateutil
+
 
 
 
