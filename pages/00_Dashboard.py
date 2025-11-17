@@ -1,4 +1,4 @@
-# 00_Dashboard.py COMPLETO con mapa, KPIs, gráficos, color azul y todo funcional desde Excel OneDrive
+# 00_Dashboard.py COMPLETO – actualizado con nuevo enlace funcional de OneDrive
 
 import pandas as pd
 import streamlit as st
@@ -11,7 +11,7 @@ import unicodedata
 # ------------------ CONFIG ------------------
 st.set_page_config(page_title="Dashboard CEPLAN", layout="wide")
 
-# 🎨 CSS para color azul en la barra lateral
+# 🎨 CSS para barra lateral azul
 st.markdown("""
     <style>
     [data-testid="stSidebar"] {
@@ -23,10 +23,10 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ✅ Enlace de descarga directa OneDrive
-URL_EXCEL = "https://onedrive.live.com/download?resid=57B77F10EE9CEE37!193"
+# ✅ Enlace definitivo OneDrive (descarga directa)
+URL_EXCEL = "https://onedrive.live.com/download?resid=57B77F10EE9CEE37!195"
 
-# Códigos a departamentos (para mapa si se usa)
+# ------------------ MAPA DEPARTAMENTAL ------------------
 CODIGOS_A_DEPARTAMENTOS = {
     "1": "AMAZONAS", "2": "ANCASH", "3": "APURIMAC", "4": "AREQUIPA",
     "5": "AYACUCHO", "6": "CAJAMARCA", "7": "CALLAO", "8": "CUSCO",
@@ -36,7 +36,7 @@ CODIGOS_A_DEPARTAMENTOS = {
     "21": "PUNO", "22": "SAN MARTIN", "23": "TACNA", "24": "TUMBES", "25": "UCAYALI"
 }
 
-# ------------------ UTILS ------------------
+# ------------------ FUNCIONES ------------------
 def _norm(s):
     if s is None:
         return ""
@@ -115,7 +115,7 @@ def load_geojson():
             return gj
     return None
 
-# ------------------ VISUALIZACIÓN ------------------
+# ------------------ VISUAL ------------------
 def kpi_card(title, formulados, pendientes):
     total = formulados + pendientes
     pct = (formulados / total * 100) if total else 0
