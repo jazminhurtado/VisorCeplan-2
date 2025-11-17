@@ -1,4 +1,4 @@
-# 00_Dashboard.py actualizado COMPLETO para usar Excel desde OneDrive (versión final)
+# 00_Dashboard.py COMPLETO con mapa, KPIs, gráficos, color azul y todo funcional desde Excel OneDrive
 
 import pandas as pd
 import streamlit as st
@@ -11,9 +11,22 @@ import unicodedata
 # ------------------ CONFIG ------------------
 st.set_page_config(page_title="Dashboard CEPLAN", layout="wide")
 
-# OneDrive - archivo único con múltiples hojas
+# 🎨 CSS para color azul en la barra lateral
+st.markdown("""
+    <style>
+    [data-testid="stSidebar"] {
+        background-color: #003366;
+    }
+    [data-testid="stSidebar"] .css-1v0mbdj, [data-testid="stSidebar"] .css-1d391kg {
+        color: white !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# ✅ Enlace de descarga directa OneDrive
 URL_EXCEL = "https://onedrive.live.com/download?resid=57B77F10EE9CEE37!193"
 
+# Códigos a departamentos (para mapa si se usa)
 CODIGOS_A_DEPARTAMENTOS = {
     "1": "AMAZONAS", "2": "ANCASH", "3": "APURIMAC", "4": "AREQUIPA",
     "5": "AYACUCHO", "6": "CAJAMARCA", "7": "CALLAO", "8": "CUSCO",
@@ -91,7 +104,7 @@ def load_poi_registro():
     df["emitido_flag"] = df[col_estado].str.lower().str.contains("aprob|ajust|consist|seguim").astype(int)
     return df[["unidad_id", "emitido_flag"]]
 
-@st.cache_data(ttl=24*3600)
+@st.cache_data(ttl=600)
 def load_geojson():
     for path in [Path("pages/peru_departa.geojson"), Path("peru_departa.geojson")]:
         if path.exists():
@@ -110,15 +123,10 @@ def kpi_card(title, formulados, pendientes):
     st.metric(label=title, value=f"{pct:.1f}%", delta=f"{formulados}/{total}", delta_color="normal")
 
 def resumen_grafico(titulo, formulados, pendientes):
-    total = formulados + pendientes
-    pct_form = round((formulados / total) * 100) if total > 0 else 0
-    pct_pend = 100 - pct_form
-
     fig = go.Figure()
     fig.add_trace(go.Bar(y=[titulo], x=[formulados], name="Formulados", orientation='h', marker_color="#308446"))
     fig.add_trace(go.Bar(y=[titulo], x=[pendientes], name="Pendientes", orientation='h', marker_color="#cc3333"))
-
-    fig.update_layout(barmode='stack', height=250, margin=dict(l=20, r=20, t=40, b=20), showlegend=True)
+    fig.update_layout(barmode='stack', height=240, margin=dict(l=10, r=10, t=30, b=20), showlegend=True)
     st.plotly_chart(fig, use_container_width=True)
 
 # ------------------ APP ------------------
@@ -149,4 +157,31 @@ with col1:
     resumen_grafico("Estado POI", poi_e, poi_p)
 
 with col2:
-    st.info("🌍 El mapa departamental puede ser activado si se incluye el archivo GeoJSON 'peru_departa.geojson' en la carpeta del proyecto.")
+    geojson = load_geojson()
+    if geojson:
+        df_uni = load_universo()
+        df_it = load_it_pei()
+        df_poi = load_poi_registro()
+
+        resumen_df = df_uni.merge(df_it, on="unidad_id", how="left").merge(df_poi, on="unidad_id", how="left")
+        resumen_df = resumen_df.groupby("departamento").agg({
+            "formulado_flag": "sum",
+            "emitido_flag": "sum"
+        }).reset_index()
+
+        resumen_df["total"] = resumen_df["formulado_flag"] + resumen_df["emitido_flag"]
+
+        fig_map = px.choropleth(
+            resumen_df,
+            geojson=geojson,
+            featureidkey="properties.dep_key",
+            locations="departamento",
+            color="total",
+            color_continuous_scale="Blues",
+            scope="south america"
+        )
+        fig_map.update_geos(fitbounds="locations", visible=False)
+        fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+        st.plotly_chart(fig_map, use_container_width=True)
+    else:
+        st.info("🌍 Para mostrar el mapa, sube el archivo 'peru_departa.geojson' a tu carpeta del proyecto.")
