@@ -9,6 +9,7 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit.components.v1 as components
+
 # --------------------------------------
 # CONFIGURACIÓN GENERAL
 # --------------------------------------
@@ -425,86 +426,28 @@ def resumen_grafico(titulo, formulados, pendientes,
 # -----------------------------
 # Mapa
 # -----------------------------
-# Aquí define tu normalización de nombres de departamento, códigos, geojson loader, etc.
-def _norm(dep: str) -> str:
-    return dep.strip().upper()
-
-@st.cache_data(ttl=3600)
-def load_resumen_departamental():
-    SHEET_CSV = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
-    df = pd.read_csv(SHEET_CSV).fillna(0)
-
-    # Suponiendo que la hoja contiene columnas así:
-    # Departamento, Total_PE I, Formulados_PE I, Pendientes_PE I, Avance_PE I,
-    # Total_PO I, Formulados_PO I, Pendientes_PO I, Avance_PO I,
-    # Total_PDC, Formulados_PDC, Pendientes_PDC, Avance_PDC
-    df["departamento"] = df["Departamento"].apply(_norm)
-
-    # Construimos dict para cada plan
-    data = {}
-    data["PEI"] = df[["departamento",
-                      "Formulados_PE I",
-                      "Pendientes_PE I",
-                      "Total_PE I",
-                      "Avance_PE I"]].rename(columns={
-                          "Formulados_PE I": "formulados",
-                          "Pendientes_PE I": "pendientes",
-                          "Total_PE I": "total",
-                          "Avance_PE I": "avance"
-                      })
-    data["POI"] = df[["departamento",
-                      "Formulados_PO I",
-                      "Pendientes_PO I",
-                      "Total_PO I",
-                      "Avance_PO I"]].rename(columns={
-                          "Formulados_PO I": "formulados",
-                          "Pendientes_PO I": "pendientes",
-                          "Total_PO I": "total",
-                          "Avance_PO I": "avance"
-                      })
-    data["PDC"] = df[["departamento",
-                      "Formulados_PDC",
-                      "Pendientes_PDC",
-                      "Total_PDC",
-                      "Avance_PDC"]].rename(columns={
-                          "Formulados_PDC": "formulados",
-                          "Pendientes_PDC": "pendientes",
-                          "Total_PDC": "total",
-                          "Avance_PDC": "avance"
-                      })
-
-    # Asegurar tipos correctos
-    for plan, d in data.items():
-        d["formulados"] = d["formulados"].astype(int)
-        d["pendientes"] = d["pendientes"].astype(int)
-        d["total"] = d["total"].astype(int)
-        d["avance"] = d["avance"].astype(float)
-        data[plan] = d
-
-    return data
-
 def render_map(plan: str):
     data_por_plan = load_resumen_departamental()
     if plan not in data_por_plan:
-        st.warning("❌ Plan no encontrado en resumen.")
+        st.warning("⚠️ Plan no encontrado.")
         return
 
     df = data_por_plan[plan].copy()
 
-    # asignar color según avance
     def asignar_color(pct):
         if pct < 50:
-            return "#cc3333"  # rojo
+            return "#cc3333"
         elif pct < 80:
-            return "#F1C40F"  # amarillo
+            return "#F1C40F"
         else:
-            return "#308446"  # verde 
+            return "#308446"
 
     df["color"] = df["avance"].apply(asignar_color)
 
-    # suponiendo que tienes la función load_geojson y dict CODIGOS_A_DEPARTAMENTOS
     gj = load_geojson()
-    df = df[df["departamento"].isin(CODIGOS_A_DEPARTAMENTOS.keys())]
+    if not gj:
+        st.warning("⚠️ No se encontró el archivo GeoJSON.")
+        return
 
     fig_map = px.choropleth(
         df,
@@ -517,57 +460,33 @@ def render_map(plan: str):
     )
 
     fig_map.update_traces(
-        hovertemplate="""
-        <b>📍 %{customdata[0]}</b><br><br>
-        📈 <b>Avance:</b> %{customdata[1]}%<br>
-        ✅ <b>Formulados:</b> %{customdata[2]}<br>
-        ⏳ <b>Pendientes:</b> %{customdata[3]}<br>
-        📊 <b>Total:</b> %{customdata[4]}<br>
-        <extra></extra>
-        """
+        hovertemplate="""<b>📍 %{customdata[0]}</b><br><br>
+📈 <b>Avance:</b> %{customdata[1]}%<br>
+✅ <b>Formulados:</b> %{customdata[2]}<br>
+⏳ <b>Pendientes:</b> %{customdata[3]}<br>
+📊 <b>Total:</b> %{customdata[4]}<br><extra></extra>"""
     )
 
     fig_map.update_geos(fitbounds="locations", visible=False)
-    fig_map.update_layout(
-        height=700,
-        font=dict(size=16),
-        margin=dict(l=0, r=0, t=10, b=0)
-    )
+    fig_map.update_layout(height=700, font=dict(size=16), margin=dict(l=0, r=0, t=10, b=0))
 
     st.plotly_chart(fig_map, use_container_width=True)
 
-    # Leyenda simple
-    st.markdown("""
-    <div style="display: flex; gap: 30px; margin-top: -150px; font-size: 14px;">
-        <div style="display: flex; align-items: center;">
-            <div style="width: 18px; height: 18px; background-color: #CC3333; border-radius: 4px; margin-right: 8px;"></div>
+    st.markdown("""<div style='display: flex; gap: 30px; margin-top: -150px; font-size: 14px;'>
+        <div style='display: flex; align-items: center;'>
+            <div style='width: 18px; height: 18px; background-color: #CC3333; border-radius: 4px; margin-right: 8px;'></div>
             <span><strong>&lt; 50%</strong> (Bajo)</span>
         </div>
-        <div style="display: flex; align-items: center;">
-            <div style="width: 18px; height: 18px; background-color: #F1C40F; border-radius: 4px; margin-right: 8px;"></div>
+        <div style='display: flex; align-items: center;'>
+            <div style='width: 18px; height: 18px; background-color: #F1C40F; border-radius: 4px; margin-right: 8px;'></div>
             <span><strong>50% - 79%</strong> (Medio)</span>
         </div>
-        <div style="display: flex; align-items: center;">
-            <div style="width: 18px; height: 18px; background-color: #308446; border-radius: 4px; margin-right: 8px;"></div>
+        <div style='display: flex; align-items: center;'>
+            <div style='width: 18px; height: 18px; background-color: #308446; border-radius: 4px; margin-right: 8px;'></div>
             <span><strong>≥ 80%</strong> (Alto)</span>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-# … en tu layout principal
-st.title("Estado Situacional de los Planes del SINAPLAN")
-
-plan_sel = st.radio(
-    label="Selecciona plan para mapa:",
-    options=["PEI", "POI", "PDC"],
-    horizontal=True
-)
-render_map(plan_sel)
-
-
-
-
-
+    </div>""", unsafe_allow_html=True)
+        
 # -----------------------------
 # Render principal
 # -----------------------------
@@ -722,7 +641,7 @@ with col1:
     # Radio funcional sin texto visible (ya lo pusimos arriba)
     plan_sel = st.radio(
         label="",
-        options=["PEI", "POI"],
+        options=["PEI", "POI", "PDC"],
         horizontal=True,
         label_visibility="collapsed"
     )
