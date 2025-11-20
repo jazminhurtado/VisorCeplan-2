@@ -426,6 +426,51 @@ def resumen_grafico(titulo, formulados, pendientes,
 # -----------------------------
 # Mapa
 # -----------------------------
+@st.cache_data(ttl=3600)
+def load_resumen_departamental():
+    # Datos por departamento para los 3 planes
+    data = {
+        "PEI": pd.DataFrame({
+            "departamento": [
+                "AMAZONAS", "ANCASH", "APURIMAC", "AREQUIPA", "AYACUCHO", "CAJAMARCA",
+                "PROVINCIA CONSTITUCIONAL DEL CALLAO", "CUSCO", "HUANCAVELICA", "HUANUCO", "ICA", "JUNIN",
+                "LA LIBERTAD", "LAMBAYEQUE", "LIMA", "LORETO", "MADRE DE DIOS", "MOQUEGUA", "PASCO", "PIURA",
+                "PUNO", "SAN MARTIN", "TACNA", "TUMBES", "UCAYALI"
+            ],
+            "formulados": [38, 88, 48, 44, 68, 94, 13, 90, 53, 58, 30, 45, 88, 38, 220, 73, 10, 30, 14, 77, 57, 72, 55, 2, 2],
+            "pendientes": [49, 82, 40, 67, 59, 39, 0, 30, 52, 30, 15, 45, 17, 7, 63, 56, 3, 23, 14, 10, 8, 33, 25, 6, 2]
+        }),
+        "POI": pd.DataFrame({
+            "departamento": [
+                "AMAZONAS", "ANCASH", "APURIMAC", "AREQUIPA", "AYACUCHO", "CAJAMARCA",
+                "PROVINCIA CONSTITUCIONAL DEL CALLAO", "CUSCO", "HUANCAVELICA", "HUANUCO", "ICA", "JUNIN",
+                "LA LIBERTAD", "LAMBAYEQUE", "LIMA", "LORETO", "MADRE DE DIOS", "MOQUEGUA", "PASCO", "PIURA",
+                "PUNO", "SAN MARTIN", "TACNA", "TUMBES", "UCAYALI"
+            ],
+            "formulados": [32, 84, 43, 45, 46, 79, 13, 90, 50, 55, 44, 67, 80, 81, 312, 73, 11, 20, 15, 52, 45, 46, 42, 12, 40],
+            "pendientes": [75, 126, 45, 96, 93, 88, 0, 69, 47, 48, 41, 97, 59, 29, 116, 56, 5, 20, 19, 44, 66, 57, 36, 13, 5]
+        }),
+        "PDC": pd.DataFrame({
+            "departamento": [
+                "AMAZONAS", "ANCASH", "APURIMAC", "AREQUIPA", "AYACUCHO", "CAJAMARCA",
+                "CALLAO", "CUSCO", "HUANCAVELICA", "HUANUCO", "ICA", "JUNIN",
+                "LA LIBERTAD", "LAMBAYEQUE", "LIMA", "LORETO", "MADRE DE DIOS", "MOQUEGUA", "PASCO", "PIURA",
+                "PUNO", "SAN MARTIN", "TACNA", "TUMBES", "UCAYALI"
+            ],
+            "formulados": [2, 10, 24, 6, 18, 7, 6, 20, 27, 27, 3, 13, 13, 5, 40, 2, 1, 2, 9, 2, 4, 3, 11, 2, 12],
+            "pendientes": [83, 157, 62, 105, 107, 126, 25, 97, 76, 78, 41, 112, 82, 34, 132, 52, 11, 9, 21, 62, 107, 76, 63, 6, 8]
+        })
+    }
+
+    # Calcular totales y avance por fila
+    for k, df in data.items():
+        df["departamento"] = df["departamento"].map(_norm)
+        df["total"] = df["formulados"] + df["pendientes"]
+        df["avance"] = round((df["formulados"] / df["total"]) * 100, 1)
+
+    return data
+
+
 def render_map(plan: str):
     data_por_plan = load_resumen_departamental()
     if plan not in data_por_plan:
