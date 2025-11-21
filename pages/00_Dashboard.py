@@ -426,51 +426,49 @@ def resumen_grafico(titulo, formulados, pendientes,
 # -----------------------------
 # Mapa
 # -----------------------------
+@st.cache_data(ttl=3600)
+def load_resumen_departamental():
+    # Datos por departamento para los 3 planes
+    data = {
+        "PEI": pd.DataFrame({
+            "departamento": [
+                "AMAZONAS", "ANCASH", "APURIMAC", "AREQUIPA", "AYACUCHO", "CAJAMARCA",
+                "PROVINCIA CONSTITUCIONAL DEL CALLAO", "CUSCO", "HUANCAVELICA", "HUANUCO", "ICA", "JUNIN",
+                "LA LIBERTAD", "LAMBAYEQUE", "LIMA", "LORETO", "MADRE DE DIOS", "MOQUEGUA", "PASCO", "PIURA",
+                "PUNO", "SAN MARTIN", "TACNA", "TUMBES", "UCAYALI"
+            ],
+            "formulados": [38, 88, 48, 44, 68, 94, 13, 90, 53, 58, 30, 45, 88, 38, 220, 73, 10, 30, 14, 77, 57, 72, 55, 2, 2],
+            "pendientes": [49, 82, 40, 67, 59, 39, 0, 30, 52, 30, 15, 45, 17, 7, 63, 56, 3, 23, 14, 10, 8, 33, 25, 6, 2]
+        }),
+        "POI": pd.DataFrame({
+            "departamento": [
+                "AMAZONAS", "ANCASH", "APURIMAC", "AREQUIPA", "AYACUCHO", "CAJAMARCA",
+                "PROVINCIA CONSTITUCIONAL DEL CALLAO", "CUSCO", "HUANCAVELICA", "HUANUCO", "ICA", "JUNIN",
+                "LA LIBERTAD", "LAMBAYEQUE", "LIMA", "LORETO", "MADRE DE DIOS", "MOQUEGUA", "PASCO", "PIURA",
+                "PUNO", "SAN MARTIN", "TACNA", "TUMBES", "UCAYALI"
+            ],
+            "formulados": [32, 84, 43, 45, 46, 79, 13, 90, 50, 55, 44, 67, 80, 81, 312, 73, 11, 20, 15, 52, 45, 46, 42, 12, 40],
+            "pendientes": [75, 126, 45, 96, 93, 88, 0, 69, 47, 48, 41, 97, 59, 29, 116, 56, 5, 20, 19, 44, 66, 57, 36, 13, 5]
+        }),
+        "PDC": pd.DataFrame({
+            "departamento": [
+                "AMAZONAS", "ANCASH", "APURIMAC", "AREQUIPA", "AYACUCHO", "CAJAMARCA",
+                "CALLAO", "CUSCO", "HUANCAVELICA", "HUANUCO", "ICA", "JUNIN",
+                "LA LIBERTAD", "LAMBAYEQUE", "LIMA", "LORETO", "MADRE DE DIOS", "MOQUEGUA", "PASCO", "PIURA",
+                "PUNO", "SAN MARTIN", "TACNA", "TUMBES", "UCAYALI"
+            ],
+            "formulados": [2, 10, 24, 6, 18, 7, 6, 20, 27, 27, 3, 13, 13, 5, 40, 2, 1, 2, 9, 2, 4, 3, 11, 2, 12],
+            "pendientes": [83, 157, 62, 105, 107, 126, 25, 97, 76, 78, 41, 112, 82, 34, 132, 52, 11, 9, 21, 62, 107, 76, 63, 6, 8]
+        })
+    }
 
-import plotly.graph_objects as go
+    # Calcular totales y avance por fila
+    for k, df in data.items():
+        df["departamento"] = df["departamento"].map(_norm)
+        df["total"] = df["formulados"] + df["pendientes"]
+        df["avance"] = round((df["formulados"] / df["total"]) * 100, 1)
 
-def mostrar_detalle_pdc():
-    import pandas as pd
-    file_path = "1.inf tecnicos PEI 2016-2017-2018-2019-2020-2021-2022...V4..xlsx - Dash_Data_UEs.csv"
-    df_raw = pd.read_csv(file_path)
-    df_pdc_niveles = df_raw.iloc[0:2][["Nivel de Gobierno", "Entidades Con PDC", "Entidades Sin PDC"]].copy()
-    df_pdc_niveles.columns = ["nivel", "formulados", "pendientes"]
-    df_pdc_niveles["formulados"] = pd.to_numeric(df_pdc_niveles["formulados"], errors="coerce")
-    df_pdc_niveles["pendientes"] = pd.to_numeric(df_pdc_niveles["pendientes"], errors="coerce")
-    df_pdc_niveles["total"] = df_pdc_niveles["formulados"] + df_pdc_niveles["pendientes"]
-    df_pdc_niveles["avance"] = round((df_pdc_niveles["formulados"] / df_pdc_niveles["total"]) * 100, 1)
-
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        y=df_pdc_niveles["nivel"],
-        x=df_pdc_niveles["formulados"],
-        name="Formulados",
-        orientation='h',
-        marker_color="#308446"
-    ))
-    fig.add_trace(go.Bar(
-        y=df_pdc_niveles["nivel"],
-        x=df_pdc_niveles["pendientes"],
-        name="Pendientes",
-        orientation='h',
-        marker_color="#cc3333"
-    ))
-    fig.update_layout(
-        title="📊 Estado del PDC por Nivel de Gobierno",
-        barmode='stack',
-        xaxis_title="Número de Entidades",
-        yaxis_title="Nivel de Gobierno",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        )
-    )
-    st.plotly_chart(fig, use_container_width=True)
-    if st.button("↩️ Volver al estado general"):
-        st.experimental_rerun()
+    return data
 
 
 def render_map(plan: str):
@@ -514,7 +512,7 @@ def render_map(plan: str):
 📊 <b>Total:</b> %{customdata[4]}<br><extra></extra>"""
     )
 
-    fig_map.update_geos(fitbounds="locations", visible=False)
+    fig_map.update_geos(fitbounds="locations", visible=False) 
     fig_map.update_layout(height=700, font=dict(size=16), margin=dict(l=0, r=0, t=10, b=0))
 
     st.plotly_chart(fig_map, use_container_width=True)
