@@ -513,7 +513,22 @@ def render_map(plan: str):
     )
 
     fig_map.update_geos(fitbounds="locations", visible=False) 
-    fig_map.update_layout(height=700, font=dict(size=16), margin=dict(l=0, r=0, t=10, b=0))
+    fig_map.update_layout(
+    height=700,
+    font=dict(size=16),
+    margin=dict(l=0, r=0, t=10, b=0),
+    legend=dict(
+        orientation="v",
+        yanchor="top",
+        y=0.98,
+        xanchor="left",   # <--- este es CLAVE
+        x=-0.05,          # <--- esto lo empuja hacia la izquierda
+        bgcolor='rgba(255,255,255,0.8)',
+        bordercolor='rgba(0,0,0,0.1)',
+        borderwidth=1
+    )
+)
+
 
     st.plotly_chart(fig_map, use_container_width=True)
 
