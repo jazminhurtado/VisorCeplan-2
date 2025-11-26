@@ -635,9 +635,11 @@ def render_map(plan: str):
 # -----------------------------
 # Render principal
 # -----------------------------
-if st.button("🔄 Refrescar datos"):
-    st.cache_data.clear()
-    st.rerun()
+col1, col2 = st.columns([1, 10])
+with col1;
+    if st.button("🔄 Refrescar datos"):
+        st.cache_data.clear()
+    #st.rerun()
 
 
 
