@@ -79,8 +79,6 @@ st.markdown("""
 '>Estado Situacional de los Planes del SINAPLAN</h1>
 """, unsafe_allow_html=True)
 
-
-
 # -----------------------------
 # Config
 # -----------------------------
@@ -89,6 +87,106 @@ GID_DATA_UES     = "1259332810"   # Data_UEs
 GID_IT_PEI       = "1704733507"   # IT PEI
 GID_REGISTRO_POI = "1447296183"    # Registro POI
 GID_RESUMEN_NAC  = "1288416966"   # hoja resumen
+
+# ------------------------------------------
+# Dashboard CEPLAN con KPIs, Gráficos y Mapa coroplético conectado   
+# ------------------------------------------
+import json, unicodedata
+from pathlib import Path
+import pandas as pd
+import streamlit as st
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit.components.v1 as components
+
+# --------------------------------------
+# CONFIGURACIÓN GENERAL
+# --------------------------------------
+st.set_page_config(
+    page_title="Dashboard CEPLAN",
+    page_icon="logo_icon.png",
+    layout="wide"
+)
+
+# --------------------------------------
+# ESTILOS PERSONALIZADOS 
+# --------------------------------------
+st.markdown("""
+<style>
+h1 {
+    margin-top: 5x;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #212529;
+    text-align: center;
+}
+
+.block-container {
+    padding-top: 2rem;
+}
+
+body, .stApp {
+    background-color: #FFFFFF;
+}
+
+[data-testid="stSidebar"] {
+    background-color: #1e293b !important;
+}
+[data-testid="stSidebar"] * {
+    color: white !important;
+    font-weight: 500;
+    font-size: 15px;
+}
+[data-testid="stSidebar"] .css-1v0mbdj[aria-selected="true"] {
+    background-color: #334155 !important;
+    color: white !important;
+    font-weight: bold !important;
+    border-radius: 6px;
+}
+[data-testid="stSidebar"] a:hover {
+    background-color: #475569 !important;
+    color: white !important;
+    border-radius: 6px;
+}
+a {
+    text-decoration: none !important;
+    color: inherit;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# --------------------------------------
+# TÍTULO VISUALIZABLE
+# --------------------------------------
+st.markdown("""
+<h1 style='
+    margin-top: 40px;
+    font-size: 2.7rem;
+    font-weight: bold;
+    color: #212529;
+    text-align: center;
+'>Estado Situacional de los Planes del SINAPLAN</h1>
+""", unsafe_allow_html=True)
+
+# Función nueva para obtener datos de PDC por nivel de gobierno
+def get_pdc_nivel_gobierno():
+    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
+    df = pd.read_csv(url, header=None).fillna("")
+
+    def buscar_valores(df, nombre_nivel):
+        for i, row in df.iterrows():
+            if str(row[0]).strip().lower() == nombre_nivel.lower():
+                formulados = int(str(row[2]).replace(",", ""))
+                pendientes = int(str(row[3]).replace(",", ""))
+                return formulados, pendientes
+        return 0, 0
+
+    gr_form, gr_pend = buscar_valores(df, "Gobierno regional")
+    gl_form, gl_pend = buscar_valores(df, "Gobierno local")
+    return {
+        "Gobierno Regional": (gr_form, gr_pend),
+        "Gobierno Local": (gl_form, gl_pend)
+    }
 
 def _edit_to_csv(file_edit: str, gid: str) -> str:
     file_id = file_edit.split("/d/")[1].split("/")[0]
@@ -664,11 +762,17 @@ pdc_e, pdc_p = datos["PDC"]
 pei_e, pei_p = datos["PEI"]
 poi_e, poi_p = datos["POI"]
 
+hover_pdc = st.session_state.get("hover_pdc", False)
+
 # KPIs
 c1, c2, c3 = st.columns([1, 1, 1], gap="small")
 
 with c1:
+    is_hover = st.button("🟠 PDC", key="hover_pdc_btn")
+    if is_hover:
+       st.session_state["hover_pdc"] = not st.session_state.get("hover_pdc", False) 
     kpi_card("PDC", pdc_e, pdc_p, "pliegos", "comprende los GN, GR, GL")
+    
 with c2:
     kpi_card("PEI", pei_e, pei_p, "pliegos", "comprende los GN, GR, GL")
 with c3:
@@ -709,7 +813,14 @@ with col1:
     render_map(plan_sel)
 
 with col2:
-    resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
+    if st.session_state.get("hover_pdc", False):
+        st.markdown("### Estado PDC por Nivel de Gobierno")
+        datos_niveles = get_pdc_nivel_gobierno()
+        for nivel, (form, pend) in datos_niveles.items():
+            resumen_grafico(nivel, form, pend)
+    else:
+        resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
+      
     resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
     resumen_grafico("Estado POI a Nivel Nacional", poi_e, poi_p)
 
