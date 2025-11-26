@@ -6,12 +6,6 @@ import json, unicodedata
 from pathlib import Path
 import pandas as pd
 import streamlit as st
-
-
-col1, col2 = st.columns([1, 10])
-with col1:
-    if st.button('🔄 Refrescar datos'):
-        st.cache_data.clear()
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit.components.v1 as components
@@ -77,7 +71,7 @@ a {
 # --------------------------------------
 st.markdown("""
 <h1 style='
-    margin-top: -20px;
+    margin-top: 40px;
     font-size: 2.7rem;
     font-weight: bold;
     color: #212529;
@@ -641,7 +635,7 @@ def render_map(plan: str):
 # -----------------------------
 # Render principal
 # -----------------------------
-if :
+if st.button("🔄 Refrescar datos"):
     st.cache_data.clear()
     st.rerun()
 
