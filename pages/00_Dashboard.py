@@ -632,16 +632,6 @@ def render_map(plan: str):
         </div>
     </div>""", unsafe_allow_html=True)
         
-# -----------------------------
-# Render principal
-# -----------------------------
-#col1, col2 = st.columns([1, 10])
-#with col1:
-    #if st.button("🔄 Refrescar datos"):
-        #st.cache_data.clear()
-            #st.rerun()  esto ya no va
-
-
 
 # Botón funcional fijado arriba a la izquierda
 refresh_placeholder = st.empty()
@@ -667,10 +657,6 @@ with refresh_placeholder.container():
 if btn_clicked:
     st.cache_data.clear()
     st.rerun()
-
-
-
-
 
 
 
@@ -840,9 +826,10 @@ with col2:
             resumen_grafico(nivel, form, pend)
     else:
         resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
-      
-    resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
-    resumen_grafico("Estado POI a Nivel Nacional", poi_e, poi_p)
+    
+    if not st.session_state.get("hover_pdc", False):   
+        resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
+        resumen_grafico("Estado POI a Nivel Nacional", poi_e, poi_p)
 
 
 
