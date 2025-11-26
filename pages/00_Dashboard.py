@@ -635,11 +635,42 @@ def render_map(plan: str):
 # -----------------------------
 # Render principal
 # -----------------------------
-col1, col2 = st.columns([1, 10])
-with col1:
-    if st.button("🔄 Refrescar datos"):
-        st.cache_data.clear()
-            #st.rerun()
+#col1, col2 = st.columns([1, 10])
+#with col1:
+    #if st.button("🔄 Refrescar datos"):
+        #st.cache_data.clear()
+            #st.rerun()  esto ya no va
+
+
+
+# Botón funcional fijado arriba a la izquierda
+refresh_placeholder = st.empty()
+
+st.markdown("""
+<style>
+div[data-testid="stVerticalBlock"] > div:first-child {
+    position: relative;
+}
+#refrescar-btn {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 9999;
+}
+</style>
+""", unsafe_allow_html=True)
+
+with refresh_placeholder.container():
+    btn_clicked = st.button("🔄 Refrescar datos", key="refrescar", help="Actualiza datos desde Google Sheets", use_container_width=False)
+    st.markdown("<div id='refrescar-btn'></div>", unsafe_allow_html=True)
+
+if btn_clicked:
+    st.cache_data.clear()
+    st.experimental_rerun()
+
+
+
+
 
 
 
