@@ -666,7 +666,7 @@ with refresh_placeholder.container():
 
 if btn_clicked:
     st.cache_data.clear()
-    st.experimental_rerun()
+    st.rerun()
 
 
 
