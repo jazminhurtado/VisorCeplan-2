@@ -155,19 +155,6 @@ a {
 </style>
 """, unsafe_allow_html=True)
 
-# --------------------------------------
-# TÍTULO VISUALIZABLE
-# --------------------------------------
-#st.markdown("""
-#<h1 style='
-    #margin-top: 40px;
-    #font-size: 2.7rem;
-    #font-weight: bold;
-    #color: #212529;
-    #text-align: center;
-#'>Estado Situacional de los Planes del SINAPLAN</h1>
-#""", unsafe_allow_html=True)
-
 # Función nueva para obtener datos de PDC por nivel de gobierno
 def get_pdc_nivel_gobierno():
     url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
