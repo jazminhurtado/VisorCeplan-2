@@ -125,33 +125,59 @@ df, COLS = load_data()
 
 # ============ UI ============
 st.image("pn.jpg", width=80)
-st.title("Visor - Consulta de Políticas Nacionales del Perú")
+#st.title("Visor - Consulta de Políticas Nacionales del Perú")
 
+#df_sorted = df.loc[natsorted(df.index, key=lambda i: df.loc[i, "__nro_str"])]
+#opciones = ["-- Selecciona una política --"] + df_sorted["__opcion_combo"].drop_duplicates().tolist()
+
+#with st.container():
+    #col1, col2 = st.columns([9, 1])
+    #with col1:
+        #seleccion = st.selectbox(" 📁 Consulta una Política Nacional del Perú :", opciones, key="combo_pn")
+    #with col2:
+        #with st.container():
+            #st.markdown(
+                #"""
+                #<style>
+                #div.stButton > button {
+                    #width: 100px;
+                    #white-space: nowrap;
+                    #font-size: 14px;
+                #}
+                #</style>
+                #""",
+                #unsafe_allow_html=True
+            #)
+            #if st.button("Limpiar", key="limpiar_btn_pn"):
+                #if "combo_pn" in st.session_state:
+                    #del st.session_state["combo_pn"]
+                #st.rerun()
+
+# =============================
+# TÍTULO Y SELECCIÓN AL MISMO NIVEL
+# =============================
 df_sorted = df.loc[natsorted(df.index, key=lambda i: df.loc[i, "__nro_str"])]
 opciones = ["-- Selecciona una política --"] + df_sorted["__opcion_combo"].drop_duplicates().tolist()
 
-with st.container():
-    col1, col2 = st.columns([9, 1])
-    with col1:
-        seleccion = st.selectbox(" 📁 Consulta una Política Nacional del Perú :", opciones, key="combo_pn")
-    with col2:
-        with st.container():
-            st.markdown(
-                """
-                <style>
-                div.stButton > button {
-                    width: 100px;
-                    white-space: nowrap;
-                    font-size: 14px;
-                }
-                </style>
-                """,
-                unsafe_allow_html=True
-            )
-            if st.button("Limpiar", key="limpiar_btn_pn"):
-                if "combo_pn" in st.session_state:
-                    del st.session_state["combo_pn"]
-                st.rerun()
+# Distribuir en dos columnas horizontales
+colA, colB = st.columns([6, 6])
+
+with colA:
+    st.markdown("""
+    <div style='font-size:26px; font-weight:bold; margin-bottom:10px; margin-top:5px; color:#1e293b;'>
+        📘 Visor de Políticas Nacionales del Perú
+    </div>
+    """, unsafe_allow_html=True)
+
+with colB:
+    st.markdown("<div style='margin-top:-10px;'>", unsafe_allow_html=True)
+    seleccion = st.selectbox("📁 Selecciona una Política Nacional:", opciones, key="combo_pn")
+    if st.button("Limpiar", key="limpiar_btn_pn"):
+        if "combo_pn" in st.session_state:
+            del st.session_state["combo_pn"]
+        st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
+
 
 def _si(campo):
     val = campo if not isinstance(campo, str) else campo
