@@ -130,7 +130,7 @@ df, COLS = load_data()
 st.markdown("""
 <style>
 .titulo-visor {
-    font-size: 26px;
+    font-size: 46px;
     font-weight: 700;
     color: #1e293b;
     margin-top: -50px;
@@ -139,7 +139,7 @@ st.markdown("""
 </style>
 
 <div class="titulo-visor">
-📘 Visor de Políticas Nacionales del Perú
+   Visor de Políticas Nacionales del Perú
 </div>
 """, unsafe_allow_html=True)
 
