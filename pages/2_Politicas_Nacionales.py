@@ -125,7 +125,24 @@ df, COLS = load_data()
 
 # ============ UI ============
 #st.image("pn.jpg", width=80)
-st.title("Visor - Consulta de Políticas Nacionales del Perú")
+#st.title("Visor - Consulta de Políticas Nacionales del Perú")
+# TÍTULO COMPACTO Y AL RAS
+st.markdown("""
+<style>
+.titulo-visor {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-top: -50px;
+    margin-bottom: 5px;
+}
+</style>
+
+<div class="titulo-visor">
+📘 Visor de Políticas Nacionales del Perú
+</div>
+""", unsafe_allow_html=True)
+
 
 df_sorted = df.loc[natsorted(df.index, key=lambda i: df.loc[i, "__nro_str"])]
 opciones = ["-- Selecciona una política --"] + df_sorted["__opcion_combo"].drop_duplicates().tolist()
