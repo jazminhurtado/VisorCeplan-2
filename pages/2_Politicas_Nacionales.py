@@ -159,7 +159,7 @@ with st.container():
                 div.stButton > button {
                     width: 100px;
                     white-space: nowrap;
-                    font-size: 14px;
+                    font-size: 24px;
                 }
                 </style>
                 """,
