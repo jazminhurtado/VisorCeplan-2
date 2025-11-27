@@ -217,21 +217,8 @@ opciones = ["-- Selecciona una política --"] + df_sorted["__opcion_combo"].drop
 with st.container():
     col1, col2 = st.columns([9, 1])
     with col1:
-        #seleccion = st.selectbox(" 📁 Consulta una Política Nacional del Perú :", opciones, key="combo_pn")
-        st.markdown("""
-        <style>
-        .label-pn {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        </style>
-        <div class="label-pn">📁 Consulta una Política Nacional del Perú :</div>
-        """, unsafe_allow_html=True)
+        seleccion = st.selectbox(" 📁 Consulta una Política Nacional del Perú :", opciones, key="combo_pn")
+
 
     with col2:
        #with st.container():
