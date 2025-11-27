@@ -822,53 +822,8 @@ with col2:
     if st.session_state.get("hover_pdc", False):
         st.markdown("### Estado PDC por Nivel de Gobierno")
         datos_niveles = get_pdc_nivel_gobierno()
-
-        col_r, col_l = st.columns(2)
-        with col_r:
-            form, pend = datos_niveles["Gobierno Regional"]
-            total = form + pend
-            fig = go.Figure(data=[go.Pie(
-                labels=["Formulados", "Pendientes"],
-                values=[form, pend],
-                hole=0.6,
-                marker=dict(colors=["#308446", "#cc3333"]),
-                textinfo='label+percent',
-                insidetextorientation='radial'
-            )])
-            fig.update_layout(
-                title="<b>Gobierno Regional</b>",
-                annotations=[dict(text=f"{round((form/total)*100)}%", x=0.5, y=0.5, font_size=24, showarrow=False)],
-                showlegend=False,
-                height=350
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-        with col_l:
-            form, pend = datos_niveles["Gobierno Local"]
-            total = form + pend
-            fig = go.Figure(data=[go.Pie(
-                labels=["Formulados", "Pendientes"],
-                values=[form, pend],
-                hole=0.6,
-                marker=dict(colors=["#308446", "#cc3333"]),
-                textinfo='label+percent',
-                insidetextorientation='radial'
-            )])
-            fig.update_layout(
-                title="<b>Gobierno Local</b>",
-                annotations=[dict(text=f"{round((form/total)*100)}%", x=0.5, y=0.5, font_size=24, showarrow=False)],
-                showlegend=False,
-                height=350
-            )
-            st.plotly_chart(fig, use_container_width=True)
-    
-    
-
-
-
-
-    
-    
+        for nivel, (form, pend) in datos_niveles.items():
+            resumen_grafico(nivel, form, pend)
     else:
         resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
     
