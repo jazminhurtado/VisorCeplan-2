@@ -147,7 +147,7 @@ st.markdown("""
 # =============================
 # TABLA VISUAL DE PN POR TIPO Y ESTADO
 # =============================
-st.markdown("### 📘 Resumen de Políticas Nacionales por Tipo y Estado")
+st.markdown("###  Resumen de Políticas Nacionales por Tipo y Estado")
 
 # Quitar duplicados por número de PN
 col_tipo = COLS["tipo"]
