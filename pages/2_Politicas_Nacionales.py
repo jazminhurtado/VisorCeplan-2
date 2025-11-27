@@ -292,58 +292,71 @@ if seleccion != "-- Selecciona una política --":
             )
 
 # =============================
-# TABLA VISUAL DE PN APROBADAS POR TIPO
+# TABLA VISUAL DE PN POR TIPO Y ESTADO
 # =============================
-st.markdown("### 📘 Políticas Nacionales Aprobadas por Tipo")
+st.markdown("### 📘 Resumen de Políticas Nacionales por Tipo y Estado")
 
-# Eliminar duplicados por número de PN
+# Quitar duplicados por número de PN
 col_tipo = COLS["tipo"]
 col_estado = COLS["estado"]
 col_nro = COLS["nro"]
 
-df_aprobadas = df.drop_duplicates(subset=col_nro)
-df_aprobadas = df_aprobadas[df_aprobadas[col_estado].str.lower().str.strip() == "aprobada"]
-df_aprobadas["tipo_norm"] = df_aprobadas[col_tipo].str.strip().str.lower()
+df_clean = df.drop_duplicates(subset=col_nro)
+df_clean["estado_norm"] = df_clean[col_estado].str.lower().str.strip()
+df_clean["tipo_norm"] = df_clean[col_tipo].str.lower().str.strip()
 
-# Agrupar por tipo
-resumen = df_aprobadas["tipo_norm"].value_counts().reset_index()
-resumen.columns = ["Tipo de Política", "Cantidad"]
-resumen["Tipo de Política"] = resumen["Tipo de Política"].map({
-    "sectorial": "Sectorial",
-    "multisectorial": "Multisectorial"
-})
-resumen.loc[len(resumen.index)] = ["Total", resumen["Cantidad"].sum()]
+# Mapear nombres presentables
+tipo_map = {"sectorial": "Sectorial", "multisectorial": "Multisectorial"}
+estado_map = {"aprobada": "Aprobadas ✅", "en proceso": "En Proceso ⏳"}
 
-# Mostrar tabla con estilos visuales
+df_clean["tipo_final"] = df_clean["tipo_norm"].map(tipo_map).fillna("Otro")
+df_clean["estado_final"] = df_clean["estado_norm"].map(estado_map).fillna("Otro")
+
+# Generar tabla resumen
+resumen_estado = pd.crosstab(df_clean["tipo_final"], df_clean["estado_final"])
+resumen_estado["Total 📊"] = resumen_estado.sum(axis=1)
+fila_total = pd.DataFrame(resumen_estado.sum(axis=0)).T
+fila_total.index = ["Total"]
+resumen_estado = pd.concat([resumen_estado, fila_total])
+
+# Mostrar tabla con estilo
 st.markdown("""
 <style>
-.pn-aprobadas-table td, .pn-aprobadas-table th {
+.pn-tabla-resumen td, .pn-tabla-resumen th {
     border: 1px solid #ccc;
     padding: 8px 12px;
     text-align: center;
 }
-.pn-aprobadas-table {
+.pn-tabla-resumen {
     border-collapse: collapse;
-    width: 60%;
+    width: 80%;
     margin-top: 10px;
     margin-bottom: 30px;
 }
-.pn-aprobadas-table thead {
+.pn-tabla-resumen thead {
     background-color: #1e293b;
     color: white;
 }
-.pn-aprobadas-table tbody tr:nth-child(even) {
+.pn-tabla-resumen tbody tr:nth-child(even) {
     background-color: #f9f9f9;
 }
 </style>
 """, unsafe_allow_html=True)
 
-tabla_html = "<table class='pn-aprobadas-table'><thead><tr><th>Tipo</th><th>Aprobadas</th></tr></thead><tbody>"
-for _, row in resumen.iterrows():
-    tabla_html += f"<tr><td><b>{row['Tipo de Política']}</b></td><td>{row['Cantidad']}</td></tr>"
+tabla_html = "<table class='pn-tabla-resumen'><thead><tr><th>Tipo de Política</th>"
+for col in resumen_estado.columns:
+    tabla_html += f"<th>{col}</th>"
+tabla_html += "</tr></thead><tbody>"
+
+for idx, row in resumen_estado.iterrows():
+    tabla_html += f"<tr><td><b>{idx}</b></td>"
+    for val in row:
+        tabla_html += f"<td>{val}</td>"
+    tabla_html += "</tr>"
 tabla_html += "</tbody></table>"
 
 st.markdown(tabla_html, unsafe_allow_html=True)
+
 
 
 
