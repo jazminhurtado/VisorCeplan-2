@@ -124,7 +124,7 @@ def load_data():
 df, COLS = load_data()
 
 # ============ UI ============
-st.image("pn.jpg", width=80)
+#st.image("pn.jpg", width=80)
 st.title("Visor - Consulta de Políticas Nacionales del Perú")
 
 df_sorted = df.loc[natsorted(df.index, key=lambda i: df.loc[i, "__nro_str"])]
