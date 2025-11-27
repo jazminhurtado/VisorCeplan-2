@@ -291,6 +291,74 @@ if seleccion != "-- Selecciona una política --":
                 key="descargar_pdf"
             )
 
+# =============================
+# CUADRO RESUMEN EJECUTIVO
+# =============================
+st.markdown("---")
+st.markdown("### 📊 Cuadro Resumen de las Políticas Nacionales")
+
+# Agrupamos por TIPO y ESTADO
+df_tipo_estado = df[[COLS["tipo"], COLS["estado"]]].copy()
+df_tipo_estado.columns = ["tipo", "estado"]
+df_tipo_estado = df_tipo_estado.dropna()
+df_tipo_estado["tipo"] = df_tipo_estado["tipo"].map(_norm)
+df_tipo_estado["estado"] = df_tipo_estado["estado"].map(_norm)
+
+# Nombres amigables
+tipo_map = {
+    "sectorial": "Sectorial",
+    "multisectorial": "Multisectorial"
+}
+estado_map = {
+    "aprobada": "Aprobadas",
+    "en proceso": "En Proceso"
+}
+
+df_tipo_estado["tipo"] = df_tipo_estado["tipo"].map(tipo_map).fillna("Otro")
+df_tipo_estado["estado"] = df_tipo_estado["estado"].map(estado_map).fillna("Otro")
+
+# Conteo cruzado
+tabla_resumen = pd.crosstab(df_tipo_estado["tipo"], df_tipo_estado["estado"])
+tabla_resumen["Total"] = tabla_resumen.sum(axis=1)
+fila_total = pd.DataFrame(tabla_resumen.sum(axis=0)).T
+fila_total.index = ["Total General"]
+tabla_resumen = pd.concat([tabla_resumen, fila_total])
+
+# Mostrar tabla con estilos
+st.markdown("""
+<style>
+.resumen-pn-table td, .resumen-pn-table th {
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+    text-align: center;
+}
+.resumen-pn-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 10px;
+}
+.resumen-pn-table thead {
+    background-color: #1e293b;
+    color: white;
+}
+.resumen-pn-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+</style>
+""", unsafe_allow_html=True)
+
+tabla_html = "<table class='resumen-pn-table'><thead><tr><th>Política Nacional</th>"
+for col in tabla_resumen.columns:
+    tabla_html += f"<th>{col}</th>"
+tabla_html += "</tr></thead><tbody>"
+for idx, row in tabla_resumen.iterrows():
+    tabla_html += f"<tr><td><b>{idx}</b></td>"
+    for val in row:
+        tabla_html += f"<td>{val}</td>"
+    tabla_html += "</tr>"
+tabla_html += "</tbody></table>"
+
+st.markdown(tabla_html, unsafe_allow_html=True)
 
 
 
