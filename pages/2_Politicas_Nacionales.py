@@ -139,7 +139,7 @@ st.markdown("""
 </style>
 
 <div class="titulo-visor">
-   Visor de Políticas Nacionales del Perú
+   📘Visor de Políticas Nacionales del Perú
 </div>
 """, unsafe_allow_html=True)
 
