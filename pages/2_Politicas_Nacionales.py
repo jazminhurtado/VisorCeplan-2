@@ -322,7 +322,8 @@ if seleccion != "-- Selecciona una política --":
                 for lin in lineamientos:
                     rlin = lin_rows[lin_rows[c["lin"]] == lin]
 
-                    with st.expander(f"➤ {lin}", expanded=False):
+                    #with st.expander(f"➤ {lin}", expanded=False):
+                    with st.expander(f" {lin}", expanded=False):    
                         rows = rlin[[c["servicios"], c["proveedores"], c["receptor"]]].dropna(how="all")
 
                         # Detectar si un servicio se repite con distintos proveedores/receptores
