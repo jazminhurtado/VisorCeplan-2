@@ -220,7 +220,7 @@ with st.container():
         st.markdown("""
         <style>
         label[for="combo_pn"] > div {
-            font-size: 18px !important;
+            font-size: 28px !important;
             font-weight: 600 !important;
             color: #1e293b !important;
         }
