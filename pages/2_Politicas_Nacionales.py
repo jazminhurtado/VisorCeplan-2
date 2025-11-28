@@ -212,7 +212,7 @@ st.markdown(tabla_html, unsafe_allow_html=True)
 
 
 df_sorted = df.loc[natsorted(df.index, key=lambda i: df.loc[i, "__nro_str"])]
-opciones = ["-- Selecciona una política --"] + df_sorted["__opcion_combo"].drop_duplicates().tolist()
+opciones = ["-- Selecciona una política --"] + df_sorted["__opcion_combo"].drop_duplicates().tolist() 
 
 with st.container():
     col1, col2 = st.columns([9, 1])
