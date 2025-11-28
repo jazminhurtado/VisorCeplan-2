@@ -312,13 +312,39 @@ if seleccion != "-- Selecciona una política --":
 
         if sub.empty:
             st.info("No se encontraron columnas de OP/Lineamientos en la selección.")
+       
         else:
             ops = [op for op in sub[c["op"]].dropna().unique()]
+            for op in ops:
+                lin_rows = sub[sub[c["op"]] == op]
+                lineamientos = list(dict.fromkeys(lin_rows[c["lin"]].tolist()))
 
-ops = [op for op in sub[c["op"]].dropna().unique()]
-for op in ops:
-    lin_rows = sub[sub[c["op"]] == op]
-    lineamientos = list(dict.fromkeys(lin_rows[c["lin"]].tolist()))
+                with st.expander(f"🔷 {op}", expanded=False):
+                    for lin in lineamientos:
+                        rlin = lin_rows[lin_rows[c["lin"]] == lin]
+
+                        with st.expander(f"{lin}", expanded=False):
+                            rows = rlin[[c["servicios"], c["proveedores"], c["receptor"]]].dropna(how="all")
+
+                            if rows[c["servicios"]].duplicated().any():
+                                rows = (
+                                    rows.groupby(c["servicios"], as_index=False)
+                                    .agg({
+                                        c["proveedores"]: lambda x: ", ".join(sorted(set(x.dropna()))),
+                                        c["receptor"]: lambda x: ", ".join(sorted(set(x.dropna())))
+                                    })
+                                    .reset_index(drop=True)
+                                )
+
+                            st.dataframe(rows, hide_index=True, use_container_width=True)
+
+    
+
+
+
+
+
+    
 
     with st.expander(f"🔶 {op}", expanded=False):
         for lin in lineamientos:
