@@ -310,7 +310,7 @@ if seleccion != "-- Selecciona una política --":
         needed_cols = [c["op"], c["lin"], c["servicios"], c["proveedores"], c["receptor"]]
         sub = resultados[needed_cols].dropna(subset=[c["lin"]])
 
-          if sub.empty:
+        if sub.empty:
             st.info("No se encontraron columnas de OP/Lineamientos en la selección.")
         else:
             ops = list(dict.fromkeys(sub[c["op"]].dropna().tolist()))  # ← evita duplicados y conserva orden
@@ -350,6 +350,9 @@ if seleccion != "-- Selecciona una política --":
                                 st.markdown(table_html, unsafe_allow_html=True)
                             else:
                                 st.markdown("_Sin servicios, proveedores ni receptores registrados_")
+
+        
+       
 
   
 
