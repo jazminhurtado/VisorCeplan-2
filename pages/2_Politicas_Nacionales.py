@@ -319,7 +319,7 @@ if seleccion != "-- Selecciona una política --":
                 lin_rows = sub[sub[c["op"]] == op]
                 lineamientos = list(dict.fromkeys(lin_rows[c["lin"]].tolist()))  # evita duplicados
 
-                with st.expander(f"🔶 {op}", expanded=False):
+                with st.expander(f" {op}", expanded=False):
                     for lin in lineamientos:
                         rlin = lin_rows[lin_rows[c["lin"]] == lin]
 
