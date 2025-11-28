@@ -219,7 +219,7 @@ with st.container():
     with col1:
         st.markdown("""
         <div style='
-            font-size: 228px;
+            font-size: 20px;
             font-weight: 700;
             color: #1e293b;
             margin-bottom: 6px;
