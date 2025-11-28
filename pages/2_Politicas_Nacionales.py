@@ -314,7 +314,7 @@ if seleccion != "-- Selecciona una política --":
             st.info("No se encontraron columnas de OP/Lineamientos en la selección.")
        
         else:
-            ops =  list(dict.fromkeys(sub[c["op"]].dropna().tolist()))
+            ops =  sorted(set(sub[c["op"]].dropna()), key=lambda x: sub[sub[c["op"]] == x].index[0])
             for op in ops:
                 lin_rows = sub[sub[c["op"]] == op]
                 lineamientos = list(dict.fromkeys(lin_rows[c["lin"]].tolist()))
