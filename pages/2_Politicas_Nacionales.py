@@ -313,42 +313,32 @@ if seleccion != "-- Selecciona una política --":
         if sub.empty:
             st.info("No se encontraron columnas de OP/Lineamientos en la selección.")
        
-       else:
-            # Eliminar duplicados de OP y mantener orden de aparición
-            op_series = sub[c["op"]].dropna()
-            _, idx = np.unique(op_series, return_index=True)
-            ops = op_series.iloc[np.sort(idx)].tolist()
+  else:
+    ops = sorted(set(sub[c["op"]].dropna()), key=lambda x: sub[sub[c["op"]] == x].index[0])
+    
+    for op in ops:
+        lin_rows = sub[sub[c["op"]] == op]
+        lineamientos = list(dict.fromkeys(lin_rows[c["lin"]].tolist()))
 
-            for op in ops:
-                lin_rows = sub[sub[c["op"]] == op]
-                lineamientos = list(dict.fromkeys(lin_rows[c["lin"]].tolist()))
+        with st.expander(f"🔷 {op}", expanded=False):
+            for lin in lineamientos:
+                rlin = lin_rows[lin_rows[c["lin"]] == lin]
 
-                with st.expander(f"🔷 {op}", expanded=False):
-                    for lin in lineamientos:
-                        rlin = lin_rows[lin_rows[c["lin"]] == lin]
+                with st.expander(f"{lin}", expanded=False):
+                    rows = rlin[[c["servicios"], c["proveedores"], c["receptor"]]].dropna(how="all")
 
-                        with st.expander(f"{lin}", expanded=False):
-                            rows = rlin[[c["servicios"], c["proveedores"], c["receptor"]]].dropna(how="all")
-
-                            if rows[c["servicios"]].duplicated().any():
-                                rows = (
-                                    rows.groupby(c["servicios"], as_index=False)
-                                    .agg({
-                                        c["proveedores"]: lambda x: ", ".join(sorted(set(x.dropna()))),
-                                        c["receptor"]: lambda x: ", ".join(sorted(set(x.dropna())))
-                                    })
-                                    .reset_index(drop=True)
-                                )
-
-                            st.dataframe(
-                                rows.rename(columns={
-                                    c["servicios"]: "Servicio",
-                                    c["proveedores"]: "Proveedor(es)",
-                                    c["receptor"]: "Receptor(es)"
-                                }),
-                                hide_index=True,
-                                use_container_width=True
-                            )
+                    if rows[c["servicios"]].duplicated().any():
+                        rows = (
+                            rows.groupby(c["servicios"], as_index=False)
+                            .agg({
+                                c["proveedores"]: lambda x: ", ".join(sorted(set(x.dropna()))),
+                                c["receptor"]: lambda x: ", ".join(sorted(set(x.dropna())))
+                            })
+                            .reset_index(drop=True)
+                        )
+                    
+                    st.dataframe(rows, hide_index=True, use_container_width=True)
+  
 
             
 
