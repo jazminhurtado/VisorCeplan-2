@@ -363,42 +363,6 @@ if seleccion != "-- Selecciona una política --":
 
     
 
-    with st.expander(f"🔶 {op}", expanded=False):
-        for lin in lineamientos:
-            rlin = lin_rows[lin_rows[c["lin"]] == lin]
-
-            with st.expander(f"{lin}", expanded=False):    
-                rows = rlin[[c["servicios"], c["proveedores"], c["receptor"]]].dropna(how="all")
-
-                if rows[c["servicios"]].duplicated().any():
-                    rows = (
-                        rows.groupby(c["servicios"], as_index=False)
-                        .agg({
-                            c["proveedores"]: lambda x: ", ".join(sorted(set(x.dropna()))),
-                            c["receptor"]: lambda x: ", ".join(sorted(set(x.dropna())))
-                        })
-                        .reset_index(drop=True)
-                    )
-                else:
-                    rows = rows.drop_duplicates()
-
-                if not rows.empty:
-                    table_html = """<table style='width:100%; border-collapse: collapse;'>
-                    <tr style='background:#f0f0f0;'>
-                        <th style='border:1px solid #ddd;padding:8px;'>Servicio</th>
-                        <th style='border:1px solid #ddd;padding:8px;'>Proveedor(es)</th>
-                        <th style='border:1px solid #ddd;padding:8px;'>Receptor(es)</th>
-                    </tr>"""
-                    for _, row in rows.iterrows():
-                        srv = row[c["servicios"]] or "—"
-                        prv = row[c["proveedores"]] or "—"
-                        rec = row[c["receptor"]] or "—"
-                        table_html += f"<tr><td style='border:1px solid #ddd;padding:8px;'>{srv}</td><td style='border:1px solid #ddd;padding:8px;'>{prv}</td><td style='border:1px solid #ddd;padding:8px;'>{rec}</td></tr>"
-                    table_html += "</table>"
-                    st.markdown(table_html, unsafe_allow_html=True)
-                else:
-                    st.markdown("_Sin servicios, proveedores ni receptores registrados_")
-
 
 
         # ========== Descargas ==========
