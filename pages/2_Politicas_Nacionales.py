@@ -218,6 +218,17 @@ with st.container():
     col1, col2 = st.columns([9, 1])
     with col1:
         seleccion = st.selectbox(" 📁 Consulta una Política Nacional del Perú :", opciones, key="combo_pn")
+                    # Estilo para agrandar el label del selectbox
+                    st.markdown("""
+                    <style>
+                    label[for="combo_pn"] > div {
+                        font-size: 18px !important;
+                        font-weight: 600 !important;
+                        color: #1e293b !important;
+                    }
+                    </style>
+                    """, unsafe_allow_html=True)
+
 
 
     with col2:
