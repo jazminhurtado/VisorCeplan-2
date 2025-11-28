@@ -313,8 +313,12 @@ if seleccion != "-- Selecciona una política --":
         if sub.empty:
             st.info("No se encontraron columnas de OP/Lineamientos en la selección.")
        
-        else:
-            ops =  sorted(set(sub[c["op"]].dropna()), key=lambda x: sub[sub[c["op"]] == x].index[0])
+       else:
+            # Eliminar duplicados de OP y mantener orden de aparición
+            op_series = sub[c["op"]].dropna()
+            _, idx = np.unique(op_series, return_index=True)
+            ops = op_series.iloc[np.sort(idx)].tolist()
+
             for op in ops:
                 lin_rows = sub[sub[c["op"]] == op]
                 lineamientos = list(dict.fromkeys(lin_rows[c["lin"]].tolist()))
@@ -336,7 +340,17 @@ if seleccion != "-- Selecciona una política --":
                                     .reset_index(drop=True)
                                 )
 
-                            st.dataframe(rows, hide_index=True, use_container_width=True)
+                            st.dataframe(
+                                rows.rename(columns={
+                                    c["servicios"]: "Servicio",
+                                    c["proveedores"]: "Proveedor(es)",
+                                    c["receptor"]: "Receptor(es)"
+                                }),
+                                hide_index=True,
+                                use_container_width=True
+                            )
+
+            
 
     
 
