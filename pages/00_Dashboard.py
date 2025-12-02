@@ -778,34 +778,52 @@ with c1:
     if "hover_pdc" not in st.session_state:
         st.session_state["hover_pdc"] = False
 
-    # Usamos HTML + JS para capturar clic sobre toda la tarjeta
-    clicked = st.button(
-        " ",  # <-- espacio invisible
-        key="pdc_kpi_click",
-        help="Haz clic en el KPI para ver detalles por Nivel de Gobierno"
-    )
-
-    # Estilo para ocultar visualmente el botón (sin quitar funcionalidad)
+    # Script para detectar clics en la tarjeta KPI usando JS dentro de HTML
     st.markdown("""
-    <style>
-    button[kind="primary"][data-testid="baseButton-pdc_kpi_click"] {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 180px;  /* ajusta si tu tarjeta es más alta */
-        opacity: 0;
-        z-index: 10;
-        cursor: pointer;
+    <script>
+    const kpi = window.parent.document.querySelector('div[data-testid="stMarkdownContainer"] .kpi-card-hover');
+    if (kpi) {
+        kpi.style.cursor = 'pointer';
+        kpi.onclick = () => {
+            const streamlitEvent = new CustomEvent("streamlit:sendMessage", {
+                detail: {type: "toggle_pdc"}
+            });
+            window.parent.dispatchEvent(streamlitEvent);
+        };
     }
-    </style>
+    </script>
     """, unsafe_allow_html=True)
 
-    if clicked:
-        st.session_state["hover_pdc"] = not st.session_state["hover_pdc"]
+    # Escuchar el evento JS y cambiar estado
+    if "pdc_event_triggered" not in st.session_state:
+        st.session_state["pdc_event_triggered"] = False
 
-    # Mostrar KPI visual
+    import streamlit.components.v1 as components
+
+    components.html("""
+    <script>
+    window.addEventListener("streamlit:sendMessage", (e) => {
+        const msg = e.detail;
+        if (msg.type === "toggle_pdc") {
+            window.parent.postMessage({isPdcToggle: true}, "*");
+        }
+    });
+    </script>
+    """, height=0)
+
+    import streamlit_js_eval
+    from streamlit_js_eval import streamlit_js_eval
+
+    event = streamlit_js_eval(js_expressions="window.pdcToggle",
+                              key="js_toggle_pdc")
+
+    if event == "true":
+        st.session_state["hover_pdc"] = not st.session_state["hover_pdc"]
+        st.experimental_rerun()
+
+    # Tarjeta visual (tu KPI de siempre)
     kpi_card("PDC", pdc_e, pdc_p, "pliegos", "comprende los GN, GR, GL")
+
 
 
 
