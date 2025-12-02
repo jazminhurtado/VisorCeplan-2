@@ -778,24 +778,35 @@ with c1:
     if "hover_pdc" not in st.session_state:
         st.session_state["hover_pdc"] = False
 
-    # Crear un formulario invisible que no expanda visualmente
+    # Detectar el cambio de estado desde la URL
+    query = st.experimental_get_query_params()
+    if "toggle_pdc" in query:
+        st.session_state["hover_pdc"] = not st.session_state["hover_pdc"]
+        st.experimental_set_query_params()  # limpiar la URL
+
+    # Renderizar la tarjeta como un enlace oculto
     st.markdown("""
-        <form action="" method="post">
-            <div onclick="this.closest('form').submit();" style="all: unset;">
+    <style>
+    .kpi-clickable {
+        cursor: pointer;
+    }
+    .kpi-clickable:hover {
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        transform: scale(1.01);
+    }
+    </style>
+
+    <a href="?toggle_pdc=true" style="text-decoration: none;">
+        <div class="kpi-clickable">
     """, unsafe_allow_html=True)
 
-    # Mostrar el KPI
     kpi_card("PDC", pdc_e, pdc_p, "pliegos", "comprende los GN, GR, GL")
 
     st.markdown("""
-            </div>
-            <input type="submit" style="display: none;">
-        </form>
+        </div>
+    </a>
     """, unsafe_allow_html=True)
 
-    # Captura el evento POST (cuando se hace clic)
-    if st.form("invisible_form_pdc").form_submit_button(""):
-        st.session_state["hover_pdc"] = not st.session_state["hover_pdc"]
 
 
 
