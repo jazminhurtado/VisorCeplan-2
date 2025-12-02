@@ -759,7 +759,7 @@ def cargar_datos_dashboard():
             ]
             match_val = "total"
             key_con  = ["formulados", "en", "elaborado"]
-            key_sin = = ["pendientes", "sin", "poi"]
+            key_sin  = ["pendientes", "sin", "poi"]
 
         hdr = _find_header_row(df, headers)
         if hdr < 0: return (0, 0)
