@@ -778,28 +778,30 @@ with c1:
     if "hover_pdc" not in st.session_state:
         st.session_state["hover_pdc"] = False
 
-    # Crear un formulario invisible con submit implícito al hacer clic en el div
-    with st.form("pdc_kpi_form"):
-        # Estilos para hacer que el div sea clickeable
-        st.markdown("""
-        <style>
-        .clickable-kpi {
-            cursor: pointer;
-        }
-        </style>
-        <div class="clickable-kpi" onclick="document.forms['pdc_kpi_form'].submit();">
-        """, unsafe_allow_html=True)
+    # Crear botón visual que parece tarjeta
+    clicked = st.button(" ", key="pdc_kpi_button")
 
-        # Mostrar KPI visual
-        kpi_card("PDC", pdc_e, pdc_p, "pliegos", "comprende los GN, GR, GL")
+    # CAMUFLARLO visualmente
+    st.markdown("""
+    <style>
+    button[data-testid="baseButton-pdc_kpi_button"] {
+        position: absolute;
+        top: 160px; /* AJUSTA según la posición de la tarjeta */
+        left: 50px; /* AJUSTA según el padding */
+        width: 280px; /* mismo ancho que tu tarjeta KPI */
+        height: 180px;
+        opacity: 0;
+        z-index: 1;
+        cursor: pointer;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-        st.markdown("</div>", unsafe_allow_html=True)
+    if clicked:
+        st.session_state["hover_pdc"] = not st.session_state["hover_pdc"]
 
-        submitted = st.form_submit_button("")
-
-        if submitted:
-            st.session_state["hover_pdc"] = not st.session_state["hover_pdc"]
-
+    # KPI visual
+    kpi_card("PDC", pdc_e, pdc_p, "pliegos", "comprende los GN, GR, GL")
 
 
 
