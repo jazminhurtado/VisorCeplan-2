@@ -220,7 +220,7 @@ def get_poi_nivel_gobierno():
                     return formulados, pendientes
                 except:
                     return 0, 0
-        return 0, 0
+        return 0, 0 
 
     return {
         "Gobierno Nacional": buscar_valores(df, "Gobierno nacional"),
