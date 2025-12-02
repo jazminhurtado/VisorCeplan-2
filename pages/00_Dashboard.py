@@ -778,34 +778,28 @@ with c1:
     if "hover_pdc" not in st.session_state:
         st.session_state["hover_pdc"] = False
 
-    # Detectar el cambio de estado desde la URL
-    query = st.experimental_get_query_params()
-    if "toggle_pdc" in query:
-        st.session_state["hover_pdc"] = not st.session_state["hover_pdc"]
-        st.experimental_set_query_params()  # limpiar la URL
+    # Crear un formulario invisible con submit implícito al hacer clic en el div
+    with st.form("pdc_kpi_form"):
+        # Estilos para hacer que el div sea clickeable
+        st.markdown("""
+        <style>
+        .clickable-kpi {
+            cursor: pointer;
+        }
+        </style>
+        <div class="clickable-kpi" onclick="document.forms['pdc_kpi_form'].submit();">
+        """, unsafe_allow_html=True)
 
-    # Renderizar la tarjeta como un enlace oculto
-    st.markdown("""
-    <style>
-    .kpi-clickable {
-        cursor: pointer;
-    }
-    .kpi-clickable:hover {
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        transform: scale(1.01);
-    }
-    </style>
+        # Mostrar KPI visual
+        kpi_card("PDC", pdc_e, pdc_p, "pliegos", "comprende los GN, GR, GL")
 
-    <a href="?toggle_pdc=true" style="text-decoration: none;">
-        <div class="kpi-clickable">
-    """, unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    kpi_card("PDC", pdc_e, pdc_p, "pliegos", "comprende los GN, GR, GL")
+        submitted = st.form_submit_button("")
 
-    st.markdown("""
-        </div>
-    </a>
-    """, unsafe_allow_html=True)
+        if submitted:
+            st.session_state["hover_pdc"] = not st.session_state["hover_pdc"]
+
 
 
 
