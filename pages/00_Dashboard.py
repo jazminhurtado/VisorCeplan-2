@@ -902,7 +902,30 @@ with c2:
 
 
 with c3:
-    kpi_card("POI", poi_e, poi_p, "UEs", "comprende los GN, GR, GL")
+    if "hover_poi" not in st.session_state:
+        st.session_state["hover_poi"] = False
+
+    with st.form("poi_kpi_form"):
+        st.markdown("""
+        <style>
+        .clickable-kpi {
+            cursor: pointer;
+        }
+        </style>
+        <div class="clickable-kpi" onclick="document.forms['poi_kpi_form'].submit();">
+        """, unsafe_allow_html=True)
+
+        kpi_card("POI", poi_e, poi_p, "UEs", "comprende los GN, GR, GL")
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        submitted = st.form_submit_button("")
+
+        if submitted:
+            st.session_state["hover_poi"] = True
+            st.session_state["hover_pei"] = False
+            st.session_state["hover_pdc"] = False
+
 
 
 
