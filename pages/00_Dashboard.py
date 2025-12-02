@@ -771,6 +771,7 @@ poi_e, poi_p = datos["POI"]
 hover_pdc = st.session_state.get("hover_pdc", False)
 
 # KPIs
+# KPIs
 c1, c2, c3 = st.columns([1, 1, 1], gap="small")
 
 with c1:
@@ -778,18 +779,24 @@ with c1:
     if "hover_pdc" not in st.session_state:
         st.session_state["hover_pdc"] = False
 
-    # Crear KPI PDC como botón completo
+    # KPI PDC como botón invisible encima del KPI
     clicked = st.button(
         label="",
         key="pdc_kpi_btn",
-        help="Haz clic para ver detalle por nivel de gobierno",
+        help="Haz clic en el KPI para ver detalles por nivel de gobierno"
     )
-
     if clicked:
         st.session_state["hover_pdc"] = not st.session_state["hover_pdc"]
 
     # Mostrar KPI visualmente (igual que antes)
     kpi_card("PDC", pdc_e, pdc_p, "pliegos", "comprende los GN, GR, GL")
+
+with c2:
+    kpi_card("PEI", pei_e, pei_p, "pliegos", "comprende los GN, GR, GL")
+
+with c3:
+    kpi_card("POI", poi_e, poi_p, "UEs", "comprende los GN, GR, GL")
+
 
 
 
