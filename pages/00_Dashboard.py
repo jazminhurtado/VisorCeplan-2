@@ -922,6 +922,17 @@ with col2:
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
 
+
+    elif st.session_state.get("hover_poi", False):
+    st.markdown("### Estado POI por Nivel de Gobierno")
+    datos_niveles = get_poi_nivel_gobierno()
+    for nivel, (form, pend) in datos_niveles.items():
+        resumen_grafico(nivel, form, pend)
+
+
+
+    
+
     else:
         resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
         resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
