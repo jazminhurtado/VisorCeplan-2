@@ -775,21 +775,22 @@ hover_pdc = st.session_state.get("hover_pdc", False)
 c1, c2, c3 = st.columns([1, 1, 1], gap="small")
 
 with c1:
-    # Inicializar estado si no existe
+    # Inicializar estado
     if "hover_pdc" not in st.session_state:
         st.session_state["hover_pdc"] = False
 
-    # KPI PDC como botón invisible encima del KPI
-    clicked = st.button(
-        label="",
-        key="pdc_kpi_btn",
-        help="Haz clic en el KPI para ver detalles por nivel de gobierno"
-    )
-    if clicked:
-        st.session_state["hover_pdc"] = not st.session_state["hover_pdc"]
+    # Crear formulario invisible para capturar clic del KPI
+    with st.form(key="form_pdc_kpi", clear_on_submit=True):
+        submitted = st.form_submit_button(
+            "",
+            use_container_width=True
+        )
+        if submitted:
+            st.session_state["hover_pdc"] = not st.session_state["hover_pdc"]
 
-    # Mostrar KPI visualmente (igual que antes)
-    kpi_card("PDC", pdc_e, pdc_p, "pliegos", "comprende los GN, GR, GL")
+        # Renderizar KPI visualmente (igual que siempre)
+        kpi_card("PDC", pdc_e, pdc_p, "pliegos", "comprende los GN, GR, GL")
+
 
 with c2:
     kpi_card("PEI", pei_e, pei_p, "pliegos", "comprende los GN, GR, GL")
