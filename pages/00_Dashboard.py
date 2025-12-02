@@ -751,7 +751,12 @@ def cargar_datos_dashboard():
             match_val = "total"
             key_con, key_sin = ["con", "pei"], ["sin", "pei"]
         else:  # POI
-            headers = [["nivel", "gobierno"], ["total", "ues"], ["formulados"], ["pendientes", "sin", "poi"]]
+            headers = [
+                ["nivel", "gobierno"],
+                ["total", "ues"],
+                ["formulados"],
+                ["pendientes", "sin", "poi"]
+            ]
             match_val = "total"
             key_con  = ["formulados"]
             key_sin = = ["pendientes", "sin", "poi"]
