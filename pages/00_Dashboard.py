@@ -778,27 +778,25 @@ with c1:
     if "hover_pdc" not in st.session_state:
         st.session_state["hover_pdc"] = False
 
-    # Crear un formulario invisible con submit implícito al hacer clic en el div
-    with st.form("pdc_kpi_form"):
-        # Estilos para hacer que el div sea clickeable
-        st.markdown("""
-        <style>
-        .clickable-kpi {
-            cursor: pointer;
-        }
-        </style>
-        <div class="clickable-kpi" onclick="document.forms['pdc_kpi_form'].submit();">
-        """, unsafe_allow_html=True)
+    # Crear un formulario invisible que no expanda visualmente
+    st.markdown("""
+        <form action="" method="post">
+            <div onclick="this.closest('form').submit();" style="all: unset;">
+    """, unsafe_allow_html=True)
 
-        # Mostrar KPI visual
-        kpi_card("PDC", pdc_e, pdc_p, "pliegos", "comprende los GN, GR, GL")
+    # Mostrar el KPI
+    kpi_card("PDC", pdc_e, pdc_p, "pliegos", "comprende los GN, GR, GL")
 
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("""
+            </div>
+            <input type="submit" style="display: none;">
+        </form>
+    """, unsafe_allow_html=True)
 
-        submitted = st.form_submit_button("")
+    # Captura el evento POST (cuando se hace clic)
+    if st.form("invisible_form_pdc").form_submit_button(""):
+        st.session_state["hover_pdc"] = not st.session_state["hover_pdc"]
 
-        if submitted:
-            st.session_state["hover_pdc"] = not st.session_state["hover_pdc"]
 
 
 
