@@ -204,6 +204,37 @@ def get_pei_nivel_gobierno():
         "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
     }
 
+def get_poi_nivel_gobierno():
+    # Aquí colocas el código para leer desde Google Sheets
+    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&id=1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ&gid=1288416966"
+    df = pd.read_csv(url).fillna("")
+
+    # Extrae los valores correctos de POI según las cabeceras
+    # Usa la misma lógica que para PEI o PDC
+    def buscar_valores(df, nombre_nivel):
+        for i, row in df.iterrows():
+            if str(row[0]).strip().lower() == nombre_nivel.lower():
+                try:
+                    formulados = int(str(row[2]).replace(",", ""))
+                    pendientes = int(str(row[3]).replace(",", ""))
+                    return formulados, pendientes
+                except:
+                    return 0, 0
+        return 0, 0
+
+    return {
+        "Gobierno Nacional": buscar_valores(df, "Gobierno nacional"),
+        "Gobierno Regional": buscar_valores(df, "Gobierno regional"),
+        "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
+        "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
+    }
+
+
+
+
+
+
+
 
 def _edit_to_csv(file_edit: str, gid: str) -> str:
     file_id = file_edit.split("/d/")[1].split("/")[0]
