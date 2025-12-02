@@ -775,21 +775,34 @@ hover_pdc = st.session_state.get("hover_pdc", False)
 c1, c2, c3 = st.columns([1, 1, 1], gap="small")
 
 with c1:
-    # Inicializar estado
+    # Inicializar estado si no existe
     if "hover_pdc" not in st.session_state:
         st.session_state["hover_pdc"] = False
 
-    # Crear formulario invisible para capturar clic del KPI
-    with st.form(key="form_pdc_kpi", clear_on_submit=True):
-        submitted = st.form_submit_button(
-            "",
-            use_container_width=True
-        )
-        if submitted:
-            st.session_state["hover_pdc"] = not st.session_state["hover_pdc"]
+    # HTML + JS para capturar clic en la tarjeta KPI
+    kpi_container_id = "pdc-kpi-container"
 
-        # Renderizar KPI visualmente (igual que siempre)
-        kpi_card("PDC", pdc_e, pdc_p, "pliegos", "comprende los GN, GR, GL")
+    st.markdown(f"""
+    <style>
+    #{kpi_container_id} {{
+        cursor: pointer;
+    }}
+    </style>
+
+    <div id="{kpi_container_id}" onclick="fetch('/_stcore/ping?hover_pdc=toggle')">
+    """, unsafe_allow_html=True)
+
+    kpi_card("PDC", pdc_e, pdc_p, "pliegos", "comprende los GN, GR, GL")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # Manejar clic vía session_state (truco de ping)
+    if "hover_pdc_toggled" not in st.session_state:
+        st.session_state["hover_pdc_toggled"] = False
+    if st.experimental_get_query_params().get("hover_pdc") == ["toggle"]:
+        st.session_state["hover_pdc"] = not st.session_state["hover_pdc"]
+        st.experimental_set_query_params()
+
 
 
 with c2:
