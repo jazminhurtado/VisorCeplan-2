@@ -175,19 +175,19 @@ def get_pdc_nivel_gobierno():
         "Gobierno Local": (gl_form, gl_pend)
     }
 
-import pandas as pd
+
 
 def get_pei_nivel_gobierno():
-    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
-    df = pd.read_csv(url, header=None).fillna("")
-
-    # ✅ Verifica visualmente qué datos está leyendo
-    print(df.head(20))  # Esto te permite ver si la fila es la correcta
+    # Usa el archivo local descargado correctamente
+    df = pd.read_csv("Dash_Data_UEs.csv").fillna("")
+    
+    # Verifica visualmente qué datos se están leyendo
+    print(df.head(20))  # Esto es para depuración en consola
 
     def buscar_valores(df, nombre_nivel):
         for i, row in df.iterrows():
             if str(row[0]).strip().lower() == nombre_nivel.lower():
-                print(f"Encontrado: {nombre_nivel} ➤ fila {i} ➤ datos: {row[2]}, {row[3]}")
+                print(f"✅ Encontrado: {nombre_nivel} ▶ fila {i} ▶ datos: {row[2]}, {row[3]}")
                 try:
                     formulados = int(str(row[2]).replace(",", ""))
                     pendientes = int(str(row[3]).replace(",", ""))
@@ -202,7 +202,7 @@ def get_pei_nivel_gobierno():
         "Gobierno Nacional": buscar_valores(df, "Gobierno nacional"),
         "Gobierno Regional": buscar_valores(df, "Gobierno regional"),
         "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
-        "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
+        "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital"),
     }
 
 
