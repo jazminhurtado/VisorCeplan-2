@@ -834,7 +834,8 @@ with c1:
         submitted = st.form_submit_button("")
 
         if submitted:
-            st.session_state["hover_pdc"] = not st.session_state["hover_pdc"]
+            st.session_state["hover_pdc"] = True
+            st.session_state["hover_pei"] = False  # Asegura que PEI se apague
 
 
 
@@ -863,7 +864,8 @@ with c2:
         submitted = st.form_submit_button("")
 
         if submitted:
-            st.session_state["hover_pei"] = not st.session_state["hover_pei"]
+            st.session_state["hover_pei"] = True
+            st.session_state["hover_pdc"] = False  # Asegura que PDC se apague
 
 
 
