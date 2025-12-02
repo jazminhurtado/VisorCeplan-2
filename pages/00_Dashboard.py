@@ -750,11 +750,10 @@ def cargar_datos_dashboard():
             headers = [["nivel", "gobierno"], ["total", "pliegos"], ["con", "pei"], ["sin", "pei"]]
             match_val = "total"
             key_con, key_sin = ["con", "pei"], ["sin", "pei"]
-        elif tipo == "POI":
-            headers = [["nivel", "gobierno"], ["total", "ues"], ["formulados"], ["pendientes", "sin", "poi"]]
+        else:  # POI
+            headers = [["nivel", "gobierno"], ["total", "ues"]]
             match_val = "total"
-            key_con = ["formulados"]
-            key_sin = = ["pendientes", "sin", "poi"]
+            key_con, key_sin = ["en", "poi"], ["sin", "poi"]
 
         hdr = _find_header_row(df, headers)
         if hdr < 0: return (0, 0)
