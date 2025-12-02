@@ -175,6 +175,27 @@ def get_pdc_nivel_gobierno():
         "Gobierno Local": (gl_form, gl_pend)
     }
 
+def get_pei_nivel_gobierno():
+    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
+    df = pd.read_csv(url, header=None).fillna("")
+
+    def buscar_valores(df, nombre_nivel):
+        for i, row in df.iterrows():
+            if str(row[0]).strip().lower() == nombre_nivel.lower():
+                formulados = int(str(row[2]).replace(",", ""))
+                pendientes = int(str(row[3]).replace(",", ""))
+                return formulados, pendientes
+        return 0, 0
+
+    return {
+        "Gobierno Nacional": buscar_valores(df, "Gobierno nacional"),
+        "Gobierno Regional": buscar_valores(df, "Gobierno regional"),
+        "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
+        "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
+    }
+
+
+
 def _edit_to_csv(file_edit: str, gid: str) -> str:
     file_id = file_edit.split("/d/")[1].split("/")[0]
     return f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=csv&gid={gid}"
@@ -807,7 +828,30 @@ with c1:
 
 
 with c2:
-    kpi_card("PEI", pei_e, pei_p, "pliegos", "comprende los GN, GR, GL")
+    if "hover_pei" not in st.session_state:
+        st.session_state["hover_pei"] = False
+
+    with st.form("pei_kpi_form"):
+        st.markdown("""
+        <style>
+        .clickable-kpi {
+            cursor: pointer;
+        }
+        </style>
+        <div class="clickable-kpi" onclick="document.forms['pei_kpi_form'].submit();">
+        """, unsafe_allow_html=True)
+
+        kpi_card("PEI", pei_e, pei_p, "pliegos", "comprende los GN, GR, GL")
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        submitted = st.form_submit_button("")
+
+        if submitted:
+            st.session_state["hover_pei"] = not st.session_state["hover_pei"]
+
+
+
 
 with c3:
     kpi_card("POI", poi_e, poi_p, "UEs", "comprende los GN, GR, GL")
@@ -854,12 +898,18 @@ with col2:
         datos_niveles = get_pdc_nivel_gobierno()
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
+
+    elif st.session_state.get("hover_pei", False):
+        st.markdown("### Estado PEI por Nivel de Gobierno")
+        datos_niveles = get_pei_nivel_gobierno()
+        for nivel, (form, pend) in datos_niveles.items():
+            resumen_grafico(nivel, form, pend)
+
     else:
         resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
-    
-    if not st.session_state.get("hover_pdc", False):   
         resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
         resumen_grafico("Estado POI a Nivel Nacional", poi_e, poi_p)
+
 
 
 
