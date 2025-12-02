@@ -175,36 +175,34 @@ def get_pdc_nivel_gobierno():
         "Gobierno Local": (gl_form, gl_pend)
     }
 
-import pandas as pd
 
 def get_pei_nivel_gobierno():
     url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
-    df = pd.read_csv(url).fillna("")
+    df = pd.read_csv(url, header=None).fillna("")
+
+    # ✅ Verifica visualmente qué datos está leyendo
+    print(df.head(20))  # Esto te permite ver si la fila es la correcta
 
     def buscar_valores(df, nombre_nivel):
         for i, row in df.iterrows():
             if str(row[0]).strip().lower() == nombre_nivel.lower():
+                print(f"Encontrado: {nombre_nivel} ➤ fila {i} ➤ datos: {row[2]}, {row[3]}")
                 try:
                     formulados = int(str(row[2]).replace(",", ""))
                     pendientes = int(str(row[3]).replace(",", ""))
                     return formulados, pendientes
                 except:
+                    print("⚠️ Error al convertir valores.")
                     return 0, 0
+        print(f"❌ No se encontró: {nombre_nivel}")
         return 0, 0
 
     return {
         "Gobierno Nacional": buscar_valores(df, "Gobierno nacional"),
         "Gobierno Regional": buscar_valores(df, "Gobierno regional"),
         "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
-        "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital"),
+        "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
     }
-
-
-
-
-
-
-
 
 
 def _edit_to_csv(file_edit: str, gid: str) -> str:
@@ -920,7 +918,6 @@ with col2:
         resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
         resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
         resumen_grafico("Estado POI a Nivel Nacional", poi_e, poi_p)
-
 
 
 
