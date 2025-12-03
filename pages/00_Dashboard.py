@@ -963,29 +963,41 @@ with col1:
 
     render_map(plan_sel)
 
-if hover_pdc:
-    st.markdown("### Estado PDC por Nivel de Gobierno")
-    datos_niveles = get_pdc_nivel_gobierno()
-    for nivel, (form, pend) in datos_niveles.items():
-        resumen_grafico(nivel, form, pend)
+with col2:
+    if st.session_state.get("hover_pdc", False):
+        st.markdown("### Estado PDC por Nivel de Gobierno")
+        datos_niveles = get_pdc_nivel_gobierno()
+        for nivel, (form, pend) in datos_niveles.items():
+            resumen_grafico(nivel, form, pend)
 
-elif hover_pei:
-    st.markdown("### Estado PEI por Nivel de Gobierno")
-    datos_niveles = get_pei_nivel_gobierno()
-    for nivel, (form, pend) in datos_niveles.items():
-        resumen_grafico(nivel, form, pend)
+    elif st.session_state.get("hover_pei", False):
+        st.markdown("### Estado PEI por Nivel de Gobierno")
+        datos_niveles = get_pei_nivel_gobierno()
+        for nivel, (form, pend) in datos_niveles.items():
+            resumen_grafico(nivel, form, pend)
 
-elif hover_poi:
-    st.markdown("### Estado POI por Nivel de Gobierno")
-    datos_niveles = get_poi_nivel_gobierno()
-    for nivel, (form, pend) in datos_niveles.items():
-        resumen_grafico(nivel, form, pend)
 
-else:
-    st.markdown("### Estado Situacional Nacional")
-    resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
-    resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
-    resumen_grafico("Estado POI a Nivel Nacional", poi_e, poi_p)
+    elif st.session_state.get("hover_poi", False):
+        st.markdown("### Estado POI por Nivel de Gobierno")
+        datos_niveles = get_poi_nivel_gobierno()
+        for nivel, (form, pend) in datos_niveles.items():
+            resumen_grafico(nivel, form, pend)
+
+
+
+    
+
+    else:
+        resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
+        resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
+        resumen_grafico("Estado POI a Nivel Nacional", poi_e, poi_p)
+
+
+
+
+
+
+
 
 
 
