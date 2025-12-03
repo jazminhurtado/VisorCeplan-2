@@ -964,37 +964,27 @@ with col1:
     render_map(plan_sel)
 
 with col2:
-    if st.session_state.get("hover_pdc", False):
+    hover_pdc = st.session_state.get("hover_pdc", False)
+    hover_pei = st.session_state.get("hover_pei", False)
+    hover_poi = st.session_state.get("hover_poi", False)
+
+    if hover_pdc:
         st.markdown("### Estado PDC por Nivel de Gobierno")
         datos_niveles = get_pdc_nivel_gobierno()
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
 
-    elif st.session_state.get("hover_pei", False):
+    if hover_pei:
         st.markdown("### Estado PEI por Nivel de Gobierno")
         datos_niveles = get_pei_nivel_gobierno()
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
 
-
-    elif st.session_state.get("hover_poi", False):
+    if hover_poi:
         st.markdown("### Estado POI por Nivel de Gobierno")
         datos_niveles = get_poi_nivel_gobierno()
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
-
-
-
-    
-
-    else:
-        resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
-        resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
-        resumen_grafico("Estado POI a Nivel Nacional", poi_e, poi_p)
-
-
-
-
 
 
 
