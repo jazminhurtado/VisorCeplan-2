@@ -231,7 +231,6 @@ def get_poi_nivel_gobierno():
 
 
 
-
 def _edit_to_csv(file_edit: str, gid: str) -> str:
     file_id = file_edit.split("/d/")[1].split("/")[0]
     return f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=csv&gid={gid}"
@@ -967,7 +966,6 @@ with col2:
     if hover_poi:
         st.markdown("### Estado POI por Nivel de Gobierno")
         datos_niveles = get_poi_nivel_gobierno()
-        st.write("DEBUG:", datos_niveles)  # <---- esta línea
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
 
