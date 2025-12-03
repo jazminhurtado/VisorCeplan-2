@@ -205,12 +205,9 @@ def get_pei_nivel_gobierno():
     }
 
 def get_poi_nivel_gobierno():
-    # Aquí colocas el código para leer desde Google Sheets
     url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&id=1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ&gid=1288416966"
     df = pd.read_csv(url).fillna("")
 
-    # Extrae los valores correctos de POI según las cabeceras
-    # Usa la misma lógica que para PEI o PDC
     def buscar_valores(df, nombre_nivel):
         for i, row in df.iterrows():
             if str(row[0]).strip().lower() == nombre_nivel.lower():
@@ -220,15 +217,14 @@ def get_poi_nivel_gobierno():
                     return formulados, pendientes
                 except:
                     return 0, 0
-        return 0, 0 
+        return 0, 0
 
     return {
         "Gobierno Nacional": buscar_valores(df, "Gobierno nacional"),
         "Gobierno Regional": buscar_valores(df, "Gobierno regional"),
         "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
-        "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
+        "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital"),
     }
-
 
 
 
@@ -971,20 +967,22 @@ with col2:
     if hover_poi:
         st.markdown("### Estado POI por Nivel de Gobierno")
         datos_niveles = get_poi_nivel_gobierno()
+        st.write("DEBUG:", datos_niveles)  # <---- esta línea
         for nivel, (form, pend) in datos_niveles.items():
-            resumen_graphico(nivel, form, pend)
+            resumen_grafico(nivel, form, pend)
 
     elif hover_pei:
         st.markdown("### Estado PEI por Nivel de Gobierno")
         datos_niveles = get_pei_nivel_gobierno()
         for nivel, (form, pend) in datos_niveles.items():
-            resumen_graphico(nivel, form, pend)
+            resumen_grafico(nivel, form, pend)
 
     elif hover_pdc:
         st.markdown("### Estado PDC por Nivel de Gobierno")
         datos_niveles = get_pdc_nivel_gobierno()
         for nivel, (form, pend) in datos_niveles.items():
-            resumen_graphico(nivel, form, pend)
+            resumen_grafico(nivel, form, pend)
+
 
 
 
