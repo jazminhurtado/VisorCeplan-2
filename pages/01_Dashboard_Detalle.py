@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import matplotlib.pyplot as plt
 import requests
 
 # --- CONFIGURACIÓN DE PÁGINA ---
@@ -72,23 +73,42 @@ if selected_plan == "PDC":
 
         df_filtrado = df_pdc[df_pdc['nivel_gobierno'].isin(seleccion_nivel)]
 
-        # --- GRÁFICO DE BARRAS ---
-        conteo = df_filtrado['nivel_gobierno'].value_counts().reset_index()
-        conteo.columns = ['Nivel de Gobierno', 'Cantidad']
+            # --- GRÁFICO DE BARRAS PERSONALIZADO CON MATPLOTLIB ---
+        conteo_nivel = df_filtrado['nivel_gobierno'].value_counts()
 
-        fig = px.bar(
-            conteo,
-            x='Nivel de Gobierno',
-            y='Cantidad',
-            text='Cantidad',
-            labels={'Cantidad': 'Cantidad', 'Nivel de Gobierno': 'Nivel de Gobierno'},
-            title="Cantidad de entidades por Nivel de Gobierno"
-        )
-        fig.update_traces(textposition='outside')
-        fig.update_layout(xaxis_tickangle=0)
+        fig, ax = plt.subplots(figsize=(8, 5))
 
-        st.plotly_chart(fig, use_container_width=True)
+        # Colores neutros personalizados
+        colors = ['#4A90E2', '#7B8B99']
 
+        # Crear barras
+        bars = ax.bar(conteo_nivel.index, conteo_nivel.values, color=colors)
+
+        # Etiquetas encima de cada barra
+        for bar in bars:
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2, height + 20, f'{int(height)}',
+                    ha='center', va='bottom', fontsize=12, fontweight='bold')
+
+        # Estilo de texto de ejes
+        ax.set_xlabel("Nivel de Gobierno", fontsize=12, fontweight='bold')
+        ax.set_ylabel("Cantidad", fontsize=12, fontweight='bold')
+        ax.set_title("Cantidad de entidades por Nivel de Gobierno", fontsize=14, fontweight='bold')
+
+        # Ejes con texto horizontal
+        plt.xticks(rotation=0, fontsize=11, fontweight='bold')
+        plt.yticks(fontsize=11)
+
+        st.pyplot(fig)
+
+
+  
+
+  
+    
+    
+    
+    
     else:
         st.sidebar.error("⚠️ La columna 'nivel_gobierno' no fue encontrada.")
         df_filtrado = df_pdc.copy()
