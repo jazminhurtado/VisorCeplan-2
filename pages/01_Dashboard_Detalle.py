@@ -1,87 +1,68 @@
 import streamlit as st
 import pandas as pd
-import requests
+import matplotlib.pyplot as plt
+from modules.gsheet import load_data
 
-# --- CONFIGURACIÓN DE PÁGINA ---
-st.set_page_config(
-    page_title="Dashboard Detalle",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# --- Configuración de página ---
+st.set_page_config(page_title="Dashboard Detalle", layout="wide")
 
-# --- APLICAR ESTILO PARA FONDO Y TEXTO DEL SIDEBAR ---
-st.markdown("""
-    <style>
-    [data-testid="stSidebar"] {
-        background-color: #15233C;
-    }
-    [data-testid="stSidebar"] * {
-        color: white !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
+# --- Constantes ---
+URL_ESTADO_PDC = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&id=1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ&gid=200314121"
 
-# --- TÍTULO Y BOTÓN REFRESCAR ---
-st.title("Estado de Instrumentos PDC – PEI – POI)")
-refresh = st.button("🔄 Refrescar datos")
+# --- Cargar datos con caché ---
+@st.cache_data(ttl=1800)
+def cargar_datos():
+    df_pdc = pd.read_csv(URL_ESTADO_PDC, dtype=str)
+    return df_pdc
 
-# --- URL DE GOOGLE SHEETS (EstadoPDC) ---
-URL_ESTADO_PDC = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=200314121"
+# --- Layout Principal ---
+st.title("Dashboard General – Estado de Instrumentos (PEI – POI – PDC)")
 
-# --- FUNCIÓN PARA CARGAR DATOS ---
-@st.cache_data(show_spinner=True)
-def load_data():
-    try:
-        df = pd.read_csv(URL_ESTADO_PDC)
-        return df
-    except Exception as e:
-        st.error("⚠️ Error al cargar los datos desde Google Sheets. Verifica el enlace o el acceso público.")
-        st.stop()
+# Botón para recargar datos si es necesario
+if st.button("🔄 Refrescar datos"):
+    st.cache_data.clear()
+    st.experimental_rerun()
 
-# --- CARGA DE DATOS ---
-df_pdc = load_data()
+# --- Cargar datos ---
+df_pdc = cargar_datos()
 
-# --- SIDEBAR ---
-st.sidebar.markdown("## Planes")
+# --- Filtros Sidebar ---
+st.sidebar.title("Planes")
 
-# Selector tipo radio horizontal
-selected_plan = st.sidebar.radio(
-    "Selecciona el Plan",
-    options=["PDC", "PEI", "POI"],
-    index=0,
-    horizontal=True
-)
+# Selección de tipo de plan
+plan = st.sidebar.radio("Selecciona el Plan", ["PDC", "PEI", "POI"], index=0, horizontal=True)
 
-st.session_state.plan = selected_plan
+# Mostrar selectbox de nivel de gobierno SOLO para PDC
+niveles_disponibles = df_pdc['nivel_gobierno'].dropna().unique().tolist()
+niveles_ordenados = sorted(niveles_disponibles)
+niveles_seleccionados = []
+if plan == "PDC":
+    niveles_seleccionados = st.sidebar.multiselect("Nivel de Gobierno", opciones=niveles_ordenados, default=niveles_ordenados)
 
-# --- FILTRO SOLO PARA PDC ---
-if selected_plan == "PDC":
-    # Normalizar el nombre de columna en caso haya espacios o mayúsculas
-    df_pdc.columns = df_pdc.columns.str.strip().str.lower()
-    
-    if 'nivel_gobierno' in df_pdc.columns:
-        niveles = df_pdc['nivel_gobierno'].dropna().unique().tolist()
-        niveles.sort()
+# --- Título por plan ---
+st.subheader(f"Vista previa de datos - Estado{plan}")
 
-        seleccion_nivel = st.sidebar.multiselect(
-            "Nivel de Gobierno",
-            options=niveles,
-            default=niveles
-        )
-
-        df_filtrado = df_pdc[df_pdc['nivel_gobierno'].isin(seleccion_nivel)]
-    else:
-        st.sidebar.error("⚠️ La columna 'nivel_gobierno' no fue encontrada.")
-        df_filtrado = df_pdc.copy()
+# --- Filtrado por nivel de gobierno si aplica ---
+if plan == "PDC" and niveles_seleccionados:
+    df_filtrado = df_pdc[df_pdc['nivel_gobierno'].isin(niveles_seleccionados)]
 else:
     df_filtrado = df_pdc.copy()
 
+# --- Mostrar tabla de vista previa ---
+st.dataframe(df_filtrado.head(30), use_container_width=True)
 
+# --- Gráfico de barras por Nivel de Gobierno ---
+st.subheader("Distribución por Nivel de Gobierno")
+conteo_niveles = df_filtrado['nivel_gobierno'].value_counts().sort_index()
 
+fig, ax = plt.subplots(figsize=(8, 4))
+ax.bar(conteo_niveles.index, conteo_niveles.values, color="#3399FF")
+ax.set_title("Cantidad de Entidades por Nivel de Gobierno")
+ax.set_ylabel("Cantidad")
+ax.set_xlabel("Nivel de Gobierno")
+ax.grid(axis='y', linestyle='--', alpha=0.7)
 
+for i, v in enumerate(conteo_niveles.values):
+    ax.text(i, v + 1, str(v), ha='center', va='bottom')
 
-
-
-# --- VISUALIZACIÓN DE TABLA ---
-st.subheader("Vista previa de datos - EstadoPDC")
-st.dataframe(df_pdc, use_container_width=True)
+st.pyplot(fig)
