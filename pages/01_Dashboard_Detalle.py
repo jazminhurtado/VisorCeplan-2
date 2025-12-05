@@ -1,4 +1,4 @@
-# Dashboard_Detalle_V2.py con diagnóstico de columnas para POI
+# Dashboard_Detalle_V2.py actualizado con columnas correctas para POI: Id_UE y ESTADO_UE
 
 import streamlit as st
 import pandas as pd
@@ -89,10 +89,10 @@ elif plan_sel == "POI":
     df_poi.columns = df_poi.columns.str.strip()
     st.warning("Columnas detectadas en 'Registro POI':")
     st.code(list(df_poi.columns))
-    if "Id_U" not in df_poi.columns or "ESTADO_UI" not in df_poi.columns:
-        st.error("❌ La hoja 'Registro POI' debe contener las columnas 'Id_U' y 'ESTADO_UI'. Verifica el nombre exacto y publica bien el CSV.")
+    if "Id_UE" not in df_poi.columns or "ESTADO_UE" not in df_poi.columns:
+        st.error("❌ La hoja 'Registro POI' debe contener las columnas 'Id_UE' y 'ESTADO_UE'. Verifica el nombre exacto y publica bien el CSV.")
         st.stop()
-    df_cruz = df_poi.rename(columns={"Id_U": "unidad_id", "ESTADO_UI": "estado"})
+    df_cruz = df_poi.rename(columns={"Id_UE": "unidad_id", "ESTADO_UE": "estado"})
     df_cruz["estado"] = normalizar_estado(df_cruz["estado"])
     df_cruz["emitido"] = df_cruz["estado"] == "Emitido"
     df = df.merge(df_cruz[["unidad_id", "estado", "emitido"]], on="unidad_id", how="left")
