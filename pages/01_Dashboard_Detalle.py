@@ -22,7 +22,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- TÍTULO Y BOTÓN REFRESCAR ---
-st.title("Dashboard General – Estado de Instrumentos (PEI – POI – PDC)")
+st.title("Estado de Instrumentos PDC – PEI – POI)")
 refresh = st.button("🔄 Refrescar datos")
 
 # --- URL DE GOOGLE SHEETS (EstadoPDC) ---
