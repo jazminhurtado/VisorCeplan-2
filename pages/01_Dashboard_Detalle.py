@@ -1,4 +1,4 @@
-# 01_Dashboard_Detalle.py – Sidebar con texto blanco para menú activo e inactivo
+# 01_Dashboard_Detalle.py – Selector PDC/PEI/POI reubicado al fondo del sidebar
 
 import streamlit as st
 import pandas as pd
@@ -7,7 +7,7 @@ import plotly.express as px
 
 st.set_page_config(page_title="Dashboard Detalle", layout="wide")
 
-# Estilos personalizados corregidos para texto blanco en sidebar
+# Estilos personalizados para sidebar blanco completo y selector en fondo visible
 st.markdown("""
     <style>
         .stApp {
@@ -53,10 +53,10 @@ kcol1.markdown("## Dashboard General – Estado de Instrumentos (PEI – POI –
 with kcol2:
     if st.button("🔁 Refrescar datos"):
         st.cache_data.clear()
-        st.experimental_rerun()
+        st.rerun()
 
 # ---------------------------------------------
-# SIDEBAR – Filtros + Selector de Plan al FINAL
+# SIDEBAR – Filtros + Selector de Plan al FINAL del espacio lateral
 # ---------------------------------------------
 df_uni = load_data(URL_UNIVERSO, GID_UNIVERSO)
 niveles = df_uni["nivel"].dropna().unique().tolist()
@@ -68,15 +68,16 @@ sel_nivel = st.sidebar.multiselect("", niveles, default=niveles)
 st.sidebar.subheader("Departamento")
 sel_dep = st.sidebar.multiselect("", departamentos, default=departamentos)
 
-# Selector de plan horizontal al final del sidebar
-st.sidebar.markdown("""---""")
-st.sidebar.markdown("### Selección de Plan")
-colp1, colp2, colp3 = st.sidebar.columns(3)
+# Agregar espacio y sección visual al fondo de sidebar
+st.sidebar.markdown("""<hr style='border:1px solid white;'>""", unsafe_allow_html=True)
+st.sidebar.markdown("<div style='margin-top:80px'></div>", unsafe_allow_html=True)
+st.sidebar.markdown("### <center>Seleccionar Instrumento</center>", unsafe_allow_html=True)
+col1, col2, col3 = st.sidebar.columns(3)
 if 'plan' not in st.session_state:
     st.session_state.plan = "PDC"
-if colp1.button("PDC"): st.session_state.plan = "PDC"
-if colp2.button("PEI"): st.session_state.plan = "PEI"
-if colp3.button("POI"): st.session_state.plan = "POI"
+if col1.button("PDC"): st.session_state.plan = "PDC"
+if col2.button("PEI"): st.session_state.plan = "PEI"
+if col3.button("POI"): st.session_state.plan = "POI"
 
 plan = st.session_state.plan
 
