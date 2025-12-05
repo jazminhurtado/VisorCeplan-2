@@ -1,6 +1,4 @@
-# 01_Dashboard_Detalle.py ajustado con visibilidad completa y selector visible en sidebar
-# - Letras blancas visibles en sidebar
-# - Selector PDC – PEI – POI aparece correctamente
+# 01_Dashboard_Detalle.py – Sidebar con texto blanco para menú activo e inactivo
 
 import streamlit as st
 import pandas as pd
@@ -9,7 +7,7 @@ import plotly.express as px
 
 st.set_page_config(page_title="Dashboard Detalle", layout="wide")
 
-# Estilos personalizados mejorados para visibilidad
+# Estilos personalizados corregidos para texto blanco en sidebar
 st.markdown("""
     <style>
         .stApp {
@@ -19,12 +17,11 @@ st.markdown("""
             background-color: #1B2B49;
             color: white;
         }
-        .stSidebar, .css-10trblm, .css-1v0mbdj, .css-1cpxqw2, .css-1l02zno, .css-1r6slb0 {
+        .stSidebar div, .stSidebar span, .stSidebar label, .stSidebar h1, .stSidebar h2, .stSidebar h3, .stSidebar h4, .stSidebar h5, .stSidebar h6, .stSidebar p {
             color: white !important;
         }
-        .stSidebar .element-container button {
-            background-color: #3F51B5;
-            color: white;
+        .css-17eq0hr, .css-1d391kg {
+            color: white !important;
         }
         .block-container { padding-top: 2rem; }
     </style>
