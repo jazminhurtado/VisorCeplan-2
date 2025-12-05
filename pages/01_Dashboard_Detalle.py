@@ -1,7 +1,6 @@
-# 01_Dashboard_Detalle.py con ajustes visuales de layout
-# - Sidebar azul oscuro con letras blancas
-# - Selector horizontal PDC – PEI – POI al final del sidebar
-# - Botón de refrescar visible en lado derecho
+# 01_Dashboard_Detalle.py ajustado con visibilidad completa y selector visible en sidebar
+# - Letras blancas visibles en sidebar
+# - Selector PDC – PEI – POI aparece correctamente
 
 import streamlit as st
 import pandas as pd
@@ -10,7 +9,7 @@ import plotly.express as px
 
 st.set_page_config(page_title="Dashboard Detalle", layout="wide")
 
-# Estilos personalizados
+# Estilos personalizados mejorados para visibilidad
 st.markdown("""
     <style>
         .stApp {
@@ -20,7 +19,11 @@ st.markdown("""
             background-color: #1B2B49;
             color: white;
         }
-        .stSidebar .css-10trblm, .stSidebar .css-1v0mbdj, .stSidebar .css-1cpxqw2 {
+        .stSidebar, .css-10trblm, .css-1v0mbdj, .css-1cpxqw2, .css-1l02zno, .css-1r6slb0 {
+            color: white !important;
+        }
+        .stSidebar .element-container button {
+            background-color: #3F51B5;
             color: white;
         }
         .block-container { padding-top: 2rem; }
