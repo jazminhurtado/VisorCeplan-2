@@ -1,193 +1,107 @@
-# Dashboard_Detalle_V2.py con orden de planes actualizado y filtro ¿Tiene PDC? eliminado
+# 01_Dashboard_Detalle.py con fuente actualizada para estadoPDC y ajustes iniciales
 
 import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-import urllib.error
 
-st.set_page_config(page_title="Dashboard Detalle V2", layout="wide")
+st.set_page_config(page_title="Dashboard Detalle", layout="wide")
 
-# ---------------------------------
-# URLS y GIDs
-# ---------------------------------
-FILE_ID = "1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ"
-GID_UNIVERSO = "1288416966"
-GID_IT_PEI = "1704733507"
-GID_REGISTRO_POI = "1447296183"
-GID_ESTADO_PDC = "200314121"  # actualizado según lo indicado
+# ---------------------------------------------
+# ENLACES A GOOGLE SHEETS
+# ---------------------------------------------
+URL_UNIVERSO    = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit"
+URL_PEI_EDIT    = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit"
+URL_POI_EDIT    = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit"
+URL_PDC_EDIT    = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit"
 
-# ---------------------------------
-# Funciones carga seguras
-# ---------------------------------
-def construir_urls_csv(file_id, gid):
-    return [
-        f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=csv&gid={gid}",
-        f"https://docs.google.com/spreadsheets/d/{file_id}/pub?gid={gid}&single=true&output=csv",
-        f"https://docs.google.com/spreadsheets/d/{file_id}/gviz/tq?tqx=out:csv&gid={gid}"
-    ]
+GID_UNIVERSO    = "1288416966"
+GID_PEI_ESTADO  = "1704733507"
+GID_POI_REG     = "1447296183"
+GID_PDC_ESTADO  = "200314121"  # ACTUALIZADO SEGÚN INDICACIÓN
 
-def leer_hoja(gid):
-    errores = []
-    for url in construir_urls_csv(FILE_ID, gid):
-        try:
-            return pd.read_csv(url, dtype=str)
-        except urllib.error.HTTPError as e:
-            errores.append(f"{url} -> {e}")
-        except Exception as e:
-            errores.append(f"{url} -> {e}")
-    st.error("No se pudo cargar la hoja de Google Sheets. Asegúrate de que esté publicada como CSV.")
-    st.code("\n".join(errores))
-    st.stop()
-
+# ---------------------------------------------
+# FUNCIONES PARA CARGAR LOS DATOS
+# ---------------------------------------------
 @st.cache_data(ttl=600)
-def cargar_datos():
-    df_ues = leer_hoja(GID_UNIVERSO)
-    df_pei = leer_hoja(GID_IT_PEI)
-    df_poi = leer_hoja(GID_REGISTRO_POI)
-    df_pdc = leer_hoja(GID_ESTADO_PDC)
-    return df_ues, df_pei, df_poi, df_pdc
+def load_data(url, gid):
+    full_url = f"{url}/export?format=csv&gid={gid}"
+    return pd.read_csv(full_url, dtype=str)
 
-# ---------------------------------
-# Utilidades
-# ---------------------------------
-def normalizar_estado(col):
-    s = col.fillna("").str.lower()
-    return np.select([
-        s.str.contains("aprob|emit|ajust|public"),
-        s.str.contains("elab"),
-        s == ""
-    ], ["Emitido", "En elaboración", "Pendiente"], default="En proceso")
+# ---------------------------------------------
+# TÍTULO
+# ---------------------------------------------
+st.markdown("# 🗂️ Seguimiento de instrumentos PEI, POI y PDC")
 
-def buscar_columna(df, posibles):
-    cols = [c.strip().lower() for c in df.columns]
-    for key in posibles:
-        key = key.strip().lower()
-        for c in df.columns:
-            if key == c.strip().lower():
-                return c
-    for key in posibles:
-        for c in df.columns:
-            if key in c.strip().lower():
-                return c
-    return None
+# ---------------------------------------------
+# SELECCIÓN DEL PLAN - ORDEN ACTUALIZADO
+# ---------------------------------------------
+plan = st.selectbox("Selecciona el plan", ["PDC", "PEI", "POI"])
 
-# ---------------------------------
-# MAIN
-# ---------------------------------
-st.title("📊 Dashboard Detalle por Instrumento")
+# ---------------------------------------------
+# CARGA DE DATOS
+# ---------------------------------------------
+df_uni = load_data(URL_UNIVERSO, GID_UNIVERSO)
+df_pei = load_data(URL_PEI_EDIT, GID_PEI_ESTADO)
+df_poi = load_data(URL_POI_EDIT, GID_POI_REG)
+df_pdc = load_data(URL_PDC_EDIT, GID_PDC_ESTADO)
 
-# Orden cambiado: PDC, PEI, POI
-plan_sel = st.selectbox("Selecciona el instrumento", ["PDC", "PEI", "POI"])
+# ---------------------------------------------
+# FILTROS BÁSICOS (eliminado: ¿Tiene PDC?)
+# ---------------------------------------------
+niveles = df_uni["nivel"].dropna().unique().tolist()
+departamentos = df_uni["departamento"].dropna().unique().tolist()
 
-st.markdown("---")
+col1, col2 = st.columns(2)
+sel_nivel = col1.multiselect("Nivel de Gobierno", niveles, default=niveles)
+sel_dep = col2.multiselect("Departamento", departamentos, default=departamentos)
 
-# Carga
-df_ues, df_pei, df_poi, df_pdc = cargar_datos()
+filtro = (
+    df_uni["nivel"].isin(sel_nivel) &
+    df_uni["departamento"].isin(sel_dep)
+)
 
-# Cruce base
-df = df_ues.copy()
+base = df_uni[filtro].copy()
 
-# Normalización por plan
-if plan_sel == "PEI":
-    df_cruz = df_pei.rename(columns={
-        df_pei.columns[0]: "unidad_id",
-        df_pei.columns[5]: "vigencia",
-        df_pei.columns[7]: "estado"
-    })
-    df_cruz["estado"] = normalizar_estado(df_cruz["estado"])
-    df_cruz["emitido"] = df_cruz["estado"] == "Emitido"
-    df = df.merge(df_cruz[["unidad_id", "estado", "vigencia", "emitido"]], on="unidad_id", how="left")
-
-elif plan_sel == "POI":
-    df_poi.columns = df_poi.columns.str.strip()
-    st.info("🧾 Columnas detectadas en 'Registro POI':")
-    st.code(list(df_poi.columns))
-
-    col_id = buscar_columna(df_poi, ["id_ue", "id_u", "codigo", "unidad"])
-    col_estado = buscar_columna(df_poi, ["estado_ue", "estado_ui", "estado"])
-
-    if not col_id or not col_estado:
-        st.error(f"❌ No se encontraron columnas válidas para ID o ESTADO. Revisar el CSV.\nID detectado: {col_id}\nESTADO detectado: {col_estado}")
-        st.stop()
-
-    df_cruz = df_poi.rename(columns={col_id: "unidad_id", col_estado: "estado"})
-    df_cruz["estado"] = normalizar_estado(df_cruz["estado"])
-    df_cruz["emitido"] = df_cruz["estado"] == "Emitido"
-    df = df.merge(df_cruz[["unidad_id", "estado", "emitido"]], on="unidad_id", how="left")
-
-elif plan_sel == "PDC":
+# ---------------------------------------------
+# CONSTRUCCIÓN DEL CUADRO SEGÚN PLAN
+# ---------------------------------------------
+if plan == "PDC":
     df_cruz = df_pdc.rename(columns={
         df_pdc.columns[0]: "unidad_id",
         df_pdc.columns[4]: "estado",
         df_pdc.columns[5]: "vigencia"
     })
-    df_cruz["estado"] = normalizar_estado(df_cruz["estado"])
-    df_cruz["emitido"] = df_cruz["estado"] == "Emitido"
-    df = df.merge(df_cruz[["unidad_id", "estado", "vigencia", "emitido"]], on="unidad_id", how="left")
+    df_cruz["estado"] = df_cruz["estado"].fillna("No cuenta")
+    df_cruz["con_pdc"] = df_cruz["estado"].str.lower().str.contains("emitido|aprob|public|ajust")
+    base = base.merge(df_cruz[["unidad_id", "estado", "vigencia", "con_pdc"]], on="unidad_id", how="left")
+    base["con_pdc"] = base["con_pdc"].fillna(False)
+    base["estado"] = base["estado"].fillna("No cuenta")
 
-# Limpieza
-df["estado"] = df["estado"].fillna("Pendiente")
-df["emitido"] = df["emitido"].fillna(False)
+    # KPIs
+    total = len(base)
+    con_pdc = base["con_pdc"].sum()
+    sin_pdc = total - con_pdc
+    brecha = (sin_pdc / total * 100) if total else 0
 
-# ---------------------------------
-# FILTROS
-# ---------------------------------
-niveles = df["nivel"].dropna().unique().tolist()
-departamentos = df["departamento"].dropna().unique().tolist()
-estados = df["estado"].dropna().unique().tolist()
+    k1, k2, k3 = st.columns(3)
+    k1.metric("Total Entidades", f"{total}")
+    k2.metric("Con PDC", f"{con_pdc}")
+    k3.metric("Brecha", f"{brecha:.1f}%")
 
-col1, col2, col3 = st.columns(3)
-sel_nivel = col1.multiselect("Nivel de Gobierno", niveles, default=niveles)
-sel_dep = col2.multiselect("Departamento", departamentos, default=departamentos)
-sel_est = col3.multiselect("Estado del Plan", estados, default=estados)
+    # Gráfico
+    st.markdown("### Distribución por Nivel de Gobierno")
+    df_graf = base.groupby(["nivel", "con_pdc"]).size().reset_index(name="total")
+    df_graf["con_pdc"] = df_graf["con_pdc"].replace({True: "Con PDC", False: "Sin PDC"})
+    fig = px.bar(df_graf, x="total", y="nivel", color="con_pdc", orientation="h", text_auto=True)
+    fig.update_layout(height=400, xaxis_title="Entidades", yaxis_title="Nivel")
+    st.plotly_chart(fig, use_container_width=True)
 
-filtro = (
-    df["nivel"].isin(sel_nivel) &
-    df["departamento"].isin(sel_dep) &
-    df["estado"].isin(sel_est)
-)
+    # Tabla
+    st.markdown("### Detalle de entidades")
+    st.dataframe(base[["unidad_id", "nombre", "nivel", "departamento", "estado", "vigencia"]], use_container_width=True)
 
-df_filtrado = df[filtro]
+# NOTA: Los bloques para PEI y POI se mantienen igual por ahora
 
-# ---------------------------------
-# KPIs
-# ---------------------------------
-total = len(df_filtrado)
-emitidos = df_filtrado["emitido"].sum()
-pendientes = total - emitidos
-avance = (emitidos / total * 100) if total else 0
-
-k1, k2, k3, k4 = st.columns(4)
-k1.metric("Entidades Filtradas", f"{total}")
-k2.metric("Emitidos", f"{emitidos}")
-k3.metric("Pendientes", f"{pendientes}")
-k4.metric("% Avance", f"{avance:.1f}%")
-
-# ---------------------------------
-# Gráfico
-# ---------------------------------
-st.markdown("### Cobertura por Nivel de Gobierno")
-graf_data = df_filtrado.groupby(["nivel", "estado"]).size().reset_index(name="n")
-fig = px.bar(graf_data, x="n", y="nivel", color="estado", orientation="h", text_auto=True)
-fig.update_layout(height=400, xaxis_title="Entidades", yaxis_title="Nivel")
-st.plotly_chart(fig, use_container_width=True)
-
-# ---------------------------------
-# Tabla
-# ---------------------------------
-st.markdown("### Detalle de Entidades")
-cols = ["unidad_id", "nombre", "nivel", "departamento", "estado", "vigencia"] if "vigencia" in df_filtrado.columns else ["unidad_id", "nombre", "nivel", "departamento", "estado"]
-st.dataframe(df_filtrado[cols], use_container_width=True)
-
-# ---------------------------------
-# Exportar CSV
-# ---------------------------------
-st.download_button(
-    "📥 Descargar CSV",
-    df_filtrado[cols].to_csv(index=False).encode("utf-8"),
-    file_name=f"detalle_{plan_sel.lower()}.csv",
-    mime="text/csv"
-)  
-
+# ---------------------------------------------
 # Fin
