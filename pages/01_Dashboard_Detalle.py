@@ -93,9 +93,10 @@ if selected_plan == "PDC":
         st.sidebar.error("⚠️ La columna 'nivel_gobierno' no fue encontrada.")
         df_filtrado = df_pdc.copy()
 
-    # --- VISUALIZACIÓN DE TABLA ---
-    st.subheader("Vista previa de datos - EstadoPDC")
-    st.dataframe(df_filtrado, use_container_width=True)
+    # --- VISUALIZACIÓN DE RELACIÓN DE PLIEGOS ---
+    st.subheader("Relación de Pliegos por Nivel de Gobierno")
+    st.dataframe(df_filtrado[['nivel_gobierno', 'nombre_pliego']], use_container_width=True)
+
 
 else:
     st.warning("🔧 Visualización aún no implementada para este plan.")
