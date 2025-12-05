@@ -73,7 +73,7 @@ if selected_plan == "PDC":
 
         df_filtrado = df_pdc[df_pdc['nivel_gobierno'].isin(seleccion_nivel)]
 
-       # --- GRÁFICO DE BARRAS ---
+      # --- GRÁFICO DE BARRAS ---
         conteo = df_filtrado['nivel_gobierno'].value_counts().reset_index()
         conteo.columns = ['Nivel de Gobierno', 'Cantidad']
 
@@ -89,7 +89,6 @@ if selected_plan == "PDC":
         fig.update_layout(xaxis_tickangle=0)
 
         st.plotly_chart(fig, use_container_width=True)
-
         
 
   
