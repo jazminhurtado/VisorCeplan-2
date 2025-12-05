@@ -1,4 +1,4 @@
-# Dashboard_Detalle_V2.py actualizado con columnas correctas para POI: Id_UE y ESTADO_UE
+# Dashboard_Detalle_V2.py con detección automática de columnas POI (robusto)
 
 import streamlit as st
 import pandas as pd
@@ -49,7 +49,7 @@ def cargar_datos():
     return df_ues, df_pei, df_poi, df_pdc
 
 # ---------------------------------
-# Procesamiento
+# Utilidades
 # ---------------------------------
 def normalizar_estado(col):
     s = col.fillna("").str.lower()
@@ -58,6 +58,19 @@ def normalizar_estado(col):
         s.str.contains("elab"),
         s == ""
     ], ["Emitido", "En elaboración", "Pendiente"], default="En proceso")
+
+def buscar_columna(df, posibles):
+    cols = [c.strip().lower() for c in df.columns]
+    for key in posibles:
+        key = key.strip().lower()
+        for c in df.columns:
+            if key == c.strip().lower():
+                return c
+    for key in posibles:
+        for c in df.columns:
+            if key in c.strip().lower():
+                return c
+    return None
 
 # ---------------------------------
 # MAIN
@@ -87,12 +100,17 @@ if plan_sel == "PEI":
 
 elif plan_sel == "POI":
     df_poi.columns = df_poi.columns.str.strip()
-    st.warning("Columnas detectadas en 'Registro POI':")
+    st.info("🧾 Columnas detectadas en 'Registro POI':")
     st.code(list(df_poi.columns))
-    if "Id_UE" not in df_poi.columns or "ESTADO_UE" not in df_poi.columns:
-        st.error("❌ La hoja 'Registro POI' debe contener las columnas 'Id_UE' y 'ESTADO_UE'. Verifica el nombre exacto y publica bien el CSV.")
+
+    col_id = buscar_columna(df_poi, ["id_ue", "id_u", "codigo", "unidad"])
+    col_estado = buscar_columna(df_poi, ["estado_ue", "estado_ui", "estado"])
+
+    if not col_id or not col_estado:
+        st.error(f"❌ No se encontraron columnas válidas para ID o ESTADO. Revisar el CSV.\nID detectado: {col_id}\nESTADO detectado: {col_estado}")
         st.stop()
-    df_cruz = df_poi.rename(columns={"Id_UE": "unidad_id", "ESTADO_UE": "estado"})
+
+    df_cruz = df_poi.rename(columns={col_id: "unidad_id", col_estado: "estado"})
     df_cruz["estado"] = normalizar_estado(df_cruz["estado"])
     df_cruz["emitido"] = df_cruz["estado"] == "Emitido"
     df = df.merge(df_cruz[["unidad_id", "estado", "emitido"]], on="unidad_id", how="left")
