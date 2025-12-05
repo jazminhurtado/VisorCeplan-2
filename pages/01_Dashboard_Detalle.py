@@ -58,7 +58,7 @@ st.session_state.plan = selected_plan
 if selected_plan == "PDC":
     # Normalizar el nombre de columna en caso haya espacios o mayúsculas
     df_pdc.columns = df_pdc.columns.str.strip().str.lower()
-    
+
     if 'nivel_gobierno' in df_pdc.columns:
         niveles = df_pdc['nivel_gobierno'].dropna().unique().tolist()
         niveles.sort()
@@ -70,33 +70,29 @@ if selected_plan == "PDC":
         )
 
         df_filtrado = df_pdc[df_pdc['nivel_gobierno'].isin(seleccion_nivel)]
+
+        # --- GRÁFICO DE BARRAS POR NIVEL DE GOBIERNO ---
+        conteo = df_filtrado['nivel_gobierno'].value_counts().reset_index()
+        conteo.columns = ['nivel_gobierno', 'cantidad']
+
+        conteo['nivel_gobierno'] = conteo['nivel_gobierno'].replace({
+            '2. Gobierno Regional': 'Gobierno Regional',
+            '3. Gobierno Local': 'Gobierno Local'
+        })
+
+        st.subheader("Cantidad de entidades por Nivel de Gobierno")
+
+        st.bar_chart(
+            data=conteo.set_index('nivel_gobierno'),
+            use_container_width=True
+        )
+
     else:
         st.sidebar.error("⚠️ La columna 'nivel_gobierno' no fue encontrada.")
         df_filtrado = df_pdc.copy()
+
 else:
     df_filtrado = df_pdc.copy()
-
-
-    # --- GRÁFICO DE BARRAS POR NIVEL DE GOBIERNO ---
-    conteo = df_filtrado['nivel_gobierno'].value_counts().reset_index()
-    conteo.columns = ['nivel_gobierno', 'cantidad']
-
-    # Reemplazar para que se vean bien en la gráfica
-    conteo['nivel_gobierno'] = conteo['nivel_gobierno'].replace({
-        '2. Gobierno Regional': 'Gobierno Regional',
-        '3. Gobierno Local': 'Gobierno Local'
-    })
-
-    st.subheader("Cantidad de entidades por Nivel de Gobierno")
-
-    st.bar_chart(
-        data=conteo.set_index('nivel_gobierno'),
-        use_container_width=True
-    )
-
-
-
-
 
 # --- VISUALIZACIÓN DE TABLA ---
 st.subheader("Vista previa de datos - EstadoPDC")
