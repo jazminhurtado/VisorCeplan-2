@@ -54,6 +54,20 @@ selected_plan = st.sidebar.radio(
 
 st.session_state.plan = selected_plan
 
+# --- FILTRO NIVEL DE GOBIERNO (solo si PDC) ---
+if st.session_state.plan == "PDC":
+    niveles = df_pdc["NivelGobierno"].dropna().unique().tolist()
+    seleccion_nivel = st.sidebar.multiselect("Nivel de Gobierno", opciones := niveles, default=opciones)
+else:
+    seleccion_nivel = []  # vacío para evitar errores lógicos si se usa luego
+
 # --- VISUALIZACIÓN DE TABLA ---
 st.subheader("Vista previa de datos - EstadoPDC")
-st.dataframe(df_pdc, use_container_width=True)
+
+# Filtrar si aplica
+if seleccion_nivel:
+    df_filtrado = df_pdc[df_pdc["NivelGobierno"].isin(seleccion_nivel)]
+else:
+    df_filtrado = df_pdc
+
+st.dataframe(df_filtrado, use_container_width=True)
