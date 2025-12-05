@@ -9,8 +9,20 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# --- APLICAR ESTILO PARA FONDO Y TEXTO DEL SIDEBAR ---
+st.markdown("""
+    <style>
+    [data-testid="stSidebar"] {
+        background-color: #15233C;
+    }
+    [data-testid="stSidebar"] * {
+        color: white !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # --- TÍTULO Y BOTÓN REFRESCAR ---
-st.title("Dashboard General – Estado de Instrumentos (PDC – PEI – POI)")
+st.title("Dashboard General – Estado de Instrumentos (PEI – POI – PDC)")
 refresh = st.button("🔄 Refrescar datos")
 
 # --- URL DE GOOGLE SHEETS (EstadoPDC) ---
