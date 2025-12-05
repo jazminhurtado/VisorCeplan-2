@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import requests
+import altair as alt
 
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(
@@ -22,7 +22,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- TÍTULO Y BOTÓN REFRESCAR ---
-st.title("Estado de Instrumentos PDC – PEI – POI)")
+st.title("Estado de Instrumentos PDC – PEI – POI")
 refresh = st.button("🔄 Refrescar datos")
 
 # --- URL DE GOOGLE SHEETS (EstadoPDC) ---
@@ -56,7 +56,6 @@ st.session_state.plan = selected_plan
 
 # --- FILTRO SOLO PARA PDC ---
 if selected_plan == "PDC":
-    # Normalizar el nombre de columna en caso haya espacios o mayúsculas
     df_pdc.columns = df_pdc.columns.str.strip().str.lower()
 
     if 'nivel_gobierno' in df_pdc.columns:
@@ -71,43 +70,38 @@ if selected_plan == "PDC":
 
         df_filtrado = df_pdc[df_pdc['nivel_gobierno'].isin(seleccion_nivel)]
 
-        # --- GRÁFICO DE BARRAS POR NIVEL DE GOBIERNO ---
-        conteo = df_filtrado['nivel_gobierno'].value_counts().reset_index()
-        conteo.columns = ['nivel_gobierno', 'cantidad']
+        # --- GRÁFICO DE BARRAS PERSONALIZADO ---
+        conteo_niveles = df_filtrado['nivel_gobierno'].value_counts().reset_index()
+        conteo_niveles.columns = ['Nivel de Gobierno', 'Cantidad']
 
-        conteo['nivel_gobierno'] = conteo['nivel_gobierno'].replace({
-            '2. Gobierno Regional': 'Gobierno Regional',
-            '3. Gobierno Local': 'Gobierno Local'
-        })
+        chart = alt.Chart(conteo_niveles).mark_bar().encode(
+            x=alt.X('Nivel de Gobierno:N', sort='-y', title='Nivel de Gobierno'),
+            y=alt.Y('Cantidad:Q', title='Cantidad'),
+            tooltip=['Nivel de Gobierno', 'Cantidad']
+        ).properties(
+            width=700,
+            height=400,
+            title='Cantidad de entidades por Nivel de Gobierno'
+        )
 
-        st.subheader("Cantidad de entidades por Nivel de Gobierno")
-
-        # --- GRÁFICO MEJORADO CON ALTair ---
-        import altair as alt
-        conteo_alt = conteo.copy()
-        chart = alt.Chart(conteo_alt).mark_bar(color="#1f77b4").encode(
-            x=alt.X('nivel_gobierno:N', title='Nivel de Gobierno'),
-            y=alt.Y('cantidad:Q', title='Cantidad')
-        ) + alt.Chart(conteo_alt).mark_text(
-            align='center', baseline='bottom', dy=-5, size=14
+        etiquetas = alt.Chart(conteo_niveles).mark_text(
+            align='center',
+            baseline='bottom',
+            dy=-5  # Desplazamiento hacia arriba
         ).encode(
-            x='nivel_gobierno:N',
-            y='cantidad:Q',
-            text='cantidad:Q'
+            x='Nivel de Gobierno:N',
+            y='Cantidad:Q',
+            text='Cantidad:Q'
         )
 
-        st.altair_chart(chart, use_container_width=True)(
-            data=conteo.set_index('nivel_gobierno'),
-            use_container_width=True
-        )
+        st.altair_chart(chart + etiquetas, use_container_width=True)
 
     else:
         st.sidebar.error("⚠️ La columna 'nivel_gobierno' no fue encontrada.")
         df_filtrado = df_pdc.copy()
-
 else:
     df_filtrado = df_pdc.copy()
 
 # --- VISUALIZACIÓN DE TABLA ---
 st.subheader("Vista previa de datos - EstadoPDC")
-st.dataframe(df_pdc, use_container_width=True)
+st.dataframe(df_filtrado, use_container_width=True)
