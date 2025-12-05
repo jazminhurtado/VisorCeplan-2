@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-import altair as alt
+import plotly.express as px
+import requests
 
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(
@@ -56,6 +57,7 @@ st.session_state.plan = selected_plan
 
 # --- FILTRO SOLO PARA PDC ---
 if selected_plan == "PDC":
+    # Normalizar el nombre de columna en caso haya espacios o mayúsculas
     df_pdc.columns = df_pdc.columns.str.strip().str.lower()
 
     if 'nivel_gobierno' in df_pdc.columns:
@@ -70,38 +72,30 @@ if selected_plan == "PDC":
 
         df_filtrado = df_pdc[df_pdc['nivel_gobierno'].isin(seleccion_nivel)]
 
-        # --- GRÁFICO DE BARRAS PERSONALIZADO ---
-        conteo_niveles = df_filtrado['nivel_gobierno'].value_counts().reset_index()
-        conteo_niveles.columns = ['Nivel de Gobierno', 'Cantidad']
+        # --- GRÁFICO DE BARRAS ---
+        conteo = df_filtrado['nivel_gobierno'].value_counts().reset_index()
+        conteo.columns = ['Nivel de Gobierno', 'Cantidad']
 
-        chart = alt.Chart(conteo_niveles).mark_bar().encode(
-            x=alt.X('Nivel de Gobierno:N', sort='-y', title='Nivel de Gobierno'),
-            y=alt.Y('Cantidad:Q', title='Cantidad'),
-            tooltip=['Nivel de Gobierno', 'Cantidad']
-        ).properties(
-            width=700,
-            height=400,
-            title='Cantidad de entidades por Nivel de Gobierno'
+        fig = px.bar(
+            conteo,
+            x='Nivel de Gobierno',
+            y='Cantidad',
+            text='Cantidad',
+            labels={'Cantidad': 'Cantidad', 'Nivel de Gobierno': 'Nivel de Gobierno'},
+            title="Cantidad de entidades por Nivel de Gobierno"
         )
+        fig.update_traces(textposition='outside')
+        fig.update_layout(xaxis_tickangle=0)
 
-        etiquetas = alt.Chart(conteo_niveles).mark_text(
-            align='center',
-            baseline='bottom',
-            dy=-5  # Desplazamiento hacia arriba
-        ).encode(
-            x='Nivel de Gobierno:N',
-            y='Cantidad:Q',
-            text='Cantidad:Q'
-        )
-
-        st.altair_chart(chart + etiquetas, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True)
 
     else:
         st.sidebar.error("⚠️ La columna 'nivel_gobierno' no fue encontrada.")
         df_filtrado = df_pdc.copy()
-else:
-    df_filtrado = df_pdc.copy()
 
-# --- VISUALIZACIÓN DE TABLA ---
-st.subheader("Vista previa de datos - EstadoPDC")
-st.dataframe(df_filtrado, use_container_width=True)
+    # --- VISUALIZACIÓN DE TABLA ---
+    st.subheader("Vista previa de datos - EstadoPDC")
+    st.dataframe(df_filtrado, use_container_width=True)
+
+else:
+    st.warning("🔧 Visualización aún no implementada para este plan.")
