@@ -44,18 +44,15 @@ df_pdc = load_data()
 # --- SIDEBAR ---
 st.sidebar.markdown("## Planes")
 
-# Selector horizontal al fondo del sidebar
-st.sidebar.markdown("<div style='margin-top:80px'></div>", unsafe_allow_html=True)
-st.sidebar.markdown("### <center>Seleccionar Instrumento</center>", unsafe_allow_html=True)
-col1, col2, col3 = st.sidebar.columns(3)
-if 'plan' not in st.session_state:
-    st.session_state.plan = "PDC"
-if col1.button("PDC"):
-    st.session_state.plan = "PDC"
-if col2.button("PEI"):
-    st.session_state.plan = "PEI"
-if col3.button("POI"):
-    st.session_state.plan = "POI"
+# Selector tipo radio horizontal
+selected_plan = st.sidebar.radio(
+    "Selecciona el Plan",
+    options=["PDC", "PEI", "POI"],
+    index=0,
+    horizontal=True
+)
+
+st.session_state.plan = selected_plan
 
 # --- VISUALIZACIÓN DE TABLA ---
 st.subheader("Vista previa de datos - EstadoPDC")
