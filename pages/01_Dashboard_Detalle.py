@@ -1,6 +1,7 @@
-# 01_Dashboard_Detalle.py (versión con selector horizontal y fondo como imagen)
-# - Selector horizontal de planes
-# - Fondo claro tipo visor CEPLAN
+# 01_Dashboard_Detalle.py con ajustes visuales de layout
+# - Sidebar azul oscuro con letras blancas
+# - Selector horizontal PDC – PEI – POI al final del sidebar
+# - Botón de refrescar visible en lado derecho
 
 import streamlit as st
 import pandas as pd
@@ -9,7 +10,7 @@ import plotly.express as px
 
 st.set_page_config(page_title="Dashboard Detalle", layout="wide")
 
-# Estilos personalizados para fondo y botones
+# Estilos personalizados
 st.markdown("""
     <style>
         .stApp {
@@ -19,13 +20,10 @@ st.markdown("""
             background-color: #1B2B49;
             color: white;
         }
-        .css-1v0mbdj.edgvbvh3 {  /* Texto título sidebar */
+        .stSidebar .css-10trblm, .stSidebar .css-1v0mbdj, .stSidebar .css-1cpxqw2 {
             color: white;
         }
-        .css-17eq0hr {  /* Botones multiselect */
-            background-color: #E53935;
-            color: white;
-        }
+        .block-container { padding-top: 2rem; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -48,33 +46,17 @@ def load_data(url, gid):
     return pd.read_csv(full_url, dtype=str)
 
 # ---------------------------------------------
-# TITULO Y REFRESH
+# TITULO Y BOTÓN REFRESH
 # ---------------------------------------------
-st.title("Dashboard General – Estado de Instrumentos (PEI – POI – PDC)")
-
-with st.expander("Refrescar (releer Google Sheets)"):
-    st.cache_data.clear()
-    st.success("Datos actualizados")
-
-# ---------------------------------------------
-# SELECTOR HORIZONTAL DE PLANES (PDC – PEI – POI)
-# ---------------------------------------------
-col1, col2, col3 = st.columns(3)
-with col1: pdc_opt = st.button("PDC")
-with col2: pei_opt = st.button("PEI")
-with col3: poi_opt = st.button("POI")
-
-# Variable seleccionada
-if 'plan' not in st.session_state:
-    st.session_state.plan = "PDC"
-if pdc_opt: st.session_state.plan = "PDC"
-if pei_opt: st.session_state.plan = "PEI"
-if poi_opt: st.session_state.plan = "POI"
-
-plan = st.session_state.plan
+kcol1, kcol2 = st.columns([10, 2])
+kcol1.markdown("## Dashboard General – Estado de Instrumentos (PEI – POI – PDC)")
+with kcol2:
+    if st.button("🔁 Refrescar datos"):
+        st.cache_data.clear()
+        st.experimental_rerun()
 
 # ---------------------------------------------
-# FILTROS BÁSICOS (sidebar limpio)
+# SIDEBAR – Filtros + Selector de Plan al FINAL
 # ---------------------------------------------
 df_uni = load_data(URL_UNIVERSO, GID_UNIVERSO)
 niveles = df_uni["nivel"].dropna().unique().tolist()
@@ -86,15 +68,29 @@ sel_nivel = st.sidebar.multiselect("", niveles, default=niveles)
 st.sidebar.subheader("Departamento")
 sel_dep = st.sidebar.multiselect("", departamentos, default=departamentos)
 
+# Selector de plan horizontal al final del sidebar
+st.sidebar.markdown("""---""")
+st.sidebar.markdown("### Selección de Plan")
+colp1, colp2, colp3 = st.sidebar.columns(3)
+if 'plan' not in st.session_state:
+    st.session_state.plan = "PDC"
+if colp1.button("PDC"): st.session_state.plan = "PDC"
+if colp2.button("PEI"): st.session_state.plan = "PEI"
+if colp3.button("POI"): st.session_state.plan = "POI"
+
+plan = st.session_state.plan
+
+# ---------------------------------------------
+# FILTRADO BASE
+# ---------------------------------------------
 filtro = (
     df_uni["nivel"].isin(sel_nivel) &
     df_uni["departamento"].isin(sel_dep)
 )
-
 base = df_uni[filtro].copy()
 
 # ---------------------------------------------
-# BLOQUE PDC
+# SOLO BLOQUE PDC ACTIVO
 # ---------------------------------------------
 if plan == "PDC":
     df_pdc = load_data(URL_PDC_EDIT, GID_PDC_ESTADO)
@@ -137,6 +133,6 @@ if plan == "PDC":
     df_tabla["sin_pdc"] = df_tabla["total_entidades"] - df_tabla["con_pdc"]
     st.dataframe(df_tabla, use_container_width=True)
 
-# BLOQUES PEI y POI pendientes
+# BLOQUES PEI y POI por desarrollar
 
 # FIN
