@@ -82,7 +82,21 @@ if selected_plan == "PDC":
 
         st.subheader("Cantidad de entidades por Nivel de Gobierno")
 
-        st.bar_chart(
+        # --- GRÁFICO MEJORADO CON ALTair ---
+        import altair as alt
+        conteo_alt = conteo.copy()
+        chart = alt.Chart(conteo_alt).mark_bar(color="#1f77b4").encode(
+            x=alt.X('nivel_gobierno:N', title='Nivel de Gobierno'),
+            y=alt.Y('cantidad:Q', title='Cantidad')
+        ) + alt.Chart(conteo_alt).mark_text(
+            align='center', baseline='bottom', dy=-5, size=14
+        ).encode(
+            x='nivel_gobierno:N',
+            y='cantidad:Q',
+            text='cantidad:Q'
+        )
+
+        st.altair_chart(chart, use_container_width=True)(
             data=conteo.set_index('nivel_gobierno'),
             use_container_width=True
         )
