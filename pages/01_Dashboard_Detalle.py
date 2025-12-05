@@ -1,4 +1,4 @@
-# Dashboard_Detalle_V2.py actualizado con URL fallback seguro
+# Dashboard_Detalle_V2.py actualizado para POI con nombres reales de columnas
 
 import streamlit as st
 import pandas as pd
@@ -86,10 +86,11 @@ if plan_sel == "PEI":
     df = df.merge(df_cruz[["unidad_id", "estado", "vigencia", "emitido"]], on="unidad_id", how="left")
 
 elif plan_sel == "POI":
-    df_cruz = df_poi.rename(columns={
-        df_poi.columns[0]: "unidad_id",
-        df_poi.columns[3]: "estado"
-    })
+    df_poi = df_poi.rename(columns=str.strip)
+    if "Id_U" not in df_poi.columns or "ESTADO_UI" not in df_poi.columns:
+        st.error("La hoja 'Registro POI' debe contener las columnas 'Id_U' y 'ESTADO_UI'")
+        st.stop()
+    df_cruz = df_poi.rename(columns={"Id_U": "unidad_id", "ESTADO_UI": "estado"})
     df_cruz["estado"] = normalizar_estado(df_cruz["estado"])
     df_cruz["emitido"] = df_cruz["estado"] == "Emitido"
     df = df.merge(df_cruz[["unidad_id", "estado", "emitido"]], on="unidad_id", how="left")
