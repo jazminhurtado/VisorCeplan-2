@@ -1,4 +1,4 @@
-# 01_Dashboard_Detalle.py – Selector PDC/PEI/POI reubicado al fondo del sidebar
+# 01_Dashboard_Detalle.py – Selector horizontal PDC/PEI/POI visible al final del sidebar
 
 import streamlit as st
 import pandas as pd
@@ -7,7 +7,7 @@ import plotly.express as px
 
 st.set_page_config(page_title="Dashboard Detalle", layout="wide")
 
-# Estilos personalizados para sidebar blanco completo y selector en fondo visible
+# Estilos personalizados para sidebar oscuro y texto blanco
 st.markdown("""
     <style>
         .stApp {
@@ -15,12 +15,12 @@ st.markdown("""
         }
         section[data-testid="stSidebar"] {
             background-color: #1B2B49;
-            color: white;
         }
-        .stSidebar div, .stSidebar span, .stSidebar label, .stSidebar h1, .stSidebar h2, .stSidebar h3, .stSidebar h4, .stSidebar h5, .stSidebar h6, .stSidebar p {
+        .stSidebar, .stSidebar div, .stSidebar span, .stSidebar label, .stSidebar h1, .stSidebar h2,
+        .stSidebar h3, .stSidebar h4, .stSidebar h5, .stSidebar h6, .stSidebar p {
             color: white !important;
         }
-        .css-17eq0hr, .css-1d391kg {
+        .css-17eq0hr, .css-1d391kg, .css-10trblm {
             color: white !important;
         }
         .block-container { padding-top: 2rem; }
@@ -56,7 +56,7 @@ with kcol2:
         st.rerun()
 
 # ---------------------------------------------
-# SIDEBAR – Filtros + Selector de Plan al FINAL del espacio lateral
+# SIDEBAR – Filtros laterales
 # ---------------------------------------------
 df_uni = load_data(URL_UNIVERSO, GID_UNIVERSO)
 niveles = df_uni["nivel"].dropna().unique().tolist()
@@ -68,16 +68,20 @@ sel_nivel = st.sidebar.multiselect("", niveles, default=niveles)
 st.sidebar.subheader("Departamento")
 sel_dep = st.sidebar.multiselect("", departamentos, default=departamentos)
 
-# Agregar espacio y sección visual al fondo de sidebar
+# ---------------------------------------------
+# BLOQUE AL FINAL DEL SIDEBAR – Selector Horizontal PDC/PEI/POI
+# ---------------------------------------------
 st.sidebar.markdown("""<hr style='border:1px solid white;'>""", unsafe_allow_html=True)
-st.sidebar.markdown("<div style='margin-top:80px'></div>", unsafe_allow_html=True)
-st.sidebar.markdown("### <center>Seleccionar Instrumento</center>", unsafe_allow_html=True)
-col1, col2, col3 = st.sidebar.columns(3)
+st.sidebar.markdown("<br><br>", unsafe_allow_html=True)
+
+st.sidebar.markdown("<h4 style='text-align:center;'>Seleccionar Instrumento</h4>", unsafe_allow_html=True)
+selector_cols = st.sidebar.columns([1,1,1])
+
 if 'plan' not in st.session_state:
     st.session_state.plan = "PDC"
-if col1.button("PDC"): st.session_state.plan = "PDC"
-if col2.button("PEI"): st.session_state.plan = "PEI"
-if col3.button("POI"): st.session_state.plan = "POI"
+if selector_cols[0].button("PDC"): st.session_state.plan = "PDC"
+if selector_cols[1].button("PEI"): st.session_state.plan = "PEI"
+if selector_cols[2].button("POI"): st.session_state.plan = "POI"
 
 plan = st.session_state.plan
 
@@ -91,7 +95,7 @@ filtro = (
 base = df_uni[filtro].copy()
 
 # ---------------------------------------------
-# SOLO BLOQUE PDC ACTIVO
+# BLOQUE PDC – Activo
 # ---------------------------------------------
 if plan == "PDC":
     df_pdc = load_data(URL_PDC_EDIT, GID_PDC_ESTADO)
@@ -134,6 +138,4 @@ if plan == "PDC":
     df_tabla["sin_pdc"] = df_tabla["total_entidades"] - df_tabla["con_pdc"]
     st.dataframe(df_tabla, use_container_width=True)
 
-# BLOQUES PEI y POI por desarrollar
-
-# FIN
+# PEI y POI por construir
