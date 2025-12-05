@@ -1,28 +1,44 @@
-# Dashboard_Detalle_V2.py
-# Detalle por instrumento PEI / POI / PDC con filtros, KPIs y tabla
+# Dashboard_Detalle_V2.py actualizado con URL fallback seguro
 
 import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import urllib.error
 
 st.set_page_config(page_title="Dashboard Detalle V2", layout="wide")
 
 # ---------------------------------
 # URLS y GIDs
 # ---------------------------------
-URL_BASE = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ"
+FILE_ID = "1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ"
 GID_UNIVERSO = "1288416966"
 GID_IT_PEI = "1704733507"
 GID_REGISTRO_POI = "1447296183"
 GID_ESTADO_PDC = "1778012106"
 
 # ---------------------------------
-# Funciones carga
+# Funciones carga seguras
 # ---------------------------------
+def construir_urls_csv(file_id, gid):
+    return [
+        f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=csv&gid={gid}",
+        f"https://docs.google.com/spreadsheets/d/{file_id}/pub?gid={gid}&single=true&output=csv",
+        f"https://docs.google.com/spreadsheets/d/{file_id}/gviz/tq?tqx=out:csv&gid={gid}"
+    ]
+
 def leer_hoja(gid):
-    url = f"{URL_BASE}/export?format=csv&gid={gid}"
-    return pd.read_csv(url, dtype=str)
+    errores = []
+    for url in construir_urls_csv(FILE_ID, gid):
+        try:
+            return pd.read_csv(url, dtype=str)
+        except urllib.error.HTTPError as e:
+            errores.append(f"{url} -> {e}")
+        except Exception as e:
+            errores.append(f"{url} -> {e}")
+    st.error("No se pudo cargar la hoja de Google Sheets. Asegúrate de que esté publicada como CSV.")
+    st.code("\n".join(errores))
+    st.stop()
 
 @st.cache_data(ttl=600)
 def cargar_datos():
