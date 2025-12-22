@@ -641,10 +641,20 @@ def render_map(plan: str):
         return
 
 
+# Datos de ejemplo solo para Callao (puedes reemplazarlo con tus datos reales)
+df = pd.DataFrame({
+    "departamento": ["CALLAO"],
+    "avance": [85],
+    "formulados": [11],
+    "pendientes": [2],
+    "total": [13],
+    "ubigeo": ["07"]
+})
 
+# GeoJSON simulado de Callao (en tu código real usa el archivo peru_geojson)
+peru_geojson = "https://raw.githubusercontent.com/johan/world.geo.json/master/countries/PER.geo.json"
 
-# ... tu código anterior de carga de datos y generación del mapa
-
+# Crear el mapa
 fig_map = px.choropleth(
     df,
     geojson=peru_geojson,
@@ -679,7 +689,10 @@ fig_map.update_layout(
     height=500
 )
 
+# Mostrar en Streamlit
 st.plotly_chart(fig_map, use_container_width=True)
+
+
 
 
 
