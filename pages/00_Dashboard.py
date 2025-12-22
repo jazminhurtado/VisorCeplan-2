@@ -656,6 +656,8 @@ def render_map(plan: str):
 ✅ <b>Formulados:</b> %{customdata[2]}<br>
 ⏳ <b>Pendientes:</b> %{customdata[3]}<br>
 📊 <b>Total:</b> %{customdata[4]}<br><extra></extra>"""
+    selected={'marker': {'opacity': 1}},
+    unselected={'marker': {'opacity': 1}}    
     )
 
     fig_map.update_geos(fitbounds="locations", visible=False) 
