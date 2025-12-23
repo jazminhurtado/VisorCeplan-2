@@ -1,3 +1,4 @@
+# pages/00_Dashboard.py
 # ------------------------------------------
 # Dashboard CEPLAN con KPIs, Gráficos y Mapa coroplético conectado   
 # ------------------------------------------
@@ -87,6 +88,17 @@ GID_DATA_UES     = "1259332810"   # Data_UEs
 GID_IT_PEI       = "1704733507"   # IT PEI
 GID_REGISTRO_POI = "1447296183"    # Registro POI
 GID_RESUMEN_NAC  = "1288416966"   # hoja resumen
+
+# ------------------------------------------
+# Dashboard CEPLAN con KPIs, Gráficos y Mapa coroplético conectado   
+# ------------------------------------------
+import json, unicodedata
+from pathlib import Path
+import pandas as pd
+import streamlit as st
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit.components.v1 as components
 
 # --------------------------------------
 # CONFIGURACIÓN GENERAL
@@ -217,6 +229,13 @@ def get_poi_nivel_gobierno():
         "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
         "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
     }
+
+
+
+
+
+
+
 
 def _edit_to_csv(file_edit: str, gid: str) -> str:
     file_id = file_edit.split("/d/")[1].split("/")[0]
@@ -574,14 +593,12 @@ def load_resumen_departamental():
     data = {
         "departamento": departamentos,
         "formulados": [60, 80, 45, 75, 30, 50, 85, 40, 55, 70, 90, 100, 35, 65, 95, 55, 60, 45, 70, 80, 90, 50, 60, 70, 80],
-        "pendientes": [40, 20, 55, 25, 70, 50, 15, 60, 45, 30, 10, 0, 65, 35, 5, 45, 40, 55, 30, 20, 10, 50, 40, 30, 20]
+        "pendientes": [40, 20, 55, 25, 70, 50, 15, 60, 45, 30, 10, 0, 65, 35, 5, 45, 40, 55, 30, 20, 10, 50, 40, 30, 20, 10]
     }
     df = pd.DataFrame(data)
     df["total"] = df["formulados"] + df["pendientes"]
     df["avance"] = round((df["formulados"] / df["total"]) * 100, 1)
     return {"PEI": df}
-
-
 
 def render_map(plan: str):
     data_por_plan = load_resumen_departamental()
@@ -625,8 +642,6 @@ def render_map(plan: str):
         showlegend=True
     )
 
-
-    
     fig_map.update_geos(fitbounds="locations", visible=False)
 
     fig_map.update_layout(
@@ -647,8 +662,6 @@ def render_map(plan: str):
         legend_itemclick=False,
         legend_itemdoubleclick=False
     )
-
-   
 
     with st.container():
         st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
@@ -671,6 +684,7 @@ def render_map(plan: str):
 
 st.radio("Selecciona plan para mapa:", options=["PEI", "POI", "PDC"], index=0, horizontal=True, key="plan_sel")
 render_map(st.session_state["plan_sel"])
+
         
 
 # Botón funcional fijado arriba a la izquierda
@@ -697,7 +711,6 @@ with refresh_placeholder.container():
 if btn_clicked:
     st.cache_data.clear()
     st.rerun()
-
 
 
 @st.cache_data(ttl=600, show_spinner="Leyendo Google Sheets…")
@@ -800,7 +813,6 @@ def cargar_datos_dashboard():
         "POI": _extract_totals(df, "POI"),
     }
 
-
 # -----------------------------
 # Carga de datos desde hoja Resumen con detección robusta
 # -----------------------------
@@ -848,11 +860,6 @@ with c1:
             st.session_state["hover_pei"] = False  # Asegura que PEI se apague
 
 
-
-
-
-
-
 with c2:
     if "hover_pei" not in st.session_state:
         st.session_state["hover_pei"] = False
@@ -876,9 +883,6 @@ with c2:
         if submitted:
             st.session_state["hover_pei"] = True
             st.session_state["hover_pdc"] = False  # Asegura que PDC se apague
-
-
-
 
 with c3:
     if "hover_poi" not in st.session_state:
@@ -904,9 +908,6 @@ with c3:
             st.session_state["hover_poi"] = True
             st.session_state["hover_pei"] = False
             st.session_state["hover_pdc"] = False
-
-
-
 
 
 # Mapa y Gráficos
@@ -962,10 +963,7 @@ with col2:
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
 
-
-
-    
-
+ 
     else:
         resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
         resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
