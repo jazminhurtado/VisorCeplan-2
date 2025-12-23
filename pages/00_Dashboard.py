@@ -677,7 +677,9 @@ def render_map(plan: str):
             x=-0.05,
             bgcolor='rgba(255,255,255,0.8)',
             bordercolor='rgba(0,0,0,0.1)',
-            borderwidth=1
+            borderwidth=1,
+            itemclick="none",          # 🔥 CLAVE
+            itemdoubleclick="none"     # 🔥 CLAVE
         )
     )
 
