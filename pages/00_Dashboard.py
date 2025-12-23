@@ -639,24 +639,27 @@ def render_map(plan: str):
         st.warning("⚠️ No se encontró el archivo GeoJSON.")
         return
 
+    # ✅ Usamos "departamento" para mantener los nombres
     fig_map = px.choropleth(
         df,
         geojson=gj,
         locations="departamento",
         featureidkey="properties.dep_key",
-        color="departamento",  # ✅ color por DEPARTAMENTO
+        color="departamento",  # Coloreamos por nombre de departamento
         color_discrete_map={row["departamento"]: row["color"] for _, row in df.iterrows()},
         custom_data=["departamento", "avance", "formulados", "pendientes", "total"]
     )
 
-    # Tooltip y desactiva clics en leyenda
+    # ✅ Forzamos que NO se pueda ocultar al hacer clic
     fig_map.update_traces(
+        selector=dict(type='choropleth'),
         hovertemplate="""<b>📍 %{customdata[0]}</b><br><br>
 📈 <b>Avance:</b> %{customdata[1]}%<br>
 ✅ <b>Formulados:</b> %{customdata[2]}<br>
 ⏳ <b>Pendientes:</b> %{customdata[3]}<br>
 📊 <b>Total:</b> %{customdata[4]}<br><extra></extra>""",
-        showlegend=False  # ✅ Oculta leyenda que se podía clicar
+        showlegend=True,
+        legendgroup=""
     )
 
     fig_map.update_geos(fitbounds="locations", visible=False)
@@ -665,12 +668,22 @@ def render_map(plan: str):
         height=700,
         font=dict(size=16),
         margin=dict(l=0, r=0, t=10, b=0),
-        showlegend=False  # ✅ También desde layout
+        showlegend=True,
+        legend=dict(
+            orientation="v",
+            yanchor="top",
+            y=0.98,
+            xanchor="left",
+            x=-0.05,
+            bgcolor='rgba(255,255,255,0.8)',
+            bordercolor='rgba(0,0,0,0.1)',
+            borderwidth=1
+        )
     )
 
     st.plotly_chart(fig_map, use_container_width=True)
 
-    # Leyenda visual fija
+    # Leyenda fija de colores de avance
     st.markdown("""<div style='display: flex; gap: 30px; margin-top: -150px; font-size: 14px;'>
         <div style='display: flex; align-items: center;'>
             <div style='width: 18px; height: 18px; background-color: #CC3333; border-radius: 4px; margin-right: 8px;'></div>
