@@ -616,6 +616,7 @@ def load_resumen_departamental():
 
     return data
 
+
 def render_map(plan: str):
     data_por_plan = load_resumen_departamental()
     if plan not in data_por_plan:
@@ -626,11 +627,11 @@ def render_map(plan: str):
 
     def asignar_color(pct):
         if pct < 50:
-            return "#cc3333"  # rojo
+            return "#cc3333"
         elif pct < 80:
-            return "#F1C40F"  # amarillo
+            return "#F1C40F"
         else:
-            return "#308446"  # verde
+            return "#308446"
 
     df["color"] = df["avance"].apply(asignar_color)
 
@@ -644,12 +645,11 @@ def render_map(plan: str):
         geojson=gj,
         locations="departamento",
         featureidkey="properties.dep_key",
-        color="departamento",  # clave para que aparezcan nombres
+        color="departamento",
         color_discrete_map={row["departamento"]: row["color"] for _, row in df.iterrows()},
         custom_data=["departamento", "avance", "formulados", "pendientes", "total"]
     )
 
-    # Tooltip y control de clic en leyenda
     fig_map.update_traces(
         hovertemplate="""<b>📍 %{customdata[0]}</b><br><br>
 📈 <b>Avance:</b> %{customdata[1]}%<br>
@@ -664,42 +664,28 @@ def render_map(plan: str):
         height=700,
         font=dict(size=16),
         margin=dict(l=0, r=0, t=10, b=0),
-        legend=dict(
-            orientation="v",
-            yanchor="top",
-            y=0.98,
-            xanchor="left",
-            x=-0.05,
-            bgcolor='rgba(255,255,255,0.8)',
-            bordercolor='rgba(0,0,0,0.1)',
-            borderwidth=1
-        )  
-        itemclick="none",         # 👈 desactiva el clic
-        itemdoubleclick="none"    # 👈 desactiva doble clic
-        
+        showlegend=False
     )
 
-    st.plotly_chart(fig_map, use_container_width=True)
-
-    st.markdown("""<div style='display: flex; gap: 30px; margin-top: -150px; font-size: 14px;'>
-        <div style='display: flex; align-items: center;'>
-            <div style='width: 18px; height: 18px; background-color: #CC3333; border-radius: 4px; margin-right: 8px;'></div>
-            <span><strong>&lt; 50%</strong> (Bajo)</span>
-        </div>
-        <div style='display: flex; align-items: center;'>
-            <div style='width: 18px; height: 18px; background-color: #F1C40F; border-radius: 4px; margin-right: 8px;'></div>
-            <span><strong>50% - 79%</strong> (Medio)</span>
-        </div>
-        <div style='display: flex; align-items: center;'>
-            <div style='width: 18px; height: 18px; background-color: #308446; border-radius: 4px; margin-right: 8px;'></div>
-            <span><strong>≥ 80%</strong> (Alto)</span>
-        </div>
-    </div>""", unsafe_allow_html=True)
-
-
+    with st.container():
+        st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+        st.plotly_chart(fig_map, use_container_width=True)
+        st.markdown("""<div style='display: flex; justify-content: center; gap: 30px; margin-top: -20px; font-size: 14px;'>
+            <div style='display: flex; align-items: center;'>
+                <div style='width: 18px; height: 18px; background-color: #CC3333; border-radius: 4px; margin-right: 8px;'></div>
+                <span><strong>&lt; 50%</strong> (Bajo)</span>
+            </div>
+            <div style='display: flex; align-items: center;'>
+                <div style='width: 18px; height: 18px; background-color: #F1C40F; border-radius: 4px; margin-right: 8px;'></div>
+                <span><strong>50% - 79%</strong> (Medio)</span>
+            </div>
+            <div style='display: flex; align-items: center;'>
+                <div style='width: 18px; height: 18px; background-color: #308446; border-radius: 4px; margin-right: 8px;'></div>
+                <span><strong>≥ 80%</strong> (Alto)</span>
+            </div>
+        </div>""", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
         
-
-
 
 # Botón funcional fijado arriba a la izquierda
 refresh_placeholder = st.empty()
