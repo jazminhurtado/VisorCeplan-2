@@ -624,23 +624,15 @@ def render_map(plan: str):
 
     df = data_por_plan[plan].copy()
 
-    # Clasificar por nivel de avance (categoría)
-    def asignar_nivel(pct):
+    def asignar_color(pct):
         if pct < 50:
-            return "Bajo"
+            return "#cc3333"
         elif pct < 80:
-            return "Medio"
+            return "#F1C40F"
         else:
-            return "Alto"
+            return "#308446"
 
-    df["nivel_color"] = df["avance"].apply(asignar_nivel)
-
-    # Colores fijos por nivel
-    COLOR_MAP = {
-        "Bajo": "#cc3333",
-        "Medio": "#F1C40F",
-        "Alto": "#308446"
-    }
+    df["color"] = df["avance"].apply(asignar_color)
 
     gj = load_geojson()
     if not gj:
@@ -652,18 +644,19 @@ def render_map(plan: str):
         geojson=gj,
         locations="departamento",
         featureidkey="properties.dep_key",
-        color="nivel_color",  # Usamos la nueva columna como categoría
-        color_discrete_map=COLOR_MAP,
+        color="departamento",  # ✅ color por DEPARTAMENTO
+        color_discrete_map={row["departamento"]: row["color"] for _, row in df.iterrows()},
         custom_data=["departamento", "avance", "formulados", "pendientes", "total"]
     )
 
-    # Tooltip
+    # Tooltip y desactiva clics en leyenda
     fig_map.update_traces(
         hovertemplate="""<b>📍 %{customdata[0]}</b><br><br>
 📈 <b>Avance:</b> %{customdata[1]}%<br>
 ✅ <b>Formulados:</b> %{customdata[2]}<br>
 ⏳ <b>Pendientes:</b> %{customdata[3]}<br>
-📊 <b>Total:</b> %{customdata[4]}<br><extra></extra>"""
+📊 <b>Total:</b> %{customdata[4]}<br><extra></extra>""",
+        showlegend=False  # ✅ Oculta leyenda que se podía clicar
     )
 
     fig_map.update_geos(fitbounds="locations", visible=False)
@@ -672,21 +665,12 @@ def render_map(plan: str):
         height=700,
         font=dict(size=16),
         margin=dict(l=0, r=0, t=10, b=0),
-        legend=dict(
-            orientation="v",
-            yanchor="top",
-            y=0.98,
-            xanchor="left",
-            x=-0.05,
-            bgcolor='rgba(255,255,255,0.8)',
-            bordercolor='rgba(0,0,0,0.1)',
-            borderwidth=1
-        )
+        showlegend=False  # ✅ También desde layout
     )
 
     st.plotly_chart(fig_map, use_container_width=True)
 
-    # Leyenda de colores personalizada (como ya tenías)
+    # Leyenda visual fija
     st.markdown("""<div style='display: flex; gap: 30px; margin-top: -150px; font-size: 14px;'>
         <div style='display: flex; align-items: center;'>
             <div style='width: 18px; height: 18px; background-color: #CC3333; border-radius: 4px; margin-right: 8px;'></div>
