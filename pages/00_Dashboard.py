@@ -626,11 +626,11 @@ def render_map(plan: str):
 
     def asignar_color(pct):
         if pct < 50:
-            return "#cc3333"
+            return "#cc3333"  # rojo
         elif pct < 80:
-            return "#F1C40F"
+            return "#F1C40F"  # amarillo
         else:
-            return "#308446"
+            return "#308446"  # verde
 
     df["color"] = df["avance"].apply(asignar_color)
 
@@ -660,25 +660,40 @@ def render_map(plan: str):
 
     fig_map.update_geos(fitbounds="locations", visible=False)
     fig_map.update_layout(
-        height=700,
+        height=750,
         font=dict(size=16),
         margin=dict(l=0, r=0, t=10, b=0),
         showlegend=False
     )
 
-    # 💡 DISEÑO: Lista de departamentos a la izquierda y mapa a la derecha
-    col_izq, col_der = st.columns([1, 2])  # Ajusta el balance
+    # 🔄 Diseño 2 columnas: nombres con color a la izquierda, mapa a la derecha
+    col_izq, col_der = st.columns([1, 2])
 
     with col_izq:
         st.markdown("#### Departamentos:")
-        st.markdown("<ul style='line-height: 1.6;'>", unsafe_allow_html=True)
-        for dep in df["departamento"].tolist():
-            st.markdown(f"<li>{dep.title()}</li>", unsafe_allow_html=True)
+        st.markdown("<div style='display: flex; flex-direction: column; gap: 6px;'>", unsafe_allow_html=True)
+        for _, row in df.iterrows():
+            st.markdown(f"""
+            <div style='
+                display: flex;
+                align-items: center;
+                background-color: {row["color"]};
+                color: white;
+                padding: 6px 10px;
+                border-radius: 6px;
+                font-size: 15px;
+                font-weight: 500;
+                width: 100%;
+            '>
+                {row["departamento"].title()}
+            </div>
+            """, unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     with col_der:
         st.plotly_chart(fig_map, use_container_width=True)
 
-    # Leyenda personalizada
+    # Leyenda personalizada fija
     st.markdown("""<div style='display: flex; gap: 30px; margin-top: 20px; font-size: 14px;'>
         <div style='display: flex; align-items: center;'>
             <div style='width: 18px; height: 18px; background-color: #CC3333; border-radius: 4px; margin-right: 8px;'></div>
