@@ -616,6 +616,7 @@ def load_resumen_departamental():
 
     return data
 
+
 def render_map(plan: str):
     data_por_plan = load_resumen_departamental()
     if plan not in data_por_plan:
@@ -626,11 +627,11 @@ def render_map(plan: str):
 
     def asignar_color(pct):
         if pct < 50:
-            return "#cc3333"  # rojo
+            return "#cc3333"
         elif pct < 80:
-            return "#F1C40F"  # amarillo
+            return "#F1C40F"
         else:
-            return "#308446"  # verde
+            return "#308446"
 
     df["color"] = df["avance"].apply(asignar_color)
 
@@ -654,47 +655,30 @@ def render_map(plan: str):
 📈 <b>Avance:</b> %{customdata[1]}%<br>
 ✅ <b>Formulados:</b> %{customdata[2]}<br>
 ⏳ <b>Pendientes:</b> %{customdata[3]}<br>
-📊 <b>Total:</b> %{customdata[4]}<br><extra></extra>""",
-        showlegend=False
+📊 <b>Total:</b> %{customdata[4]}<br><extra></extra>"""
     )
 
-    fig_map.update_geos(fitbounds="locations", visible=False)
+    fig_map.update_geos(fitbounds="locations", visible=False) 
     fig_map.update_layout(
-        height=750,
-        font=dict(size=16),
-        margin=dict(l=0, r=0, t=10, b=0),
-        showlegend=False
+    height=700,
+    font=dict(size=16),
+    margin=dict(l=0, r=0, t=10, b=0),
+    legend=dict(
+        orientation="v",
+        yanchor="top",
+        y=0.98,
+        xanchor="left",   # <--- este es CLAVE
+        x=-0.05,          # <--- esto lo empuja hacia la izquierda
+        bgcolor='rgba(255,255,255,0.8)',
+        bordercolor='rgba(0,0,0,0.1)',
+        borderwidth=1
     )
+)
 
-    # 🔄 Diseño 2 columnas: nombres con color a la izquierda, mapa a la derecha
-    col_izq, col_der = st.columns([1, 2])
 
-    with col_izq:
-        st.markdown("#### Departamentos:")
-        st.markdown("<div style='display: flex; flex-direction: column; gap: 6px;'>", unsafe_allow_html=True)
-        for _, row in df.iterrows():
-            st.markdown(f"""
-            <div style='
-                display: flex;
-                align-items: center;
-                background-color: {row["color"]};
-                color: white;
-                padding: 6px 10px;
-                border-radius: 6px;
-                font-size: 15px;
-                font-weight: 500;
-                width: 100%;
-            '>
-                {row["departamento"].title()}
-            </div>
-            """, unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.plotly_chart(fig_map, use_container_width=True)
 
-    with col_der:
-        st.plotly_chart(fig_map, use_container_width=True)
-
-    # Leyenda personalizada fija
-    st.markdown("""<div style='display: flex; gap: 30px; margin-top: 20px; font-size: 14px;'>
+    st.markdown("""<div style='display: flex; gap: 30px; margin-top: -150px; font-size: 14px;'>
         <div style='display: flex; align-items: center;'>
             <div style='width: 18px; height: 18px; background-color: #CC3333; border-radius: 4px; margin-right: 8px;'></div>
             <span><strong>&lt; 50%</strong> (Bajo)</span>
@@ -708,15 +692,7 @@ def render_map(plan: str):
             <span><strong>≥ 80%</strong> (Alto)</span>
         </div>
     </div>""", unsafe_allow_html=True)
-
-
-
         
-
-
-
-
-
 
 # Botón funcional fijado arriba a la izquierda
 refresh_placeholder = st.empty()
