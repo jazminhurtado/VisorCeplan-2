@@ -1,4 +1,3 @@
-# pages/00_Dashboard.py
 # ------------------------------------------
 # Dashboard CEPLAN con KPIs, Gráficos y Mapa coroplético conectado   
 # ------------------------------------------
@@ -88,17 +87,6 @@ GID_DATA_UES     = "1259332810"   # Data_UEs
 GID_IT_PEI       = "1704733507"   # IT PEI
 GID_REGISTRO_POI = "1447296183"    # Registro POI
 GID_RESUMEN_NAC  = "1288416966"   # hoja resumen
-
-# ------------------------------------------
-# Dashboard CEPLAN con KPIs, Gráficos y Mapa coroplético conectado   
-# ------------------------------------------
-import json, unicodedata
-from pathlib import Path
-import pandas as pd
-import streamlit as st
-import plotly.express as px
-import plotly.graph_objects as go
-import streamlit.components.v1 as components
 
 # --------------------------------------
 # CONFIGURACIÓN GENERAL
@@ -229,13 +217,6 @@ def get_poi_nivel_gobierno():
         "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
         "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
     }
-
-
-
-
-
-
-
 
 def _edit_to_csv(file_edit: str, gid: str) -> str:
     file_id = file_edit.split("/d/")[1].split("/")[0]
@@ -592,8 +573,8 @@ def load_resumen_departamental():
                      "PIURA", "PUNO", "SAN MARTIN", "TACNA", "TUMBES", "UCAYALI"]
     data = {
         "departamento": departamentos,
-        "formulados": [60, 80, 45, 75, 30, 50, 85, 40, 55, 70, 90, 100, 35, 65, 95, 55, 60, 45, 70, 80, 90, 50, 60, 70, 80, 90],
-        "pendientes": [40, 20, 55, 25, 70, 50, 15, 60, 45, 30, 10, 0, 65, 35, 5, 45, 40, 55, 30, 20, 10, 50, 40, 30, 20, 10]
+        "formulados": [60, 80, 45, 75, 30, 50, 85, 40, 55, 70, 90, 100, 35, 65, 95, 55, 60, 45, 70, 80, 90, 50, 60, 70, 80],
+        "pendientes": [40, 20, 55, 25, 70, 50, 15, 60, 45, 30, 10, 0, 65, 35, 5, 45, 40, 55, 30, 20, 10, 50, 40, 30, 20]
     }
     df = pd.DataFrame(data)
     df["total"] = df["formulados"] + df["pendientes"]
