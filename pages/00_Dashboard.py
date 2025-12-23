@@ -593,7 +593,7 @@ def load_resumen_departamental():
     data = {
         "departamento": departamentos,
         "formulados": [60, 80, 45, 75, 30, 50, 85, 40, 55, 70, 90, 100, 35, 65, 95, 55, 60, 45, 70, 80, 90, 50, 60, 70, 80],
-        "pendientes": [40, 20, 55, 25, 70, 50, 15, 60, 45, 30, 10, 0, 65, 35, 5, 45, 40, 55, 30, 20, 10, 50, 40, 30, 20]
+        "pendientes": [40, 20, 55, 25, 70, 50, 15, 60, 45, 30, 10, 0, 65, 35, 5, 45, 40, 55, 30, 20, 10, 50, 40, 30, 20, 10]
     }
     df = pd.DataFrame(data)
     df["total"] = df["formulados"] + df["pendientes"]
