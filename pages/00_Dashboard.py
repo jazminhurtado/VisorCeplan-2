@@ -626,11 +626,11 @@ def render_map(plan: str):
 
     def asignar_color(pct):
         if pct < 50:
-            return "#cc3333"
+            return "#cc3333"  # rojo
         elif pct < 80:
-            return "#F1C40F"
+            return "#F1C40F"  # amarillo
         else:
-            return "#308446"
+            return "#308446"  # verde
 
     df["color"] = df["avance"].apply(asignar_color)
 
@@ -639,53 +639,47 @@ def render_map(plan: str):
         st.warning("⚠️ No se encontró el archivo GeoJSON.")
         return
 
-    # ✅ Usamos "departamento" para mantener los nombres
     fig_map = px.choropleth(
         df,
         geojson=gj,
         locations="departamento",
         featureidkey="properties.dep_key",
-        color="departamento",  # Coloreamos por nombre de departamento
+        color="departamento",  # clave para que aparezcan nombres
         color_discrete_map={row["departamento"]: row["color"] for _, row in df.iterrows()},
         custom_data=["departamento", "avance", "formulados", "pendientes", "total"]
     )
 
-    # ✅ Forzamos que NO se pueda ocultar al hacer clic
+    # Tooltip y control de clic en leyenda
     fig_map.update_traces(
-        selector=dict(type='choropleth'),
         hovertemplate="""<b>📍 %{customdata[0]}</b><br><br>
 📈 <b>Avance:</b> %{customdata[1]}%<br>
 ✅ <b>Formulados:</b> %{customdata[2]}<br>
 ⏳ <b>Pendientes:</b> %{customdata[3]}<br>
-📊 <b>Total:</b> %{customdata[4]}<br><extra></extra>""",
-        showlegend=True,
-        legendgroup=""
+📊 <b>Total:</b> %{customdata[4]}<br><extra></extra>"""
     )
 
     fig_map.update_geos(fitbounds="locations", visible=False)
 
-  fig_map.update_layout(
-    height=700,
-    font=dict(size=16),
-    margin=dict(l=0, r=0, t=10, b=0),
-    legend=dict(
-        orientation="v",
-        yanchor="top",
-        y=0.98,
-        xanchor="left",
-        x=-0.05,
-        bgcolor='rgba(255,255,255,0.8)',
-        bordercolor='rgba(0,0,0,0.1)',
-        borderwidth=1,
-        itemclick="none",          # 🔥 CLAVE
-        itemdoubleclick="none"     # 🔥 CLAVE
+    fig_map.update_layout(
+        height=700,
+        font=dict(size=16),
+        margin=dict(l=0, r=0, t=10, b=0),
+        legend=dict(
+            orientation="v",
+            yanchor="top",
+            y=0.98,
+            xanchor="left",
+            x=-0.05,
+            bgcolor='rgba(255,255,255,0.8)',
+            bordercolor='rgba(0,0,0,0.1)',
+            borderwidth=1,
+            itemclick="none",         # 👈 desactiva el clic
+            itemdoubleclick="none"    # 👈 desactiva doble clic
+        )
     )
-)
-
 
     st.plotly_chart(fig_map, use_container_width=True)
 
-    # Leyenda fija de colores de avance
     st.markdown("""<div style='display: flex; gap: 30px; margin-top: -150px; font-size: 14px;'>
         <div style='display: flex; align-items: center;'>
             <div style='width: 18px; height: 18px; background-color: #CC3333; border-radius: 4px; margin-right: 8px;'></div>
@@ -703,6 +697,8 @@ def render_map(plan: str):
 
 
         
+
+
 
 # Botón funcional fijado arriba a la izquierda
 refresh_placeholder = st.empty()
