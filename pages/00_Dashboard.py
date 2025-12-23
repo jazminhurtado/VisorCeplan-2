@@ -672,10 +672,11 @@ def render_map(plan: str):
             x=-0.05,
             bgcolor='rgba(255,255,255,0.8)',
             bordercolor='rgba(0,0,0,0.1)',
-            borderwidth=1,
-            itemclick="none",         # 👈 desactiva el clic
-            itemdoubleclick="none"    # 👈 desactiva doble clic
-        )
+            borderwidth=1
+        )  
+        itemclick="none",         # 👈 desactiva el clic
+        itemdoubleclick="none"    # 👈 desactiva doble clic
+        
     )
 
     st.plotly_chart(fig_map, use_container_width=True)
