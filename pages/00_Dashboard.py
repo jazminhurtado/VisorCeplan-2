@@ -616,7 +616,6 @@ def load_resumen_departamental():
 
     return data
 
-
 def render_map(plan: str):
     data_por_plan = load_resumen_departamental()
     if plan not in data_por_plan:
@@ -625,15 +624,23 @@ def render_map(plan: str):
 
     df = data_por_plan[plan].copy()
 
-    def asignar_color(pct):
+    # Clasificar por nivel de avance (categoría)
+    def asignar_nivel(pct):
         if pct < 50:
-            return "#cc3333"
+            return "Bajo"
         elif pct < 80:
-            return "#F1C40F"
+            return "Medio"
         else:
-            return "#308446"
+            return "Alto"
 
-    df["color"] = df["avance"].apply(asignar_color)
+    df["nivel_color"] = df["avance"].apply(asignar_nivel)
+
+    # Colores fijos por nivel
+    COLOR_MAP = {
+        "Bajo": "#cc3333",
+        "Medio": "#F1C40F",
+        "Alto": "#308446"
+    }
 
     gj = load_geojson()
     if not gj:
@@ -645,11 +652,12 @@ def render_map(plan: str):
         geojson=gj,
         locations="departamento",
         featureidkey="properties.dep_key",
-        color="departamento",
-        color_discrete_map={row["departamento"]: row["color"] for _, row in df.iterrows()},
+        color="nivel_color",  # Usamos la nueva columna como categoría
+        color_discrete_map=COLOR_MAP,
         custom_data=["departamento", "avance", "formulados", "pendientes", "total"]
     )
 
+    # Tooltip
     fig_map.update_traces(
         hovertemplate="""<b>📍 %{customdata[0]}</b><br><br>
 📈 <b>Avance:</b> %{customdata[1]}%<br>
@@ -658,26 +666,27 @@ def render_map(plan: str):
 📊 <b>Total:</b> %{customdata[4]}<br><extra></extra>"""
     )
 
-    fig_map.update_geos(fitbounds="locations", visible=False) 
-    fig_map.update_layout(
-    height=700,
-    font=dict(size=16),
-    margin=dict(l=0, r=0, t=10, b=0),
-    legend=dict(
-        orientation="v",
-        yanchor="top",
-        y=0.98,
-        xanchor="left",   # <--- este es CLAVE
-        x=-0.05,          # <--- esto lo empuja hacia la izquierda
-        bgcolor='rgba(255,255,255,0.8)',
-        bordercolor='rgba(0,0,0,0.1)',
-        borderwidth=1
-    )
-)
+    fig_map.update_geos(fitbounds="locations", visible=False)
 
+    fig_map.update_layout(
+        height=700,
+        font=dict(size=16),
+        margin=dict(l=0, r=0, t=10, b=0),
+        legend=dict(
+            orientation="v",
+            yanchor="top",
+            y=0.98,
+            xanchor="left",
+            x=-0.05,
+            bgcolor='rgba(255,255,255,0.8)',
+            bordercolor='rgba(0,0,0,0.1)',
+            borderwidth=1
+        )
+    )
 
     st.plotly_chart(fig_map, use_container_width=True)
 
+    # Leyenda de colores personalizada (como ya tenías)
     st.markdown("""<div style='display: flex; gap: 30px; margin-top: -150px; font-size: 14px;'>
         <div style='display: flex; align-items: center;'>
             <div style='width: 18px; height: 18px; background-color: #CC3333; border-radius: 4px; margin-right: 8px;'></div>
@@ -692,6 +701,8 @@ def render_map(plan: str):
             <span><strong>≥ 80%</strong> (Alto)</span>
         </div>
     </div>""", unsafe_allow_html=True)
+
+
         
 
 # Botón funcional fijado arriba a la izquierda
