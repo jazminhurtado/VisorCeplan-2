@@ -649,7 +649,6 @@ fig_map = px.choropleth(
     color_discrete_map={row["departamento"]: row["color"] for _, row in df.iterrows()},
     custom_data=["departamento", "avance", "formulados", "pendientes", "total"]
 )
-
 fig_map.update_traces(
     hovertemplate="""<b>📍 %{customdata[0]}</b><br><br>
 📈 <b>Avance:</b> %{customdata[1]}%<br>
@@ -665,6 +664,7 @@ fig_map.update_layout(
     hovermode="closest",
     clickmode="none"
 )
+
 
 
 
