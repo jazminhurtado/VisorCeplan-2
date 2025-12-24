@@ -649,6 +649,9 @@ def render_map(plan: str):
         color_discrete_map={row["departamento"]: row["color"] for _, row in df.iterrows()},
         custom_data=["departamento", "avance", "formulados", "pendientes", "total"]
     )
+   
+    # ✅ OPCIÓN 1: desactivar completamente el click 
+    fig_map.update_layout(clickmode="none")
 
     fig_map.update_traces(
         hovertemplate="""<b>📍 %{customdata[0]}</b><br><br>
