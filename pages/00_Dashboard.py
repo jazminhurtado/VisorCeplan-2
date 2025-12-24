@@ -653,7 +653,7 @@ def render_map(plan: str):
     fig_map.update_layout(
     height=700,
     font=dict(size=16),
-    fig_map.update_layout(clickmode='none'),    
+    #fig_map.update_layout(clickmode='none'),    
     margin=dict(l=0, r=0, t=10, b=0),
     legend=dict(
         orientation="v",
