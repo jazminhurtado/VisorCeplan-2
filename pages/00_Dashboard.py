@@ -393,7 +393,7 @@ def load_poi_registro():
 
 @st.cache_data(ttl=24*3600)
 def load_geojson():
-    with open("data/departamentos_peru.geojson", "r", encoding="utf-8") as f:
+    with open("pages/peru_departa.geojson", "r", encoding="utf-8") as f:
         gj = json.load(f)
     return gj
 
