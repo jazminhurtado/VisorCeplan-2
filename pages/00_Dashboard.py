@@ -284,8 +284,6 @@ def load_resumen_departamental():
 
     return {"PEI": df}
 
-
-
 def render_map(plan: str):
     data_por_plan = load_resumen_departamental()
     if plan not in data_por_plan:
@@ -328,8 +326,6 @@ def render_map(plan: str):
         showlegend=True
     )
 
-
-    
     fig_map.update_geos(fitbounds="locations", visible=False)
 
     fig_map.update_layout(
@@ -351,8 +347,6 @@ def render_map(plan: str):
         legend_itemdoubleclick=False
     )
 
-   
-
     with st.container():
         st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
         st.plotly_chart(fig_map, use_container_width=True)
@@ -372,8 +366,10 @@ def render_map(plan: str):
         </div>""", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
+
 st.radio("Selecciona plan para mapa:", options=["PEI", "POI", "PDC"], index=0, horizontal=True, key="plan_sel")
 render_map(st.session_state["plan_sel"])
+
         
 
 # Botón funcional fijado arriba a la izquierda
@@ -400,7 +396,6 @@ with refresh_placeholder.container():
 if btn_clicked:
     st.cache_data.clear()
     st.rerun()
-
 
 
 @st.cache_data(ttl=600, show_spinner="Leyendo Google Sheets…")
@@ -503,7 +498,6 @@ def cargar_datos_dashboard():
         "POI": _extract_totals(df, "POI"),
     }
 
-
 # -----------------------------
 # Carga de datos desde hoja Resumen con detección robusta
 # -----------------------------
@@ -551,11 +545,6 @@ with c1:
             st.session_state["hover_pei"] = False  # Asegura que PEI se apague
 
 
-
-
-
-
-
 with c2:
     if "hover_pei" not in st.session_state:
         st.session_state["hover_pei"] = False
@@ -579,9 +568,6 @@ with c2:
         if submitted:
             st.session_state["hover_pei"] = True
             st.session_state["hover_pdc"] = False  # Asegura que PDC se apague
-
-
-
 
 with c3:
     if "hover_poi" not in st.session_state:
@@ -607,9 +593,6 @@ with c3:
             st.session_state["hover_poi"] = True
             st.session_state["hover_pei"] = False
             st.session_state["hover_pdc"] = False
-
-
-
 
 
 # Mapa y Gráficos
@@ -665,10 +648,7 @@ with col2:
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
 
-
-
-    
-
+ 
     else:
         resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
         resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
