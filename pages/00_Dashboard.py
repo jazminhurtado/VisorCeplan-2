@@ -393,9 +393,14 @@ def load_poi_registro():
 
 @st.cache_data(ttl=24*3600)
 def load_geojson():
-    with open("pages/peru_departa.geojson", "r", encoding="utf-8") as f:
-        gj = json.load(f)
-    return gj
+    for path in [Path("pages/peru_departa.geojson"), Path("peru_departa.geojson")]:
+        if path.exists():
+            gj = json.loads(path.read_text(encoding="utf-8"))
+            for ft in gj["features"]:
+                name = str(ft["properties"].get("NOMBDEP") or ft["properties"].get("name"))
+                ft["properties"]["dep_key"] = _norm(name)
+            return gj
+    return None
 
 # -----------------------------
 # KPI Cards
@@ -569,16 +574,39 @@ def resumen_grafico(titulo, formulados, pendientes,
 # -----------------------------
 @st.cache_data(ttl=3600)
 def load_resumen_departamental():
-    df_pei = pd.DataFrame({
-        "departamento": ["AMAZONAS", "ANCASH", "APURIMAC", "AREQUIPA", "AYACUCHO", "CAJAMARCA", "CALLAO", "CUSCO", "HUANCAVELICA", "HUANUCO", "ICA", "JUNIN", "LA LIBERTAD", "LAMBAYEQUE", "LIMA", "LORETO", "MADRE DE DIOS", "MOQUEGUA", "PASCO", "PIURA", "PUNO", "SAN MARTIN", "TACNA", "TUMBES", "UCAYALI"],
-        "avance": [45, 60, 72, 35, 70, 82, 85, 65, 75, 68, 88, 43, 84, 80, 74, 63, 47, 59, 66, 90, 44, 78, 49, 55, 62],
-        "formulados": [100]*25,
-        "pendientes": [200]*25,
-        "total": [300]*25
-    })
-    df_poi = df_pei.copy()
-    df_pdc = df_pei.copy()
-    return {"PEI": df_pei, "POI": df_poi, "PDC": df_pdc}
+    # Datos por departamento para los 3 planes
+    data = {
+        "PEI": pd.DataFrame({
+            "departamento": [
+                "AMAZONAS", "ANCASH", "APURIMAC", "AREQUIPA", "AYACUCHO", "CAJAMARCA",
+                "CALLAO", "CUSCO", "HUANCAVELICA", "HUANUCO", "ICA", "JUNIN",
+                "LA LIBERTAD", "LAMBAYEQUE", "LIMA", "LORETO", "MADRE DE DIOS", "MOQUEGUA", "PASCO", "PIURA",
+                "PUNO", "SAN MARTIN", "TACNA", "TUMBES", "UCAYALI"
+            ],
+            "formulados": [38, 88, 48, 44, 68, 94, 13, 90, 53, 58, 30, 45, 88, 38, 220, 73, 10, 30, 14, 77, 57, 72, 55, 2, 2],
+            "pendientes": [49, 82, 40, 67, 59, 39, 0, 30, 52, 30, 15, 45, 17, 7, 63, 56, 3, 23, 14, 10, 8, 33, 25, 6, 2]
+        }),
+        "POI": pd.DataFrame({
+            "departamento": [
+                "AMAZONAS", "ANCASH", "APURIMAC", "AREQUIPA", "AYACUCHO", "CAJAMARCA",
+                "CALLAO", "CUSCO", "HUANCAVELICA", "HUANUCO", "ICA", "JUNIN",
+                "LA LIBERTAD", "LAMBAYEQUE", "LIMA", "LORETO", "MADRE DE DIOS", "MOQUEGUA", "PASCO", "PIURA",
+                "PUNO", "SAN MARTIN", "TACNA", "TUMBES", "UCAYALI"
+            ],
+            "formulados": [32, 84, 43, 45, 46, 79, 13, 90, 50, 55, 44, 67, 80, 81, 312, 73, 11, 20, 15, 52, 45, 46, 42, 12, 40],
+            "pendientes": [75, 126, 45, 96, 93, 88, 0, 69, 47, 48, 41, 97, 59, 29, 116, 56, 5, 20, 19, 44, 66, 57, 36, 13, 5]
+        }),
+        "PDC": pd.DataFrame({
+            "departamento": [
+                "AMAZONAS", "ANCASH", "APURIMAC", "AREQUIPA", "AYACUCHO", "CAJAMARCA",
+                "CALLAO", "CUSCO", "HUANCAVELICA", "HUANUCO", "ICA", "JUNIN",
+                "LA LIBERTAD", "LAMBAYEQUE", "LIMA", "LORETO", "MADRE DE DIOS", "MOQUEGUA", "PASCO", "PIURA",
+                "PUNO", "SAN MARTIN", "TACNA", "TUMBES", "UCAYALI"
+            ],
+            "formulados": [2, 10, 24, 6, 18, 7, 6, 20, 27, 27, 3, 13, 13, 5, 40, 2, 1, 2, 9, 2, 4, 3, 11, 2, 12],
+            "pendientes": [83, 157, 62, 105, 107, 126, 25, 97, 76, 78, 41, 112, 82, 34, 132, 52, 11, 9, 21, 62, 107, 76, 63, 6, 8]
+        })
+    }
 
     # Calcular totales y avance por fila
     for k, df in data.items():
@@ -841,11 +869,6 @@ with c1:
             st.session_state["hover_pei"] = False  # Asegura que PEI se apague
 
 
-
-
-
-
-
 with c2:
     if "hover_pei" not in st.session_state:
         st.session_state["hover_pei"] = False
@@ -869,9 +892,6 @@ with c2:
         if submitted:
             st.session_state["hover_pei"] = True
             st.session_state["hover_pdc"] = False  # Asegura que PDC se apague
-
-
-
 
 with c3:
     if "hover_poi" not in st.session_state:
@@ -897,9 +917,6 @@ with c3:
             st.session_state["hover_poi"] = True
             st.session_state["hover_pei"] = False
             st.session_state["hover_pdc"] = False
-
-
-
 
 
 # Mapa y Gráficos
@@ -955,10 +972,7 @@ with col2:
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
 
-
-
-    
-
+ 
     else:
         resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
         resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
