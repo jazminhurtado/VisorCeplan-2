@@ -9,7 +9,6 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit.components.v1 as components
-import json
 
 # --------------------------------------
 # CONFIGURACIÓN GENERAL
@@ -231,12 +230,6 @@ def get_poi_nivel_gobierno():
     }
 
 
-
-
-
-
-
-
 def _edit_to_csv(file_edit: str, gid: str) -> str:
     file_id = file_edit.split("/d/")[1].split("/")[0]
     return f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=csv&gid={gid}"
@@ -263,26 +256,357 @@ CODIGOS_A_DEPARTAMENTOS = {
 # -----------------------------
 # Loaders
 # -----------------------------
+@st.cache_data(ttl=600)
+def load_resumen():
+    url = _edit_to_csv(URL_PEI_POI_FILE_EDIT, GID_RESUMEN_NAC)
+    df = pd.read_csv(url, header=None).fillna("")
+    def buscar_valores(df, texto_clave, col_emitido_offset=1, col_pendiente_offset=2):
+        for i, row in df.iterrows():
+            for j, val in enumerate(row):
+                if str(val).strip().upper() == texto_clave.upper():
+                    try:
+                        emitido = int(str(df.iloc[i, j + col_emitido_offset]).replace(",", ""))
+                        pendiente = int(str(df.iloc[i, j + col_pendiente_offset]).replace(",", ""))
+                        return (emitido, pendiente)
+                    except:
+                        return (0, 0)
+        return (0, 0)
+    pdc = buscar_valores(df, "TOTAL", 1, 2)
+    pei = buscar_valores(df, "TOTAL", 2, 3)
+    poi = buscar_valores(df, "TOTAL UES*", 2, 3)
+    return {"PDC": pdc, "PEI": pei, "POI": poi}
+
+@st.cache_data(ttl=600)
+def load_universo():
+    url = _edit_to_csv(URL_PEI_POI_FILE_EDIT, GID_DATA_UES)
+    raw = pd.read_csv(url, header=None, dtype=str).fillna("")
+    header_row = None
+    for i, row in raw.iterrows():
+        joined = " ".join(str(x).upper() for x in row.tolist())
+        if "DEPART" in joined or "REGION" in joined:
+            header_row = i
+            break
+    if header_row is None:
+        st.error("❌ No encontré fila de encabezados en Data_UEs.")
+        st.stop()
+    df = pd.read_csv(url, header=header_row, dtype=str).fillna("")
+    col_dep = None
+    for c in df.columns:
+        if any(k in str(c).lower() for k in ["depa", "región", "region"]):
+            col_dep = c
+            break
+    if col_dep is None:
+        st.error(f"❌ No se encontró columna de departamento. Encabezados: {list(df.columns)}")
+        st.stop()
+
+    # Normalizar y mapear departamentos
+    df["departamento"] = df[col_dep].map(lambda x: CODIGOS_A_DEPARTAMENTOS.get(str(x).strip(), str(x)))
+    df["departamento"] = df["departamento"].map(_norm)
+
+    # Detectar unidad_id
+    if "unidad_id" not in df.columns:
+        for c in df.columns:
+            if "unidad" in str(c).lower() or "ue" in str(c).lower() or "codigo" in str(c).lower():
+                df.rename(columns={c: "unidad_id"}, inplace=True)
+                break
+    if "unidad_id" not in df.columns:
+        st.error(f"❌ No encontré columna unidad en Data_UEs. Encabezados: {list(df.columns)}")
+        st.stop()
+    df["unidad_id"] = df["unidad_id"].astype(str)
+    return df[["unidad_id","departamento"]]
+
+@st.cache_data(ttl=600)
+def load_it_pei():
+    url = _edit_to_csv(URL_PEI_POI_FILE_EDIT, GID_IT_PEI)
+    raw = pd.read_csv(url, header=None, dtype=str).fillna("")
+    header_row = None
+    for i, row in raw.iterrows():
+        joined = " ".join(str(x).lower() for x in row.tolist())
+        if "unidad" in joined and "estado" in joined:
+            header_row = i
+            break
+    if header_row is None:
+        st.error("❌ No encontré fila encabezado en IT PEI.")
+        st.stop()
+    df = pd.read_csv(url, header=header_row, dtype=str).fillna("")
+    col_uid = None
+    for c in df.columns:
+        if "unidad" in str(c).lower() or "ue" in str(c).lower() or "codigo" in str(c).lower():
+            col_uid = c
+            break
+    if col_uid is None:
+        st.error(f"❌ No encontré unidad en IT PEI. Encabezados: {list(df.columns)}")
+        st.stop()
+    df.rename(columns={col_uid: "unidad_id"}, inplace=True)
+    df["unidad_id"] = df["unidad_id"].astype(str)
+    col_estado = None
+    for c in df.columns:
+        if "estado" in str(c).lower():
+            col_estado = c
+            break
+    if col_estado is None:
+        st.error(f"❌ No encontré estado en IT PEI. Encabezados: {list(df.columns)}")
+        st.stop()
+    df["formulado_flag"] = df[col_estado].str.lower().str.contains("aprob|emit|ajust|public").astype(int)
+    return df[["unidad_id","formulado_flag"]]
+
+@st.cache_data(ttl=600)
+def load_poi_registro():
+    url = _edit_to_csv(URL_PEI_POI_FILE_EDIT, GID_REGISTRO_POI)
+    raw = pd.read_csv(url, header=None, dtype=str).fillna("")
+    header_row = None
+    for i, row in raw.iterrows():
+        joined = " ".join(str(x).lower() for x in row.tolist())
+        if "unidad" in joined and "estado" in joined:
+            header_row = i
+            break
+    if header_row is None:
+        st.error("❌ No encontré encabezado en POI.")
+        st.stop()
+    df = pd.read_csv(url, header=header_row, dtype=str).fillna("")
+    col_uid = None
+    for c in df.columns:
+        if "unidad" in str(c).lower() or "ue" in str(c).lower() or "codigo" in str(c).lower():
+            col_uid = c
+            break
+    if col_uid is None:
+        st.error(f"❌ No encontré unidad en POI. Encabezados: {list(df.columns)}")
+        st.stop()
+    df.rename(columns={col_uid: "unidad_id"}, inplace=True)
+    df["unidad_id"] = df["unidad_id"].astype(str)
+    col_estado = None
+    for c in df.columns:
+        if "estado" in str(c).lower():
+            col_estado = c
+            break
+    if col_estado is None:
+        st.error(f"❌ No encontré estado en POI. Encabezados: {list(df.columns)}")
+        st.stop()
+    df["emitido_flag"] = df[col_estado].str.lower().str.contains("aprob|ajust|consist|seguim").astype(int)
+    return df[["unidad_id","emitido_flag"]]
+
+@st.cache_data(ttl=24*3600)
+def load_geojson():
+    for path in [Path("pages/peru_departa.geojson"), Path("peru_departa.geojson")]:
+        if path.exists():
+            gj = json.loads(path.read_text(encoding="utf-8"))
+            for ft in gj["features"]:
+                name = str(ft["properties"].get("NOMBDEP") or ft["properties"].get("name"))
+                ft["properties"]["dep_key"] = _norm(name)
+            return gj
+    return None
+
+# -----------------------------
+# KPI Cards
+# -----------------------------
+def kpi_card(title, formulados, pendientes, unidad_label="entidades", nota=""):
+    total = formulados + pendientes
+    avance_pct = round((formulados / total) * 100) if total > 0 else 0
+
+    if avance_pct < 50:
+        color = "#cc3333"
+    elif avance_pct < 80:
+        color = "#F1C40F"
+    else:
+        color = "#308446"
+
+    # Texto del tooltip con más detalle
+    tooltip_text = (
+        f"<b>Formulados: {formulados:,} / {total:,} {unidad_label}</b><br>"
+        f"{nota}"
+    )
+
+    st.markdown(f"""
+    <style>
+        .kpi-card-hover {{
+            border-radius: 18px;
+            padding: 1.5rem;
+            background-color: #ffffff;
+            text-align: center;
+            transition: transform 0.2s ease-in-out;
+            box-shadow: 6px 6px 12px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+            min-height: 180px;
+            width: 280px; /* <--- Ajuste aquí */
+            max-width: 350px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }}
+        .kpi-card-hover:hover {{
+            transform: translateY(-6px);
+            box-shadow: 10px 10px 18px rgba(0,0,0,0.15); 
+        }}
+        .kpi-container {{
+            background-color:white;
+            padding:22px;
+            width:360px;
+            border-radius:16px;
+            text-align:center;
+            box-shadow: -5px -5px 14px rgba(192,192,192,0.7);
+            position: relative;
+        }}
+        .tooltip {{
+            position: relative;
+            display: inline-block;
+        }}
+        .tooltip .tooltiptext {{
+            visibility: hidden;
+            width: 240px;
+            background-color: #555;
+            color: #fff;
+            font-size: 14px;
+            text-align: left;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 130%;
+            left: 50%;
+            margin-left: -120px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            line-height: 1.4;
+        }}
+        .tooltip:hover .tooltiptext {{
+            visibility: visible;
+            opacity: 1;
+        }}
+    </style>
+
+    <div class="kpi-card-hover">
+        <div style="font-size:25px; font-weight:bold; color:black;">
+            {title}
+            <span class="tooltip"> 🔎
+                <span class="tooltiptext">{tooltip_text}</span>
+            </span>
+        </div>
+        <div style="font-size:45px; font-weight:bold; color:{color};">{avance_pct}%</div>
+        <div style="font-size:18px; color:{color};">Avance</div>
+        <div style="font-size:17px; color:#555;">
+            Total: {total:,} {unidad_label}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+# -----------------------------
+# Gráfico de barras
+# -----------------------------
+def resumen_grafico(titulo, formulados, pendientes,
+                    color_emitido="#308446", color_pendiente="#cc3333"):
+    total = formulados + pendientes
+    pct_form = round((formulados / total) * 100) if total > 0 else 0
+    pct_pend = 100 - pct_form
+
+    fig = go.Figure()
+
+    # Barras
+    fig.add_trace(go.Bar(
+        y=[titulo], x=[formulados],
+        name="Formulados",
+        orientation='h',
+        marker_color=color_emitido,
+        text=[f"{formulados:,}"],
+        textposition="inside",
+        insidetextanchor='start',
+        textfont=dict(size=14)
+    ))
+
+    fig.add_trace(go.Bar(
+        y=[titulo], x=[pendientes],
+        name="Pendientes",
+        orientation='h',
+        marker_color=color_pendiente,
+        text=[f"{pendientes:,}"],
+        textposition="inside",
+        insidetextanchor='end',
+        textfont=dict(size=14)
+    ))
+
+    # Añadir % como anotaciones arriba
+    fig.add_annotation(
+        x=formulados / 2,
+        y=0,
+        text=f"<b>{pct_form}%</b> Formulados",
+        showarrow=False,
+        yshift=35,
+        font=dict(color=color_emitido, size=15)
+    )
+    fig.add_annotation(
+        x=formulados + (pendientes / 2),
+        y=0,
+        text=f"<b>{pct_pend}%</b> Pendientes",
+        showarrow=False,
+        yshift=35,
+        font=dict(color=color_pendiente, size=15)
+    )
+
+    fig.update_layout(
+        title=dict(
+            text=f"<b>{titulo}</b>",
+            x=0.5,
+            font=dict(size=16, color="darkred")
+        ),
+        barmode='stack',
+        height=210,
+        margin=dict(l=20, r=20, t=60, b=30),
+        showlegend=True,
+        xaxis=dict(title='', showgrid=False),
+        yaxis=dict(title='', showticklabels=False)
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+
+# -----------------------------
+# Mapa
+# -----------------------------
 @st.cache_data(ttl=3600)
 def load_resumen_departamental():
-    departamentos = [
-        "AMAZONAS", "ANCASH", "APURIMAC", "AREQUIPA", "AYACUCHO", "CAJAMARCA",
-        "CALLAO", "CUSCO", "HUANCAVELICA", "HUANUCO", "ICA", "JUNIN", "LA LIBERTAD",
-        "LAMBAYEQUE", "LIMA", "LORETO", "MADRE DE DIOS", "MOQUEGUA", "PASCO",
-        "PIURA", "PUNO", "SAN MARTIN", "TACNA", "TUMBES", "UCAYALI"
-    ]
-
+    # Datos por departamento para los 3 planes
     data = {
-        "departamento": departamentos,
-        "formulados": [60, 80, 45, 75, 30, 50, 85, 40, 55, 70, 90, 100, 35, 65, 95, 55, 60, 45, 70, 80, 90, 50, 60, 70, 80],
-        "pendientes": [40, 20, 55, 25, 70, 50, 15, 60, 45, 30, 10, 0, 65, 35, 5, 45, 40, 55, 30, 20, 10, 50, 40, 30, 20]
+        "PEI": pd.DataFrame({
+            "departamento": [
+                "AMAZONAS", "ANCASH", "APURIMAC", "AREQUIPA", "AYACUCHO", "CAJAMARCA",
+                "CALLAO", "CUSCO", "HUANCAVELICA", "HUANUCO", "ICA", "JUNIN",
+                "LA LIBERTAD", "LAMBAYEQUE", "LIMA", "LORETO", "MADRE DE DIOS", "MOQUEGUA", "PASCO", "PIURA",
+                "PUNO", "SAN MARTIN", "TACNA", "TUMBES", "UCAYALI"
+            ],
+            "formulados": [38, 88, 48, 44, 68, 94, 13, 90, 53, 58, 30, 45, 88, 38, 220, 73, 10, 30, 14, 77, 57, 72, 55, 2, 2],
+            "pendientes": [49, 82, 40, 67, 59, 39, 0, 30, 52, 30, 15, 45, 17, 7, 63, 56, 3, 23, 14, 10, 8, 33, 25, 6, 2]
+        }),
+        "POI": pd.DataFrame({
+            "departamento": [
+                "AMAZONAS", "ANCASH", "APURIMAC", "AREQUIPA", "AYACUCHO", "CAJAMARCA",
+                "CALLAO", "CUSCO", "HUANCAVELICA", "HUANUCO", "ICA", "JUNIN",
+                "LA LIBERTAD", "LAMBAYEQUE", "LIMA", "LORETO", "MADRE DE DIOS", "MOQUEGUA", "PASCO", "PIURA",
+                "PUNO", "SAN MARTIN", "TACNA", "TUMBES", "UCAYALI"
+            ],
+            "formulados": [32, 84, 43, 45, 46, 79, 13, 90, 50, 55, 44, 67, 80, 81, 312, 73, 11, 20, 15, 52, 45, 46, 42, 12, 40],
+            "pendientes": [75, 126, 45, 96, 93, 88, 0, 69, 47, 48, 41, 97, 59, 29, 116, 56, 5, 20, 19, 44, 66, 57, 36, 13, 5]
+        }),
+        "PDC": pd.DataFrame({
+            "departamento": [
+                "AMAZONAS", "ANCASH", "APURIMAC", "AREQUIPA", "AYACUCHO", "CAJAMARCA",
+                "CALLAO", "CUSCO", "HUANCAVELICA", "HUANUCO", "ICA", "JUNIN",
+                "LA LIBERTAD", "LAMBAYEQUE", "LIMA", "LORETO", "MADRE DE DIOS", "MOQUEGUA", "PASCO", "PIURA",
+                "PUNO", "SAN MARTIN", "TACNA", "TUMBES", "UCAYALI"
+            ],
+            "formulados": [2, 10, 24, 6, 18, 7, 6, 20, 27, 27, 3, 13, 13, 5, 40, 2, 1, 2, 9, 2, 4, 3, 11, 2, 12],
+            "pendientes": [83, 157, 62, 105, 107, 126, 25, 97, 76, 78, 41, 112, 82, 34, 132, 52, 11, 9, 21, 62, 107, 76, 63, 6, 8]
+        })
     }
 
-    df = pd.DataFrame(data)
-    df["total"] = df["formulados"] + df["pendientes"]
-    df["avance"] = round((df["formulados"] / df["total"]) * 100, 1)
+    # Calcular totales y avance por fila
+    for k, df in data.items():
+        df["departamento"] = df["departamento"].map(_norm)
+        df["total"] = df["formulados"] + df["pendientes"]
+        df["avance"] = round((df["formulados"] / df["total"]) * 100, 1)
 
-    return {"PEI": df}
+    return data
+
 
 def render_map(plan: str):
     data_por_plan = load_resumen_departamental()
@@ -322,54 +646,44 @@ def render_map(plan: str):
 📈 <b>Avance:</b> %{customdata[1]}%<br>
 ✅ <b>Formulados:</b> %{customdata[2]}<br>
 ⏳ <b>Pendientes:</b> %{customdata[3]}<br>
-📊 <b>Total:</b> %{customdata[4]}<br><extra></extra>""",
-        showlegend=True
+📊 <b>Total:</b> %{customdata[4]}<br><extra></extra>"""
     )
 
-    fig_map.update_geos(fitbounds="locations", visible=False)
-
+    fig_map.update_geos(fitbounds="locations", visible=False) 
     fig_map.update_layout(
-        height=700,
-        font=dict(size=16),
-        margin=dict(l=0, r=0, t=10, b=0),
-        showlegend=True,
-        legend=dict(
-            orientation="v",
-            yanchor="top",
-            y=0.98,
-            xanchor="left",
-            x=-0.05,
-            bgcolor='rgba(255,255,255,0.8)',
-            bordercolor='rgba(0,0,0,0.1)',
-            borderwidth=1
-        ),
-        legend_itemclick=False,
-        legend_itemdoubleclick=False
+    height=700,
+    font=dict(size=16),
+    fig_map.update_layout(clickmode='none'),    
+    margin=dict(l=0, r=0, t=10, b=0),
+    legend=dict(
+        orientation="v",
+        yanchor="top",
+        y=0.98,
+        xanchor="left",   # <--- este es CLAVE
+        x=-0.05,          # <--- esto lo empuja hacia la izquierda
+        bgcolor='rgba(255,255,255,0.8)',
+        bordercolor='rgba(0,0,0,0.1)',
+        borderwidth=1
     )
-
-    with st.container():
-        st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
-        st.plotly_chart(fig_map, use_container_width=True)
-        st.markdown("""<div style='display: flex; justify-content: center; gap: 30px; margin-top: -20px; font-size: 14px;'>
-            <div style='display: flex; align-items: center;'>
-                <div style='width: 18px; height: 18px; background-color: #CC3333; border-radius: 4px; margin-right: 8px;'></div>
-                <span><strong>&lt; 50%</strong> (Bajo)</span>
-            </div>
-            <div style='display: flex; align-items: center;'>
-                <div style='width: 18px; height: 18px; background-color: #F1C40F; border-radius: 4px; margin-right: 8px;'></div>
-                <span><strong>50% - 79%</strong> (Medio)</span>
-            </div>
-            <div style='display: flex; align-items: center;'>
-                <div style='width: 18px; height: 18px; background-color: #308446; border-radius: 4px; margin-right: 8px;'></div>
-                <span><strong>≥ 80%</strong> (Alto)</span>
-            </div>
-        </div>""", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+)
 
 
-st.radio("Selecciona plan para mapa:", options=["PEI", "POI", "PDC"], index=0, horizontal=True, key="plan_sel")
-render_map(st.session_state["plan_sel"])
+    st.plotly_chart(fig_map, use_container_width=True)
 
+    st.markdown("""<div style='display: flex; gap: 30px; margin-top: -150px; font-size: 14px;'>
+        <div style='display: flex; align-items: center;'>
+            <div style='width: 18px; height: 18px; background-color: #CC3333; border-radius: 4px; margin-right: 8px;'></div>
+            <span><strong>&lt; 50%</strong> (Bajo)</span>
+        </div>
+        <div style='display: flex; align-items: center;'>
+            <div style='width: 18px; height: 18px; background-color: #F1C40F; border-radius: 4px; margin-right: 8px;'></div>
+            <span><strong>50% - 79%</strong> (Medio)</span>
+        </div>
+        <div style='display: flex; align-items: center;'>
+            <div style='width: 18px; height: 18px; background-color: #308446; border-radius: 4px; margin-right: 8px;'></div>
+            <span><strong>≥ 80%</strong> (Alto)</span>
+        </div>
+    </div>""", unsafe_allow_html=True)
         
 
 # Botón funcional fijado arriba a la izquierda
@@ -396,6 +710,7 @@ with refresh_placeholder.container():
 if btn_clicked:
     st.cache_data.clear()
     st.rerun()
+
 
 
 @st.cache_data(ttl=600, show_spinner="Leyendo Google Sheets…")
@@ -498,6 +813,7 @@ def cargar_datos_dashboard():
         "POI": _extract_totals(df, "POI"),
     }
 
+
 # -----------------------------
 # Carga de datos desde hoja Resumen con detección robusta
 # -----------------------------
@@ -568,6 +884,7 @@ with c2:
         if submitted:
             st.session_state["hover_pei"] = True
             st.session_state["hover_pdc"] = False  # Asegura que PDC se apague
+
 
 with c3:
     if "hover_poi" not in st.session_state:
@@ -647,8 +964,8 @@ with col2:
         datos_niveles = get_poi_nivel_gobierno()
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
+   
 
- 
     else:
         resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
         resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
