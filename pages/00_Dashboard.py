@@ -230,6 +230,12 @@ def get_poi_nivel_gobierno():
     }
 
 
+
+
+
+
+
+
 def _edit_to_csv(file_edit: str, gid: str) -> str:
     file_id = file_edit.split("/d/")[1].split("/")[0]
     return f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=csv&gid={gid}"
@@ -491,6 +497,8 @@ def kpi_card(title, formulados, pendientes, unidad_label="entidades", nota=""):
     """, unsafe_allow_html=True)
 
 
+
+
 # -----------------------------
 # Gráfico de barras
 # -----------------------------
@@ -558,6 +566,7 @@ def resumen_grafico(titulo, formulados, pendientes,
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
 
 
 # -----------------------------
@@ -652,8 +661,8 @@ def render_map(plan: str):
     fig_map.update_geos(fitbounds="locations", visible=False) 
     fig_map.update_layout(
     height=700,
-    font=dict(size=16),
-    #fig_map.update_layout(clickmode='none'),    
+    font=dict(size=16)
+    fig_map.update_layout(clickmode='none'),
     margin=dict(l=0, r=0, t=10, b=0),
     legend=dict(
         orientation="v",
@@ -861,6 +870,11 @@ with c1:
             st.session_state["hover_pei"] = False  # Asegura que PEI se apague
 
 
+
+
+
+
+
 with c2:
     if "hover_pei" not in st.session_state:
         st.session_state["hover_pei"] = False
@@ -884,6 +898,8 @@ with c2:
         if submitted:
             st.session_state["hover_pei"] = True
             st.session_state["hover_pdc"] = False  # Asegura que PDC se apague
+
+
 
 
 with c3:
@@ -910,6 +926,9 @@ with c3:
             st.session_state["hover_poi"] = True
             st.session_state["hover_pei"] = False
             st.session_state["hover_pdc"] = False
+
+
+
 
 
 # Mapa y Gráficos
@@ -964,7 +983,10 @@ with col2:
         datos_niveles = get_poi_nivel_gobierno()
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
-   
+
+
+
+    
 
     else:
         resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
