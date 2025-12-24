@@ -649,15 +649,24 @@ def render_map(plan: str):
         color_discrete_map={row["departamento"]: row["color"] for _, row in df.iterrows()},
         custom_data=["departamento", "avance", "formulados", "pendientes", "total"]
     )
+    
 
     fig_map.update_traces(
         hovertemplate="""<b>📍 %{customdata[0]}</b><br><br>
 📈 <b>Avance:</b> %{customdata[1]}%<br>
 ✅ <b>Formulados:</b> %{customdata[2]}<br>
 ⏳ <b>Pendientes:</b> %{customdata[3]}<br>
-📊 <b>Total:</b> %{customdata[4]}<br><extra></extra>"""
-    )
-
+📊 <b>Total:</b> %{customdata[4]}<br>
+<extra></extra>""",
+    marker_line_width=1.2,
+    marker_line_color="white"
+)        
+fig_map.update_layout(
+    hovermode="closest",
+    clickmode="none"   # 🔴 ESTA LÍNEA evita que desaparezca el departamento
+)    
+        
+   
     fig_map.update_geos(fitbounds="locations", visible=False) 
     fig_map.update_layout(
     height=700,
