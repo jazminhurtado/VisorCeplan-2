@@ -844,93 +844,44 @@ poi_e, poi_p = datos["POI"]
 hover_pdc = st.session_state.get("hover_pdc", False)
 
 # KPIs
-# KPIs
+# -----------------------------
+# KPIs con botones funcionales
+# -----------------------------
 c1, c2, c3 = st.columns([1, 1, 1], gap="small")
 
 with c1:
     if "hover_pdc" not in st.session_state:
         st.session_state["hover_pdc"] = False
 
-    # Crear un formulario invisible con submit implícito al hacer clic en el div
-    with st.form("pdc_kpi_form"):
-        # Estilos para hacer que el div sea clickeable
-        st.markdown("""
-        <style>
-        .clickable-kpi {
-            cursor: pointer;
-        }
-        </style>
-        <div class="clickable-kpi" onclick="document.forms['pdc_kpi_form'].submit();">
-        """, unsafe_allow_html=True)
+    if st.button("PDC 🔍", key="btn_kpi_pdc"):
+        st.session_state["hover_pdc"] = True
+        st.session_state["hover_pei"] = False
+        st.session_state["hover_poi"] = False
 
-        # Mostrar KPI visual
-        kpi_card("PDC", pdc_e, pdc_p, "pliegos", "comprende los GN, GR, GL")
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        submitted = st.form_submit_button("")
-
-        if submitted:
-            st.session_state["hover_pdc"] = True
-            st.session_state["hover_pei"] = False  # Asegura que PEI se apague
-
-
-
-
-
-
+    kpi_card("PDC", pdc_e, pdc_p, "pliegos", "comprende los GN, GR, GL")
 
 with c2:
     if "hover_pei" not in st.session_state:
         st.session_state["hover_pei"] = False
 
-    with st.form("pei_kpi_form"):
-        st.markdown("""
-        <style>
-        .clickable-kpi {
-            cursor: pointer;
-        }
-        </style>
-        <div class="clickable-kpi" onclick="document.forms['pei_kpi_form'].submit();">
-        """, unsafe_allow_html=True)
+    if st.button("PEI 🔍", key="btn_kpi_pei"):
+        st.session_state["hover_pei"] = True
+        st.session_state["hover_pdc"] = False
+        st.session_state["hover_poi"] = False
 
-        kpi_card("PEI", pei_e, pei_p, "pliegos", "comprende los GN, GR, GL")
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        submitted = st.form_submit_button("")
-
-        if submitted:
-            st.session_state["hover_pei"] = True
-            st.session_state["hover_pdc"] = False  # Asegura que PDC se apague
-
-
-
+    kpi_card("PEI", pei_e, pei_p, "pliegos", "comprende los GN, GR, GL")
 
 with c3:
     if "hover_poi" not in st.session_state:
         st.session_state["hover_poi"] = False
 
-    with st.form("poi_kpi_form"):
-        st.markdown("""
-        <style>
-        .clickable-kpi {
-            cursor: pointer;
-        }
-        </style>
-        <div class="clickable-kpi" onclick="document.forms['poi_kpi_form'].submit();">
-        """, unsafe_allow_html=True)
+    if st.button("POI 🔍", key="btn_kpi_poi"):
+        st.session_state["hover_poi"] = True
+        st.session_state["hover_pei"] = False
+        st.session_state["hover_pdc"] = False
 
-        kpi_card("POI", poi_e, poi_p, "UEs", "comprende los GN, GR, GL")
+    kpi_card("POI", poi_e, poi_p, "UEs", "comprende los GN, GR, GL")
 
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        submitted = st.form_submit_button("")
-
-        if submitted:
-            st.session_state["hover_poi"] = True
-            st.session_state["hover_pei"] = False
-            st.session_state["hover_pdc"] = False
 
 
 
@@ -988,10 +939,7 @@ with col2:
         datos_niveles = get_poi_nivel_gobierno()
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
-
-
-
-    
+  
 
     else:
         resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
