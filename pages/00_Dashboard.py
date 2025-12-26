@@ -961,6 +961,13 @@ with col1:
     render_map(plan_sel)
 
 with col2:
+    # 🔍 Mostrar el estado actual del KPI seleccionado (solo para depuración)
+    st.write("📊 Estado KPIs activados:")
+    st.write("PDC:", st.session_state.get("hover_pdc", False))
+    st.write("PEI:", st.session_state.get("hover_pei", False))
+    st.write("POI:", st.session_state.get("hover_poi", False))
+   
+    # Visualización dinámica según KPI activo
     if st.session_state.get("hover_pdc", False):
         st.markdown("### Estado PDC por Nivel de Gobierno")
         datos_niveles = get_pdc_nivel_gobierno()
@@ -973,14 +980,12 @@ with col2:
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
 
-
     elif st.session_state.get("hover_poi", False):
         st.markdown("### Estado POI por Nivel de Gobierno")
         datos_niveles = get_poi_nivel_gobierno()
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
- 
-    else:
+     else:
         resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
         resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
         resumen_grafico("Estado POI a Nivel Nacional", poi_e, poi_p)
