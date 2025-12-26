@@ -845,42 +845,28 @@ hover_pdc = st.session_state.get("hover_pdc", False)
 
 # KPIs
 # -----------------------------
-# KPIs con botones funcionales
+# KPIs con selección única
 # -----------------------------
 c1, c2, c3 = st.columns([1, 1, 1], gap="small")
 
+if "kpi_activo" not in st.session_state:
+    st.session_state["kpi_activo"] = "PDC"  # Por defecto
+
 with c1:
-    if "hover_pdc" not in st.session_state:
-        st.session_state["hover_pdc"] = False
-
-    if st.button("PDC 🔍", key="btn_kpi_pdc"):
-        st.session_state["hover_pdc"] = True
-        st.session_state["hover_pei"] = False
-        st.session_state["hover_poi"] = False
-
+    if st.button("🔍", key="btn_kpi_pdc"):
+        st.session_state["kpi_activo"] = "PDC"
     kpi_card("PDC", pdc_e, pdc_p, "pliegos", "comprende los GN, GR, GL")
 
 with c2:
-    if "hover_pei" not in st.session_state:
-        st.session_state["hover_pei"] = False
-
-    if st.button("PEI 🔍", key="btn_kpi_pei"):
-        st.session_state["hover_pei"] = True
-        st.session_state["hover_pdc"] = False
-        st.session_state["hover_poi"] = False
-
+    if st.button("🔍", key="btn_kpi_pei"):
+        st.session_state["kpi_activo"] = "PEI"
     kpi_card("PEI", pei_e, pei_p, "pliegos", "comprende los GN, GR, GL")
 
 with c3:
-    if "hover_poi" not in st.session_state:
-        st.session_state["hover_poi"] = False
-
-    if st.button("POI 🔍", key="btn_kpi_poi"):
-        st.session_state["hover_poi"] = True
-        st.session_state["hover_pei"] = False
-        st.session_state["hover_pdc"] = False
-
+    if st.button("🔍", key="btn_kpi_poi"):
+        st.session_state["kpi_activo"] = "POI"
     kpi_card("POI", poi_e, poi_p, "UEs", "comprende los GN, GR, GL")
+
 
 
 
