@@ -845,7 +845,6 @@ poi_e, poi_p = datos["POI"]
 hover_pdc = st.session_state.get("hover_pdc", False)
 
 # KPIs
-# KPIs
 c1, c2, c3 = st.columns([1, 1, 1], gap="small")
 
 with c1:
@@ -873,7 +872,8 @@ with c1:
 
         if submitted:
             st.session_state["hover_pdc"] = True
-            st.session_state["hover_pei"] = False  # Asegura que PEI se apague
+            st.session_state["hover_pei"] = False  # Asegura que PEI se 
+             st.session_state["hover_poi"] = False
 
 
 with c2:
@@ -899,6 +899,7 @@ with c2:
         if submitted:
             st.session_state["hover_pei"] = True
             st.session_state["hover_pdc"] = False  # Asegura que PDC se apague
+            st.session_state["hover_poi"] = False
 
 with c3:
     if "hover_poi" not in st.session_state:
@@ -978,7 +979,6 @@ with col2:
         datos_niveles = get_poi_nivel_gobierno()
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
-
  
     else:
         resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
