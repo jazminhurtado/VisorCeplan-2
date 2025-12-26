@@ -873,7 +873,7 @@ with c1:
         if submitted:
             st.session_state["hover_pdc"] = True
             st.session_state["hover_pei"] = False  # Asegura que PEI se 
-             st.session_state["hover_poi"] = False
+            st.session_state["hover_poi"] = False
 
 
 with c2:
