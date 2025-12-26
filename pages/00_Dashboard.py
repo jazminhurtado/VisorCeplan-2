@@ -843,6 +843,7 @@ poi_e, poi_p = datos["POI"]
 
 hover_pdc = st.session_state.get("hover_pdc", False)
 
+
 # KPIs
 c1, c2, c3 = st.columns([1, 1, 1], gap="small")
 
@@ -914,6 +915,74 @@ with c3:
             st.session_state["hover_poi"] = True
             st.session_state["hover_pei"] = False
             st.session_state["hover_pdc"] = False
+
+
+# Mapa y Gráficos
+col1, col2 = st.columns([2, 2])  
+
+with col1:
+   with col1:
+    # Agrupamos título + radio en una sola fila horizontal
+    st.markdown("""
+    <style>
+    .radio-label-inline {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: -10px;
+    }
+    </style>
+
+    <div class="radio-label-inline">
+        <span>Selecciona plan para mapa:</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Radio funcional sin texto visible (ya lo pusimos arriba)
+    plan_sel = st.radio(
+        label="",
+        options=["PEI", "POI", "PDC"],
+        horizontal=True,
+        label_visibility="collapsed"
+    )
+
+    render_map(plan_sel)
+
+with col2:
+    if st.session_state.get("hover_pdc", False):
+        st.markdown("### Estado PDC por Nivel de Gobierno")
+        datos_niveles = get_pdc_nivel_gobierno()
+        for nivel, (form, pend) in datos_niveles.items():
+            resumen_grafico(nivel, form, pend)
+
+    elif st.session_state.get("hover_pei", False):
+        st.markdown("### Estado PEI por Nivel de Gobierno")
+        datos_niveles = get_pei_nivel_gobierno()
+        for nivel, (form, pend) in datos_niveles.items():
+            resumen_grafico(nivel, form, pend)
+
+
+    elif st.session_state.get("hover_poi", False):
+        st.markdown("### Estado POI por Nivel de Gobierno")
+        datos_niveles = get_poi_nivel_gobierno()
+        for nivel, (form, pend) in datos_niveles.items():
+            resumen_grafico(nivel, form, pend)
+
+
+
+    
+
+    else:
+        resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
+        resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
+        resumen_grafico("Estado POI a Nivel Nacional", poi_e, poi_p)
+
+
+
+
+
 
 
 
