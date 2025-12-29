@@ -496,9 +496,6 @@ def kpi_card(title, formulados, pendientes, unidad_label="entidades", nota=""):
     </div>
     """, unsafe_allow_html=True)
 
-
-
-
 # -----------------------------
 # Gráfico de barras
 # -----------------------------
@@ -876,10 +873,6 @@ with c1:
 
 
 
-
-
-
-
 with c2:
     if "hover_pei" not in st.session_state:
         st.session_state["hover_pei"] = False
@@ -903,8 +896,6 @@ with c2:
         if submitted:
             st.session_state["hover_pei"] = True
             st.session_state["hover_pdc"] = False  # Asegura que PDC se apague
-
-
 
 
 with c3:
@@ -931,12 +922,6 @@ with c3:
             st.session_state["hover_poi"] = True
             st.session_state["hover_pei"] = False
             st.session_state["hover_pdc"] = False
-
-
-# DEBUG temporal para ver qué KPI está activado
-st.write("DEBUG - PDC:", st.session_state.get("hover_pdc"))
-st.write("DEBUG - PEI:", st.session_state.get("hover_pei"))
-st.write("DEBUG - POI:", st.session_state.get("hover_poi"))
 
 
 # Mapa y Gráficos
@@ -982,6 +967,7 @@ with col2:
     elif st.session_state.get("hover_pei", False):
         st.markdown("### Estado PEI por Nivel de Gobierno")
         datos_niveles = get_pei_nivel_gobierno()
+        st.write("POI DATOS:", datos_niveles)
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
 
