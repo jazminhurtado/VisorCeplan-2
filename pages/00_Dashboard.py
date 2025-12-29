@@ -225,8 +225,8 @@ def get_poi_nivel_gobierno():
     return {
         "Gobierno Nacional": buscar_valores(df, "Gobierno nacional"),
         "Gobierno Regional": buscar_valores(df, "Gobierno regional"),
-        "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
-        "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
+        "Municipalidad Provincial": (0, 0),
+        "Municipalidad Distrital": (0, 0)
     }
 
 
