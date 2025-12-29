@@ -205,6 +205,7 @@ def get_pei_nivel_gobierno():
     }
 
 def get_poi_nivel_gobierno():
+    st.warning("✅ SE ESTÁ EJECUTANDO get_poi_nivel_gobierno()")
     url = _edit_to_csv(URL_PEI_POI_FILE_EDIT, GID_RESUMEN_NAC)
     raw = pd.read_csv(url, header=None, dtype=str).fillna("")
 
