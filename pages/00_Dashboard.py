@@ -272,7 +272,6 @@ def get_poi_nivel_gobierno():
 
 
 
-
 def _edit_to_csv(file_edit: str, gid: str) -> str:
     file_id = file_edit.split("/d/")[1].split("/")[0]
     return f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=csv&gid={gid}"
