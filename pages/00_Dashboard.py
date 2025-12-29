@@ -218,8 +218,10 @@ def get_poi_nivel_gobierno():
                     formulados = int(str(row[2]).replace(",", ""))
                     pendientes = int(str(row[3]).replace(",", ""))
                     return formulados, pendientes
-                except:
+                except Exception as e:
+                    print(f"⚠️ Error al leer valores de {nombre_nivel}: {e}")
                     return 0, 0
+        print(f"❌ Nivel de gobierno no encontrado: {nombre_nivel}")            
         return 0, 0 
 
     return {
