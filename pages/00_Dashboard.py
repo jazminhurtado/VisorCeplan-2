@@ -205,71 +205,53 @@ def get_pei_nivel_gobierno():
     }
 
 def get_poi_nivel_gobierno():
+
     import pandas as pd
-    import streamlit as st
     import unicodedata
 
-    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
+    # Descargar CSV de la hoja resumen POI
+    url = (
+        "https://docs.google.com/spreadsheets/d/"
+        "1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
+    )
     raw = pd.read_csv(url, header=None, dtype=str).fillna("")
 
-    # =========================
-    # 1️⃣ Encontrar fila encabezado
-    # =========================
+    # 1️⃣ Buscar encabezado
     header_row = None
     for i, row in raw.iterrows():
-        joined = " ".join(row.astype(str).str.lower())
+        joined = " ".join(str(x).lower() for x in row)
         if "nivel de gobierno" in joined and "total ues" in joined:
             header_row = i
             break
 
     if header_row is None:
-        st.error("❌ No se encontró el encabezado POI")
+        st.error("❌ No se encontró el encabezado POI en la hoja.")
         return {}
 
-    # =========================
-    # 2️⃣ Leer dataframe limpio
-    # =========================
+    # 2️⃣ Volver a cargar con encabezado correcto
     df = pd.read_csv(url, header=header_row, dtype=str).fillna("")
+
+    # Normalizar columnas
     df.columns = df.columns.str.strip().str.lower()
 
-    # =========================
-    # 3️⃣ Normalizar texto
-    # =========================
-    def norm(txt):
-        txt = str(txt)
-        txt = unicodedata.normalize("NFKD", txt)
-        txt = "".join(c for c in txt if not unicodedata.combining(c))
-        return txt.lower().strip()
-
-    # =========================
-    # 4️⃣ Asegurar columnas necesarias
-    # =========================
+    # Nombres de columnas que esperamos
     col_nivel = "nivel de gobierno"
     col_form = "formulados en elaborado"
     col_pend = "pendientes ues sin poi 2026-2028"
 
-    for c in [col_nivel, col_form, col_pend]:
-        if c not in df.columns:
-            st.error(f"❌ No existe la columna: {c}")
-            return {}
+    # Verificar que sí existan
+    if col_nivel not in df.columns or col_form not in df.columns or col_pend not in df.columns:
+        st.error("❌ Las columnas esperadas no se encontraron en POI")
+        return {}
 
-    # =========================
-    # 5️⃣ Limpiar valores
-    # =========================
-    df[col_nivel] = df[col_nivel].apply(norm)
-
+    # Función para convertir a entero sin fallos
     def to_int(x):
         try:
             return int(str(x).replace(",", "").strip())
         except:
             return 0
 
-    df[col_form] = df[col_form].apply(to_int)
-    df[col_pend] = df[col_pend].apply(to_int)
-
-    # =========================
-    # 6️⃣ Armar resultado FINAL
-    # =========================
+    # Extraer valores por fila
     resultado = {
         "Gobierno Nacional": (0, 0),
         "Gobierno Regional": (0, 0),
@@ -278,20 +260,21 @@ def get_poi_nivel_gobierno():
     }
 
     for _, row in df.iterrows():
-        nivel = row[col_nivel]
-        form = row[col_form]
-        pend = row[col_pend]
+        nivel = str(row[col_nivel]).strip().lower()
+        formulados = to_int(row[col_form])
+        pendientes = to_int(row[col_pend])
 
         if "nacional" in nivel:
-            resultado["Gobierno Nacional"] = (form, pend)
+            resultado["Gobierno Nacional"] = (formulados, pendientes)
         elif "regional" in nivel:
-            resultado["Gobierno Regional"] = (form, pend)
+            resultado["Gobierno Regional"] = (formulados, pendientes)
         elif "provincial" in nivel:
-            resultado["Municipalidad Provincial"] = (form, pend)
+            resultado["Municipalidad Provincial"] = (formulados, pendientes)
         elif "distrital" in nivel:
-            resultado["Municipalidad Distrital"] = (form, pend)
+            resultado["Municipalidad Distrital"] = (formulados, pendientes)
 
     return resultado
+
 
 
 
