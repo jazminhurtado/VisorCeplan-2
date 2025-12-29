@@ -548,7 +548,7 @@ def resumen_grafico(titulo, formulados, pendientes,
         text=f"<b>{pct_pend}%</b> Pendientes",
         showarrow=False,
         yshift=35,
-        font=dict(color=color_pendiente, size=15)
+        font=dict(color=color_pendiente, size=15) 
     )
 
     fig.update_layout(
