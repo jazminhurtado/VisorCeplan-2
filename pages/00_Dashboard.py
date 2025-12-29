@@ -205,34 +205,54 @@ def get_pei_nivel_gobierno():
     }
 
 def get_poi_nivel_gobierno():
-    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
+    url = _edit_to_csv(URL_PEI_POI_FILE_EDIT, GID_RESUMEN_NAC)
     raw = pd.read_csv(url, header=None, dtype=str).fillna("")
 
-    # 1. Buscar encabezado correcto
+    # 1. Buscar encabezado
     header_row = None
     for i, row in raw.iterrows():
-        joined = " ".join(str(x).lower() for x in row)
-        if "nivel de gobierno" in joined and "formulados" in joined:
+        texto = " ".join(str(x).lower() for x in row.tolist())
+        if "nivel" in texto and "formulado" in texto and "pendiente" in texto:
             header_row = i
             break
 
     if header_row is None:
-        st.error("❌ No se encontró encabezado en POI.")
+        st.error("❌ No se encontró encabezado POI por nivel")
         return {}
 
-    # 2. Leer desde encabezado
+    # 2. Leer con encabezado real
     df = pd.read_csv(url, header=header_row, dtype=str).fillna("")
 
-    # 3. Limpiar nombres de columna
-    df.columns = df.columns.str.strip().str.lower()
+    # Normalizar nombres de columnas para buscar sin errores
+    df.columns = [
+        str(c).strip().lower().replace("%", "").replace("*", "").replace("  ", " ")
+        for c in df.columns
+    ]
 
-    def get_val(nivel: str) -> tuple[int, int]:
-        row = df[df["nivel de gobierno"].str.lower() == nivel.lower()]
-        if row.empty:
+    # Mapear niveles y columnas correctas
+    def get_val(nivel):
+        # Buscar fila por nivel de gobierno
+        mask = df["nivel de gobierno"].str.lower().str.strip() == nivel.lower()
+        if not mask.any():
             return 0, 0
+
+        row = df.loc[mask].iloc[0]
+
+        # Buscar columnas por contenido
+        col_form = None
+        col_pend = None
+        for c in df.columns:
+            if "formulado" in c and "elaborado" in c:
+                col_form = c
+            if "pendiente" in c and "poi" in c:
+                col_pend = c
+
+        if col_form is None or col_pend is None:
+            return 0, 0
+
         try:
-            form = int(str(row.iloc[0]["formulados en elaborado"]).replace(",", ""))
-            pend = int(str(row.iloc[0]["pendientes ues sin poi 2026-2028"]).replace(",", ""))
+            form = int(str(row[col_form]).replace(",", "").strip())
+            pend = int(str(row[col_pend]).replace(",", "").strip())
             return form, pend
         except:
             return 0, 0
