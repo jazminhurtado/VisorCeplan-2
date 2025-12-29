@@ -233,9 +233,9 @@ def get_poi_nivel_gobierno():
     df = pd.read_csv(url, header=header_row, dtype=str).fillna("")
     df.columns = df.columns.str.strip().str.lower()
 
-    col_nivel = "Nivel de Gobierno"
-    col_form = "Formulados En Elaborado  "
-    col_pend = "Pendientes UEs sin POI 2026-2028"
+    col_nivel = "nivel de gobierno"
+    col_form = "formulados en elaborado"
+    col_pend = "pendientes ues sin poi 2026-2028"
 
     if col_nivel not in df.columns or col_form not in df.columns or col_pend not in df.columns:
         st.error("❌ Las columnas esperadas no se encontraron en POI")
@@ -269,7 +269,6 @@ def get_poi_nivel_gobierno():
             resultado["Municipalidad Distrital"] = (formulados, pendientes)
 
     return resultado
-
 
 
 
