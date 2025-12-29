@@ -205,70 +205,34 @@ def get_pei_nivel_gobierno():
     }
 
 def get_poi_nivel_gobierno():
+    # Aquí colocas el código para leer desde Google Sheets
+    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&id=1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ&gid=1288416966"
+    df = pd.read_csv(url).fillna("")
 
-    import pandas as pd
-    import unicodedata
-    import streamlit as st
+    # Extrae los valores correctos de POI según las cabeceras
+    # Usa la misma lógica que para PEI o PDC
+    def buscar_valores(df, nombre_nivel):
+        for i, row in df.iterrows():
+            if str(row[0]).strip().lower() == nombre_nivel.lower():
+                try:
+                    formulados = int(str(row[2]).replace(",", ""))
+                    pendientes = int(str(row[3]).replace(",", ""))
+                    return formulados, pendientes
+                except:
+                    return 0, 0
+        return 0, 0 
 
-    # Descargar CSV de la hoja resumen POI
-    url = (
-        "https://docs.google.com/spreadsheets/d/"
-        "1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
-    )
-    raw = pd.read_csv(url, header=None, dtype=str).fillna("")
-
-    # Buscar encabezado
-    header_row = None
-    for i, row in raw.iterrows():
-        joined = " ".join(str(x).lower() for x in row)
-        if "nivel de gobierno" in joined and "total ues" in joined:
-            header_row = i
-            break
-
-    if header_row is None:
-        st.error("❌ No se encontró el encabezado POI en la hoja.")
-        return {}
-
-    # Volver a cargar con encabezado
-    df = pd.read_csv(url, header=header_row, dtype=str).fillna("")
-    df.columns = df.columns.str.strip().str.lower()
-
-    col_nivel = "nivel de gobierno"
-    col_form = "formulados en elaborado"
-    col_pend = "pendientes ues sin poi 2026-2028"
-
-    if col_nivel not in df.columns or col_form not in df.columns or col_pend not in df.columns:
-        st.error("❌ Las columnas esperadas no se encontraron en POI")
-        return {}
-
-    def to_int(x):
-        try:
-            return int(str(x).replace(",", "").strip())
-        except:
-            return 0
-
-    resultado = {
-        "Gobierno Nacional": (0, 0),
-        "Gobierno Regional": (0, 0),
-        "Municipalidad Provincial": (0, 0),
-        "Municipalidad Distrital": (0, 0),
+    return {
+        "Gobierno Nacional": buscar_valores(df, "Gobierno nacional"),
+        "Gobierno Regional": buscar_valores(df, "Gobierno regional"),
+        "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
+        "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
     }
 
-    for _, row in df.iterrows():
-        nivel = str(row[col_nivel]).strip().lower()
-        formulados = to_int(row[col_form])
-        pendientes = to_int(row[col_pend])
 
-        if "nacional" in nivel:
-            resultado["Gobierno Nacional"] = (formulados, pendientes)
-        elif "regional" in nivel:
-            resultado["Gobierno Regional"] = (formulados, pendientes)
-        elif "provincial" in nivel:
-            resultado["Municipalidad Provincial"] = (formulados, pendientes)
-        elif "distrital" in nivel:
-            resultado["Municipalidad Distrital"] = (formulados, pendientes)
 
-    return resultado
+
+
 
 
 
@@ -334,7 +298,7 @@ def load_universo():
     df = pd.read_csv(url, header=header_row, dtype=str).fillna("")
     col_dep = None
     for c in df.columns:
-        if any(k in str(c).lower() for k in ["depa", "región", "region"]): 
+        if any(k in str(c).lower() for k in ["depa", "región", "region"]):
             col_dep = c
             break
     if col_dep is None:
@@ -532,6 +496,9 @@ def kpi_card(title, formulados, pendientes, unidad_label="entidades", nota=""):
     </div>
     """, unsafe_allow_html=True)
 
+
+
+
 # -----------------------------
 # Gráfico de barras
 # -----------------------------
@@ -581,7 +548,7 @@ def resumen_grafico(titulo, formulados, pendientes,
         text=f"<b>{pct_pend}%</b> Pendientes",
         showarrow=False,
         yshift=35,
-        font=dict(color=color_pendiente, size=15) 
+        font=dict(color=color_pendiente, size=15)
     )
 
     fig.update_layout(
@@ -877,6 +844,7 @@ poi_e, poi_p = datos["POI"]
 hover_pdc = st.session_state.get("hover_pdc", False)
 
 # KPIs
+# KPIs
 c1, c2, c3 = st.columns([1, 1, 1], gap="small")
 
 with c1:
@@ -908,6 +876,10 @@ with c1:
 
 
 
+
+
+
+
 with c2:
     if "hover_pei" not in st.session_state:
         st.session_state["hover_pei"] = False
@@ -931,6 +903,8 @@ with c2:
         if submitted:
             st.session_state["hover_pei"] = True
             st.session_state["hover_pdc"] = False  # Asegura que PDC se apague
+
+
 
 
 with c3:
@@ -957,6 +931,9 @@ with c3:
             st.session_state["hover_poi"] = True
             st.session_state["hover_pei"] = False
             st.session_state["hover_pdc"] = False
+
+
+
 
 
 # Mapa y Gráficos
