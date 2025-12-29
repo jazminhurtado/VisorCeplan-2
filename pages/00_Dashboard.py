@@ -933,7 +933,10 @@ with c3:
             st.session_state["hover_pdc"] = False
 
 
-
+# DEBUG temporal para ver qué KPI está activado
+st.write("DEBUG - PDC:", st.session_state.get("hover_pdc"))
+st.write("DEBUG - PEI:", st.session_state.get("hover_pei"))
+st.write("DEBUG - POI:", st.session_state.get("hover_poi"))
 
 
 # Mapa y Gráficos
