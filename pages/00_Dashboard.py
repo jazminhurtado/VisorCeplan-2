@@ -205,69 +205,93 @@ def get_pei_nivel_gobierno():
     }
 
 def get_poi_nivel_gobierno():
-    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
-    df = pd.read_csv(url, header=None, dtype=str).fillna("")
+    import pandas as pd
+    import streamlit as st
+    import unicodedata
 
-    # 🔎 Buscar la fila donde está el encabezado
+    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
+    raw = pd.read_csv(url, header=None, dtype=str).fillna("")
+
+    # =========================
+    # 1️⃣ Encontrar fila encabezado
+    # =========================
     header_row = None
-    for i, row in df.iterrows():
-        joined = " ".join(str(x).lower() for x in row)
-        if "nivel de gobierno" in joined:
+    for i, row in raw.iterrows():
+        joined = " ".join(row.astype(str).str.lower())
+        if "nivel de gobierno" in joined and "total ues" in joined:
             header_row = i
             break
 
-    st.write("🧠 header_row detectado:", header_row)
-
     if header_row is None:
-        st.error("❌ No se encontró encabezado POI")
+        st.error("❌ No se encontró el encabezado POI")
         return {}
 
-    # Leer de nuevo usando esa fila como encabezado
+    # =========================
+    # 2️⃣ Leer dataframe limpio
+    # =========================
     df = pd.read_csv(url, header=header_row, dtype=str).fillna("")
     df.columns = df.columns.str.strip().str.lower()
 
-    st.write("📌 COLUMNAS POI:")
-    st.write(df.columns.tolist())
+    # =========================
+    # 3️⃣ Normalizar texto
+    # =========================
+    def norm(txt):
+        txt = str(txt)
+        txt = unicodedata.normalize("NFKD", txt)
+        txt = "".join(c for c in txt if not unicodedata.combining(c))
+        return txt.lower().strip()
 
-    st.write("📊 POI LIMPIO (primeras filas):")
-    st.write(df.head())
+    # =========================
+    # 4️⃣ Asegurar columnas necesarias
+    # =========================
+    col_nivel = "nivel de gobierno"
+    col_form = "formulados en elaborado"
+    col_pend = "pendientes ues sin poi 2026-2028"
 
-    # 🔧 Renombrar para evitar errores por columnas mal nombradas
-    if "departamento" in df.columns:
-        df = df.rename(columns={"departamento": "dep"})
-    elif "departamento " in df.columns:  # a veces viene con espacio
-        df = df.rename(columns={"departamento ": "dep"})
-    else:
-        st.error("❌ No se encuentra columna 'departamento'")
-        return {}
+    for c in [col_nivel, col_form, col_pend]:
+        if c not in df.columns:
+            st.error(f"❌ No existe la columna: {c}")
+            return {}
 
-    # Detectar nivel de gobierno por departamento
-    def nivel_gobierno(dep):
-        dep = dep.upper()
-        if "NACIONAL" in dep:
-            return "Gobierno Nacional"
-        elif "REGIONAL" in dep:
-            return "Gobierno Regional"
-        elif "PROVINCIAL" in dep:
-            return "Municipalidad Provincial"
-        else:
-            return "Municipalidad Distrital"
+    # =========================
+    # 5️⃣ Limpiar valores
+    # =========================
+    df[col_nivel] = df[col_nivel].apply(norm)
 
-    df["nivel"] = df["dep"].apply(lambda x: nivel_gobierno(x))
-
-    # 🔢 Extraer datos agregados
-    datos = {}
-    for nivel in df["nivel"].unique():
-        df_nivel = df[df["nivel"] == nivel]
+    def to_int(x):
         try:
-            formulados = df_nivel["formulados en elaborado"].astype(int).sum()
-            pendientes = df_nivel["pendientes ues sin poi 2026-2028"].astype(int).sum()
-            datos[nivel] = (formulados, pendientes)
-        except Exception as e:
-            st.error(f"❌ Error procesando '{nivel}': {e}")
-            continue
+            return int(str(x).replace(",", "").strip())
+        except:
+            return 0
 
-    return datos
+    df[col_form] = df[col_form].apply(to_int)
+    df[col_pend] = df[col_pend].apply(to_int)
+
+    # =========================
+    # 6️⃣ Armar resultado FINAL
+    # =========================
+    resultado = {
+        "Gobierno Nacional": (0, 0),
+        "Gobierno Regional": (0, 0),
+        "Municipalidad Provincial": (0, 0),
+        "Municipalidad Distrital": (0, 0),
+    }
+
+    for _, row in df.iterrows():
+        nivel = row[col_nivel]
+        form = row[col_form]
+        pend = row[col_pend]
+
+        if "nacional" in nivel:
+            resultado["Gobierno Nacional"] = (form, pend)
+        elif "regional" in nivel:
+            resultado["Gobierno Regional"] = (form, pend)
+        elif "provincial" in nivel:
+            resultado["Municipalidad Provincial"] = (form, pend)
+        elif "distrital" in nivel:
+            resultado["Municipalidad Distrital"] = (form, pend)
+
+    return resultado
 
 
 
