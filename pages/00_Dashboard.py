@@ -992,4 +992,16 @@ with col2:
 
     else:
         resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
-        resumen_grafico
+        resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
+        resumen_grafico("Estado POI a Nivel Nacional", poi_e, poi_p)
+
+
+
+
+
+
+
+
+
+
+
