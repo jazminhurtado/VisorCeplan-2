@@ -205,37 +205,19 @@ def get_pei_nivel_gobierno():
     }
 
 def get_poi_nivel_gobierno():
-    df = load_poi_registro()
+    url = ...
+    df = pd.read_csv(url).fillna("")
 
-    # Mapear unidad_id ➝ nivel de gobierno
-    # Este mapping puede ajustarse según tus datos reales
-    universo = load_universo()
-    df = df.merge(universo, on="unidad_id", how="left")
-
-    def clasificar_nivel(uid):
-        uid = uid.strip()
-        if uid.startswith("1"): return "Gobierno Nacional"
-        if uid.startswith("2"): return "Gobierno Regional"
-        if uid.startswith("3"): return "Municipalidad Provincial"
-        return "Municipalidad Distrital"
-
-    df["nivel"] = df["unidad_id"].map(clasificar_nivel)
-
-    grouped = df.groupby("nivel")["emitido_flag"].agg([
-        ("formulados", "sum"),
-        ("pendientes", lambda x: len(x) - x.sum())
-    ]).to_dict(orient="index")
-
-    # Asegurar el orden de niveles
-    orden = [
-        "Gobierno Nacional",
-        "Gobierno Regional",
-        "Municipalidad Provincial",
-        "Municipalidad Distrital"
-    ]
-
-    return {nivel: (grouped.get(nivel, {}).get("formulados", 0), grouped.get(nivel, {}).get("pendientes", 0)) for nivel in orden}
-
+    def buscar_valores(df, nombre_nivel):
+        for i, row in df.iterrows():
+            if str(row[0]).strip().lower() == nombre_nivel.lower():
+                try:
+                    formulados = int(str(row[2]).replace(",", ""))
+                    pendientes = int(str(row[3]).replace(",", ""))
+                    return formulados, pendientes
+                except:
+                    return 0, 0
+        return 0, 0 
 
 
 
