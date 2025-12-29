@@ -162,7 +162,7 @@ def get_pdc_nivel_gobierno():
 
     def buscar_valores(df, nombre_nivel):
         for i, row in df.iterrows():
-            if nombre_nivel.lower() in str(row[0]).strip().lower():
+            if str(row[0]).strip().lower() == nombre_nivel.lower():
                 formulados = int(str(row[2]).replace(",", ""))
                 pendientes = int(str(row[3]).replace(",", ""))
                 return formulados, pendientes
@@ -205,9 +205,12 @@ def get_pei_nivel_gobierno():
     }
 
 def get_poi_nivel_gobierno():
-    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
-    df = pd.read_csv(url, header=None).fillna("")
+    # Aquí colocas el código para leer desde Google Sheets
+    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&id=1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ&gid=1288416966"
+    df = pd.read_csv(url).fillna("")
 
+    # Extrae los valores correctos de POI según las cabeceras
+    # Usa la misma lógica que para PEI o PDC
     def buscar_valores(df, nombre_nivel):
         for i, row in df.iterrows():
             if str(row[0]).strip().lower() == nombre_nivel.lower():
@@ -215,20 +218,16 @@ def get_poi_nivel_gobierno():
                     formulados = int(str(row[2]).replace(",", ""))
                     pendientes = int(str(row[3]).replace(",", ""))
                     return formulados, pendientes
-                except Exception as e:
-                    print(f"⚠️ Error al leer valores de {nombre_nivel}: {e}")
+                except:
                     return 0, 0
-        print(f"❌ Nivel de gobierno no encontrado: {nombre_nivel}")            
         return 0, 0 
 
-    # Obtiene valores de todas las categorías
     return {
         "Gobierno Nacional": buscar_valores(df, "Gobierno nacional"),
         "Gobierno Regional": buscar_valores(df, "Gobierno regional"),
         "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
-        "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital"),
+        "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
     }
-
 
 
 
@@ -993,16 +992,4 @@ with col2:
 
     else:
         resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
-        resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
-        resumen_grafico("Estado POI a Nivel Nacional", poi_e, poi_p)
-
-
-
-
-
-
-
-
-
-
-
+        resumen_grafico
