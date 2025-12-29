@@ -208,6 +208,7 @@ def get_poi_nivel_gobierno():
 
     import pandas as pd
     import unicodedata
+    import streamlit as st
 
     # Descargar CSV de la hoja resumen POI
     url = (
@@ -216,7 +217,7 @@ def get_poi_nivel_gobierno():
     )
     raw = pd.read_csv(url, header=None, dtype=str).fillna("")
 
-    # 1️⃣ Buscar encabezado
+    # Buscar encabezado
     header_row = None
     for i, row in raw.iterrows():
         joined = " ".join(str(x).lower() for x in row)
@@ -228,30 +229,24 @@ def get_poi_nivel_gobierno():
         st.error("❌ No se encontró el encabezado POI en la hoja.")
         return {}
 
-    # 2️⃣ Volver a cargar con encabezado correcto
+    # Volver a cargar con encabezado
     df = pd.read_csv(url, header=header_row, dtype=str).fillna("")
-
-    # Normalizar columnas
     df.columns = df.columns.str.strip().str.lower()
 
-    # Nombres de columnas que esperamos
-    col_nivel = "nivel de gobierno"
-    col_form = "formulados en elaborado"
-    col_pend = "pendientes ues sin poi 2026-2028"
+    col_nivel = "Nivel de Gobierno"
+    col_form = "Formulados En Elaborado  "
+    col_pend = "Pendientes UEs sin POI 2026-2028"
 
-    # Verificar que sí existan
     if col_nivel not in df.columns or col_form not in df.columns or col_pend not in df.columns:
         st.error("❌ Las columnas esperadas no se encontraron en POI")
         return {}
 
-    # Función para convertir a entero sin fallos
     def to_int(x):
         try:
             return int(str(x).replace(",", "").strip())
         except:
             return 0
 
-    # Extraer valores por fila
     resultado = {
         "Gobierno Nacional": (0, 0),
         "Gobierno Regional": (0, 0),
@@ -274,7 +269,6 @@ def get_poi_nivel_gobierno():
             resultado["Municipalidad Distrital"] = (formulados, pendientes)
 
     return resultado
-
 
 
 
