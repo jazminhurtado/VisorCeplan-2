@@ -208,41 +208,43 @@ def get_poi_nivel_gobierno():
     url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
     raw = pd.read_csv(url, header=None, dtype=str).fillna("")
 
-    # 1. Buscar encabezado correcto
+    # Buscar encabezado
     header_row = None
     for i, row in raw.iterrows():
-        joined = " ".join(str(x).lower() for x in row)
-        if "nivel de gobierno" in joined and "formulados" in joined:
+        if "nivel de gobierno" in " ".join(str(x).lower() for x in row):
             header_row = i
             break
 
     if header_row is None:
-        st.error("❌ No se encontró encabezado en POI.")
+        st.error("No se encontró encabezado")
         return {}
 
-    # 2. Leer desde encabezado
     df = pd.read_csv(url, header=header_row, dtype=str).fillna("")
+    df.columns = df.columns.str.strip().str.lower()  # Limpiar encabezados
 
-    # 3. Limpiar nombres de columna
-    df.columns = df.columns.str.strip().str.lower()
+    st.write("COLUMNAS POI:", df.columns.tolist())  # DEBUG
 
-    def get_val(nivel: str) -> tuple[int, int]:
+    def get_val(nivel):
         row = df[df["nivel de gobierno"].str.lower() == nivel.lower()]
         if row.empty:
             return 0, 0
         try:
-            form = int(str(row.iloc[0]["formulados en elaborado"]).replace(",", ""))
-            pend = int(str(row.iloc[0]["pendientes ues sin poi 2026-2028"]).replace(",", ""))
-            return form, pend
-        except:
+            formulado = int(str(row.iloc[0]["formulados en elaborado"]).replace(",", ""))
+            pendiente = int(str(row.iloc[0]["pendientes ues sin poi 2026-2028"]).replace(",", ""))
+            return formulado, pendiente
+        except Exception as e:
+            st.write("❌ Error en fila:", nivel, e)
             return 0, 0
 
-    return {
+    resultado = {
         "Gobierno Nacional": get_val("Gobierno nacional"),
         "Gobierno Regional": get_val("Gobierno regional"),
         "Municipalidad Provincial": get_val("Municipalidad provincial"),
         "Municipalidad Distrital": get_val("Municipalidad distrital")
     }
+
+    st.write("DATOS POI:", resultado)  # DEBUG FINAL
+    return resultado
 
 
 
