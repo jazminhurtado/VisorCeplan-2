@@ -205,36 +205,44 @@ def get_pei_nivel_gobierno():
     }
 
 def get_poi_nivel_gobierno():
-    df = load_poi_registro()
+    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
+    raw = pd.read_csv(url, header=None, dtype=str).fillna("")
 
-    # Mapear unidad_id ➝ nivel de gobierno
-    # Este mapping puede ajustarse según tus datos reales
-    universo = load_universo()
-    df = df.merge(universo, on="unidad_id", how="left")
+    # 1. Buscar encabezado correcto
+    header_row = None
+    for i, row in raw.iterrows():
+        joined = " ".join(str(x).lower() for x in row)
+        if "nivel de gobierno" in joined and "formulados" in joined:
+            header_row = i
+            break
 
-    def clasificar_nivel(uid):
-        uid = uid.strip()
-        if uid.startswith("1"): return "Gobierno Nacional"
-        if uid.startswith("2"): return "Gobierno Regional"
-        if uid.startswith("3"): return "Municipalidad Provincial"
-        return "Municipalidad Distrital"
+    if header_row is None:
+        st.error("❌ No se encontró encabezado en POI.")
+        return {}
 
-    df["nivel"] = df["unidad_id"].map(clasificar_nivel)
+    # 2. Leer desde encabezado
+    df = pd.read_csv(url, header=header_row, dtype=str).fillna("")
 
-    grouped = df.groupby("nivel")["emitido_flag"].agg([
-        ("formulados", "sum"),
-        ("pendientes", lambda x: len(x) - x.sum())
-    ]).to_dict(orient="index")
+    # 3. Limpiar nombres de columna
+    df.columns = df.columns.str.strip().str.lower()
 
-    # Asegurar el orden de niveles
-    orden = [
-        "Gobierno Nacional",
-        "Gobierno Regional",
-        "Municipalidad Provincial",
-        "Municipalidad Distrital"
-    ]
+    def get_val(nivel: str) -> tuple[int, int]:
+        row = df[df["nivel de gobierno"].str.lower() == nivel.lower()]
+        if row.empty:
+            return 0, 0
+        try:
+            form = int(str(row.iloc[0]["formulados en elaborado"]).replace(",", ""))
+            pend = int(str(row.iloc[0]["pendientes ues sin poi 2026-2028"]).replace(",", ""))
+            return form, pend
+        except:
+            return 0, 0
 
-    return {nivel: (grouped.get(nivel, {}).get("formulados", 0), grouped.get(nivel, {}).get("pendientes", 0)) for nivel in orden}
+    return {
+        "Gobierno Nacional": get_val("Gobierno nacional"),
+        "Gobierno Regional": get_val("Gobierno regional"),
+        "Municipalidad Provincial": get_val("Municipalidad provincial"),
+        "Municipalidad Distrital": get_val("Municipalidad distrital")
+    }
 
 
 
