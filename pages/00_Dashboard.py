@@ -205,44 +205,50 @@ def get_pei_nivel_gobierno():
     }
 
 def get_poi_nivel_gobierno():
-    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
-    raw = pd.read_csv(url, header=None, dtype=str).fillna("")
+    df = load_poi_registro()
 
-    # 1. Buscar encabezado correcto
-    header_row = None
-    for i, row in raw.iterrows():
-        joined = " ".join(str(x).lower() for x in row)
-        if "nivel de gobierno" in joined and "formulados" in joined:
-            header_row = i
-            break
+    # Mapear unidad_id ➝ nivel de gobierno
+    # Este mapping puede ajustarse según tus datos reales
+    universo = load_universo()
+    df = df.merge(universo, on="unidad_id", how="left")
 
-    if header_row is None:
-        st.error("❌ No se encontró encabezado en POI.")
-        return {}
+    def clasificar_nivel(uid):
+        uid = uid.strip()
+        if uid.startswith("1"): return "Gobierno Nacional"
+        if uid.startswith("2"): return "Gobierno Regional"
+        if uid.startswith("3"): return "Municipalidad Provincial"
+        return "Municipalidad Distrital"
 
-    # 2. Leer desde encabezado
-    df = pd.read_csv(url, header=header_row, dtype=str).fillna("")
+    df["nivel"] = df["unidad_id"].map(clasificar_nivel)
 
-    # 3. Limpiar nombres de columna
-    df.columns = df.columns.str.strip().str.lower()
+    grouped = df.groupby("nivel")["emitido_flag"].agg([
+        ("formulados", "sum"),
+        ("pendientes", lambda x: len(x) - x.sum())
+    ]).to_dict(orient="index")
 
-    def get_val(nivel: str) -> tuple[int, int]:
-        row = df[df["nivel de gobierno"].str.lower() == nivel.lower()]
-        if row.empty:
-            return 0, 0
-        try:
-            form = int(str(row.iloc[0]["formulados en elaborado"]).replace(",", ""))
-            pend = int(str(row.iloc[0]["pendientes ues sin poi 2026-2028"]).replace(",", ""))
-            return form, pend
-        except:
-            return 0, 0
+    # Asegurar el orden de niveles
+    orden = [
+        "Gobierno Nacional",
+        "Gobierno Regional",
+        "Municipalidad Provincial",
+        "Municipalidad Distrital"
+    ]
 
-    return {
-        "Gobierno Nacional": get_val("Gobierno nacional"),
-        "Gobierno Regional": get_val("Gobierno regional"),
-        "Municipalidad Provincial": get_val("Municipalidad provincial"),
-        "Municipalidad Distrital": get_val("Municipalidad distrital")
-    }
+    return {nivel: (grouped.get(nivel, {}).get("formulados", 0), grouped.get(nivel, {}).get("pendientes", 0)) for nivel in orden}
+
+
+
+
+def _edit_to_csv(file_edit: str, gid: str) -> str:
+    file_id = file_edit.split("/d/")[1].split("/")[0]
+    return f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=csv&gid={gid}"
+
+def _norm(s: str) -> str:
+    if s is None: return ""
+    s = str(s)
+    s = unicodedata.normalize("NFKD", s)
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    return s.strip().upper()
 
 # -----------------------------
 # Diccionario de códigos de departamentos a nombres
