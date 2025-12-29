@@ -208,11 +208,7 @@ def get_poi_nivel_gobierno():
     url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
     df = pd.read_csv(url, header=None, dtype=str).fillna("")
 
-    # 🔴 DEBUG CLAVE
-    st.write("🔎 POI RAW (primeras filas)")
-    st.write(df.head(15))
-
-    # buscar encabezado
+    # 🔎 Buscar la fila donde está el encabezado
     header_row = None
     for i, row in df.iterrows():
         joined = " ".join(str(x).lower() for x in row)
@@ -226,17 +222,52 @@ def get_poi_nivel_gobierno():
         st.error("❌ No se encontró encabezado POI")
         return {}
 
+    # Leer de nuevo usando esa fila como encabezado
     df = pd.read_csv(url, header=header_row, dtype=str).fillna("")
     df.columns = df.columns.str.strip().str.lower()
 
-    # 🔴 DEBUG CLAVE
     st.write("📌 COLUMNAS POI:")
     st.write(df.columns.tolist())
 
     st.write("📊 POI LIMPIO (primeras filas):")
     st.write(df.head())
 
-    # 👇 seguimos luego…
+    # 🔧 Renombrar para evitar errores por columnas mal nombradas
+    if "departamento" in df.columns:
+        df = df.rename(columns={"departamento": "dep"})
+    elif "departamento " in df.columns:  # a veces viene con espacio
+        df = df.rename(columns={"departamento ": "dep"})
+    else:
+        st.error("❌ No se encuentra columna 'departamento'")
+        return {}
+
+    # Detectar nivel de gobierno por departamento
+    def nivel_gobierno(dep):
+        dep = dep.upper()
+        if "NACIONAL" in dep:
+            return "Gobierno Nacional"
+        elif "REGIONAL" in dep:
+            return "Gobierno Regional"
+        elif "PROVINCIAL" in dep:
+            return "Municipalidad Provincial"
+        else:
+            return "Municipalidad Distrital"
+
+    df["nivel"] = df["dep"].apply(lambda x: nivel_gobierno(x))
+
+    # 🔢 Extraer datos agregados
+    datos = {}
+    for nivel in df["nivel"].unique():
+        df_nivel = df[df["nivel"] == nivel]
+        try:
+            formulados = df_nivel["formulados en elaborado"].astype(int).sum()
+            pendientes = df_nivel["pendientes ues sin poi 2026-2028"].astype(int).sum()
+            datos[nivel] = (formulados, pendientes)
+        except Exception as e:
+            st.error(f"❌ Error procesando '{nivel}': {e}")
+            continue
+
+    return datos
 
 
 
