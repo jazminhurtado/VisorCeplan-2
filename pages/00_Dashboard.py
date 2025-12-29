@@ -334,7 +334,7 @@ def load_universo():
     df = pd.read_csv(url, header=header_row, dtype=str).fillna("")
     col_dep = None
     for c in df.columns:
-        if any(k in str(c).lower() for k in ["depa", "región", "region"]):
+        if any(k in str(c).lower() for k in ["depa", "región", "region"]): 
             col_dep = c
             break
     if col_dep is None:
