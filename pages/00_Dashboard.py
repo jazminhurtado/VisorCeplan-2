@@ -841,7 +841,6 @@ poi_e, poi_p = datos["POI"]
 hover_pdc = st.session_state.get("hover_pdc", False)
 
 # KPIs
-# KPIs
 c1, c2, c3 = st.columns([1, 1, 1], gap="small")
 
 with c1:
@@ -967,7 +966,6 @@ with col2:
     elif st.session_state.get("hover_pei", False):
         st.markdown("### Estado PEI por Nivel de Gobierno")
         datos_niveles = get_pei_nivel_gobierno()
-        st.write("POI DATOS:", datos_niveles)
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
 
@@ -975,6 +973,7 @@ with col2:
     elif st.session_state.get("hover_poi", False):
         st.markdown("### Estado POI por Nivel de Gobierno")
         datos_niveles = get_poi_nivel_gobierno()
+        st.write("POI DATOS:", datos_niveles)
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
    
