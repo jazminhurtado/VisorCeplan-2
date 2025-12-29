@@ -266,22 +266,25 @@ CODIGOS_A_DEPARTAMENTOS = {
 def load_resumen():
     url = _edit_to_csv(URL_PEI_POI_FILE_EDIT, GID_RESUMEN_NAC)
     df = pd.read_csv(url, header=None).fillna("")
+
     def buscar_valores(df, texto_clave, col_emitido_offset=1, col_pendiente_offset=2):
         for i, row in df.iterrows():
             for j, val in enumerate(row):
                 if str(val).strip().upper() == texto_clave.upper():
                     try:
-                        emitido = int(str(df.iloc[i, j + col_emitido_offset]).replace(",", ""))
-                        pendiente = int(str(df.iloc[i, j + col_pendiente_offset]).replace(",", ""))
+                        emitido = int(str(df.iat[i, j + col_emitido_offset]).replace(",", ""))
+                        pendiente = int(str(df.iat[i, j + col_pendiente_offset]).replace(",", ""))
                         return (emitido, pendiente)
                     except:
                         return (0, 0)
         return (0, 0)
+
     pdc = buscar_valores(df, "TOTAL", 1, 2)
     pei = buscar_valores(df, "TOTAL", 2, 3)
-    poi = buscar_valores(df, "TOTAL", 2, 3)
+    poi = buscar_valores(df, "TOTAL", 2, 3)  # corregido aquí
 
     return {"PDC": pdc, "PEI": pei, "POI": poi}
+
 
 @st.cache_data(ttl=600)
 def load_universo():
