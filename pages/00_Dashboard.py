@@ -205,19 +205,45 @@ def get_pei_nivel_gobierno():
     }
 
 def get_poi_nivel_gobierno():
-    url = ...
-    df = pd.read_csv(url).fillna("")
+    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
+    raw = pd.read_csv(url, header=None, dtype=str).fillna("")
 
-    def buscar_valores(df, nombre_nivel):
-        for i, row in df.iterrows():
-            if str(row[0]).strip().lower() == nombre_nivel.lower():
-                try:
-                    formulados = int(str(row[2]).replace(",", ""))
-                    pendientes = int(str(row[3]).replace(",", ""))
-                    return formulados, pendientes
-                except:
-                    return 0, 0
-        return 0, 0 
+    # 1. Buscar encabezado correcto
+    header_row = None
+    for i, row in raw.iterrows():
+        joined = " ".join(str(x).lower() for x in row)
+        if "nivel de gobierno" in joined and "formulados" in joined:
+            header_row = i
+            break
+
+    if header_row is None:
+        st.error("❌ No se encontró encabezado en POI.")
+        return {}
+
+    # 2. Leer desde encabezado
+    df = pd.read_csv(url, header=header_row, dtype=str).fillna("")
+
+    # 3. Limpiar nombres de columna
+    df.columns = df.columns.str.strip().str.lower()
+
+    def get_val(nivel: str) -> tuple[int, int]:
+        row = df[df["nivel de gobierno"].str.lower() == nivel.lower()]
+        if row.empty:
+            return 0, 0
+        try:
+            form = int(str(row.iloc[0]["formulados en elaborado"]).replace(",", ""))
+            pend = int(str(row.iloc[0]["pendientes ues sin poi 2026-2028"]).replace(",", ""))
+            return form, pend
+        except:
+            return 0, 0
+
+    return {
+        "Gobierno Nacional": get_val("Gobierno nacional"),
+        "Gobierno Regional": get_val("Gobierno regional"),
+        "Municipalidad Provincial": get_val("Municipalidad provincial"),
+        "Municipalidad Distrital": get_val("Municipalidad distrital")
+    }
+
 
 
 
