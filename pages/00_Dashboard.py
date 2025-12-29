@@ -205,56 +205,38 @@ def get_pei_nivel_gobierno():
     }
 
 def get_poi_nivel_gobierno():
-    # Cargar el registro de POI (cada UE con su estado)
-    df_poi = load_poi_registro()  # ya devuelve unidad_id y emitido_flag
+    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
+    df = pd.read_csv(url, header=None, dtype=str).fillna("")
 
-    # Cargar universo para encontrar qué nivel de gobierno corresponde
-    df_univ = load_universo()  # contiene unidad_id y departamento
+    # 🔴 DEBUG CLAVE
+    st.write("🔎 POI RAW (primeras filas)")
+    st.write(df.head(15))
 
-    # Juntar datos
-    df = df_poi.merge(df_univ, on="unidad_id", how="left")
+    # buscar encabezado
+    header_row = None
+    for i, row in df.iterrows():
+        joined = " ".join(str(x).lower() for x in row)
+        if "nivel de gobierno" in joined:
+            header_row = i
+            break
 
-    # Definir nivel de gobierno según departamento
-    # Aquí suponemos que si no tiene departamento → "Gobierno Nacional"
-    def nivel_gobierno(dep):
-        if dep is None or dep == "":
-            return "Gobierno Nacional"
-        # Si departamento es texto normal → asumimos es regional/local
-        # Regiones → Regional
-        # Municipios? Consideraremos todo como distrital si no regional
-        # Ajusta si fuera necesario
-        return "Municipalidad Distrital" if "MUNICIPALIDAD" in dep else "Gobierno Regional"
+    st.write("🧠 header_row detectado:", header_row)
 
-    df["nivel"] = df["departamento"].apply(lambda x: nivel_gobierno(x))
+    if header_row is None:
+        st.error("❌ No se encontró encabezado POI")
+        return {}
 
-    # Contar por nivel
-    resumen = df.groupby("nivel")["emitido_flag"].agg(
-        formulados="sum",
-        total="count"
-    ).reset_index()
+    df = pd.read_csv(url, header=header_row, dtype=str).fillna("")
+    df.columns = df.columns.str.strip().str.lower()
 
-    # Calcular pendientes
-    resumen["pendientes"] = resumen["total"] - resumen["formulados"]
+    # 🔴 DEBUG CLAVE
+    st.write("📌 COLUMNAS POI:")
+    st.write(df.columns.tolist())
 
-    # Asegurar orden y nombres
-    niveles = [
-        "Gobierno Nacional",
-        "Gobierno Regional",
-        "Municipalidad Provincial",
-        "Municipalidad Distrital"
-    ]
-    resultado = {}
-    for nivel in niveles:
-        match = resumen[resumen["nivel"] == nivel]
-        if not match.empty:
-            f = int(match["formulados"].values[0])
-            p = int(match["pendientes"].values[0])
-            resultado[nivel] = (f, p)
-        else:
-            resultado[nivel] = (0, 0)
+    st.write("📊 POI LIMPIO (primeras filas):")
+    st.write(df.head())
 
-    return resultado
-
+    # 👇 seguimos luego…
 
 
 
