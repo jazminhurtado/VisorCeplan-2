@@ -162,7 +162,7 @@ def get_pdc_nivel_gobierno():
 
     def buscar_valores(df, nombre_nivel):
         for i, row in df.iterrows():
-            if str(row[0]).strip().lower() == nombre_nivel.lower():
+            if nombre_nivel.lower() in str(row[0]).strip().lower():
                 formulados = int(str(row[2]).replace(",", ""))
                 pendientes = int(str(row[3]).replace(",", ""))
                 return formulados, pendientes
