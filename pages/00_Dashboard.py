@@ -205,65 +205,56 @@ def get_pei_nivel_gobierno():
     }
 
 def get_poi_nivel_gobierno():
-    st.warning("✅ SE ESTÁ EJECUTANDO get_poi_nivel_gobierno()")
-    url = _edit_to_csv(URL_PEI_POI_FILE_EDIT, GID_RESUMEN_NAC)
-    raw = pd.read_csv(url, header=None, dtype=str).fillna("")
+    # Cargar el registro de POI (cada UE con su estado)
+    df_poi = load_poi_registro()  # ya devuelve unidad_id y emitido_flag
 
-    # 1. Buscar encabezado
-    header_row = None
-    for i, row in raw.iterrows():
-        texto = " ".join(str(x).lower() for x in row.tolist())
-        if "nivel" in texto and "formulado" in texto and "pendiente" in texto:
-            header_row = i
-            break
+    # Cargar universo para encontrar qué nivel de gobierno corresponde
+    df_univ = load_universo()  # contiene unidad_id y departamento
 
-    if header_row is None:
-        st.error("❌ No se encontró encabezado POI por nivel")
-        return {}
+    # Juntar datos
+    df = df_poi.merge(df_univ, on="unidad_id", how="left")
 
-    # 2. Leer con encabezado real
-    df = pd.read_csv(url, header=header_row, dtype=str).fillna("")
+    # Definir nivel de gobierno según departamento
+    # Aquí suponemos que si no tiene departamento → "Gobierno Nacional"
+    def nivel_gobierno(dep):
+        if dep is None or dep == "":
+            return "Gobierno Nacional"
+        # Si departamento es texto normal → asumimos es regional/local
+        # Regiones → Regional
+        # Municipios? Consideraremos todo como distrital si no regional
+        # Ajusta si fuera necesario
+        return "Municipalidad Distrital" if "MUNICIPALIDAD" in dep else "Gobierno Regional"
 
-    # Normalizar nombres de columnas para buscar sin errores
-    df.columns = [
-        str(c).strip().lower().replace("%", "").replace("*", "").replace("  ", " ")
-        for c in df.columns
+    df["nivel"] = df["departamento"].apply(lambda x: nivel_gobierno(x))
+
+    # Contar por nivel
+    resumen = df.groupby("nivel")["emitido_flag"].agg(
+        formulados="sum",
+        total="count"
+    ).reset_index()
+
+    # Calcular pendientes
+    resumen["pendientes"] = resumen["total"] - resumen["formulados"]
+
+    # Asegurar orden y nombres
+    niveles = [
+        "Gobierno Nacional",
+        "Gobierno Regional",
+        "Municipalidad Provincial",
+        "Municipalidad Distrital"
     ]
+    resultado = {}
+    for nivel in niveles:
+        match = resumen[resumen["nivel"] == nivel]
+        if not match.empty:
+            f = int(match["formulados"].values[0])
+            p = int(match["pendientes"].values[0])
+            resultado[nivel] = (f, p)
+        else:
+            resultado[nivel] = (0, 0)
 
-    # Mapear niveles y columnas correctas
-    def get_val(nivel):
-        # Buscar fila por nivel de gobierno
-        mask = df["nivel de gobierno"].str.lower().str.strip() == nivel.lower()
-        if not mask.any():
-            return 0, 0
+    return resultado
 
-        row = df.loc[mask].iloc[0]
-
-        # Buscar columnas por contenido
-        col_form = None
-        col_pend = None
-        for c in df.columns:
-            if "formulado" in c and "elaborado" in c:
-                col_form = c
-            if "pendiente" in c and "poi" in c:
-                col_pend = c
-
-        if col_form is None or col_pend is None:
-            return 0, 0
-
-        try:
-            form = int(str(row[col_form]).replace(",", "").strip())
-            pend = int(str(row[col_pend]).replace(",", "").strip())
-            return form, pend
-        except:
-            return 0, 0
-
-    return {
-        "Gobierno Nacional": get_val("Gobierno nacional"),
-        "Gobierno Regional": get_val("Gobierno regional"),
-        "Municipalidad Provincial": get_val("Municipalidad provincial"),
-        "Municipalidad Distrital": get_val("Municipalidad distrital")
-    }
 
 
 
