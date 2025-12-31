@@ -1,6 +1,6 @@
 # pages/00_Dashboard.py
 # ------------------------------------------
-# Dashboard CEPLAN con KPIs, Gráficos y Mapa coroplético conectado   
+# Dashboard CEPLAN con KPIs, Gráficos y Mapa coroplético conectado    
 # ------------------------------------------
 import json, unicodedata
 from pathlib import Path
