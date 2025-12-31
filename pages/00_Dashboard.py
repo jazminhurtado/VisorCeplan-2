@@ -500,7 +500,7 @@ def resumen_grafico(titulo, formulados, pendientes,
         textfont=dict(size=14)
     ))
 
-    # Añadir % como anotaciones arriba
+    # Anotaciones
     fig.add_annotation(
         x=formulados / 2,
         y=0,
@@ -532,68 +532,7 @@ def resumen_grafico(titulo, formulados, pendientes,
         yaxis=dict(title='', showticklabels=False)
     )
 
-    fig = go.Figure()
-
-# Barras
-fig.add_trace(go.Bar(
-    y=[titulo], x=[formulados],
-    name="Formulados",
-    orientation='h',
-    marker_color=color_emitido,
-    text=[f"{formulados:,}"],
-    textposition="inside",
-    insidetextanchor='start',
-    textfont=dict(size=14)
-))
-
-fig.add_trace(go.Bar(
-    y=[titulo], x=[pendientes],
-    name="Pendientes",
-    orientation='h',
-    marker_color=color_pendiente,
-    text=[f"{pendientes:,}"],
-    textposition="inside",
-    insidetextanchor='end',
-    textfont=dict(size=14)
-))
-
-# Anotaciones
-total = formulados + pendientes
-pct_form = round((formulados / total) * 100) if total > 0 else 0
-pct_pend = 100 - pct_form
-
-fig.add_annotation(
-    x=formulados / 2,
-    y=0,
-    text=f"<b>{pct_form}%</b> Formulados",
-    showarrow=False,
-    yshift=35,
-    font=dict(color=color_emitido, size=15)
-)
-fig.add_annotation(
-    x=formulados + (pendientes / 2),
-    y=0,
-    text=f"<b>{pct_pend}%</b> Pendientes",
-    showarrow=False,
-    yshift=35,
-    font=dict(color=color_pendiente, size=15)
-)
-
-fig.update_layout(
-    title=dict(
-        text=f"<b>{titulo}</b>",
-        x=0.5,
-        font=dict(size=16, color="darkred")
-    ),
-    barmode='stack',
-    height=210,
-    margin=dict(l=20, r=20, t=60, b=30),
-    showlegend=True,
-    xaxis=dict(title='', showgrid=False),
-    yaxis=dict(title='', showticklabels=False)
-)
-
-st.plotly_chart(fig)
+    st.plotly_chart(fig)
 
 
     # -----------------------------
@@ -613,8 +552,6 @@ fig = go.Figure(data=[
 fig.update_layout(barmode='group', title=titulo)
 st.plotly_chart(fig, use_container_width=True)
                     
-
-
 
 # -----------------------------
 # Mapa
