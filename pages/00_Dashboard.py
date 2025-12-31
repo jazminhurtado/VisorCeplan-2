@@ -957,20 +957,20 @@ with col1:
 with col2:
     if st.session_state.get("hover_pdc", False):
         st.markdown("### Estado PDC por Nivel de Gobierno")
-        datos_niveles = get_pdc_nivel_gobierno()
+        datos_niveles = get_data_nivel_gobierno("PDC")
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
 
     elif st.session_state.get("hover_pei", False):
         st.markdown("### Estado PEI por Nivel de Gobierno")
-        datos_niveles = get_pei_nivel_gobierno()
+        datos_niveles = get_data_nivel_gobierno("PEI")
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
 
 
     elif st.session_state.get("hover_poi", False):
         st.markdown("### Estado POI por Nivel de Gobierno")
-        datos_niveles = get_poi_nivel_gobierno()
+        datos_niveles = get_data_nivel_gobierno("POI")
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
    
