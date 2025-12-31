@@ -1,6 +1,6 @@
 # pages/00_Dashboard.py
 # ------------------------------------------
-# Dashboard CEPLAN con KPIs, Gráficos y Mapa coroplético conectado    
+# Dashboard CEPLAN con KPIs, Gráficos y Mapa coroplético conectado   
 # ------------------------------------------
 import json, unicodedata
 from pathlib import Path
@@ -156,18 +156,61 @@ a {
 """, unsafe_allow_html=True)
 
 # Función nueva para obtener datos de PDC por nivel de gobierno
-# -----------------------------
-# SELECTOR DE PLAN
-# -----------------------------
-opcion = st.sidebar.selectbox("Selecciona el plan:", ["PEI", "PDC", "POI"])
-
-# -----------------------------
-# FUNCIÓN UNIFICADA PARA OBTENER DATOS
-# -----------------------------
-def get_data_nivel_gobierno(tipo):
+def get_pdc_nivel_gobierno():
     url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
     df = pd.read_csv(url, header=None).fillna("")
 
+    def buscar_valores(df, nombre_nivel):
+        for i, row in df.iterrows():
+            if str(row[0]).strip().lower() == nombre_nivel.lower():
+                formulados = int(str(row[2]).replace(",", ""))
+                pendientes = int(str(row[3]).replace(",", ""))
+                return formulados, pendientes
+        return 0, 0
+
+    gr_form, gr_pend = buscar_valores(df, "Gobierno regional")
+    gl_form, gl_pend = buscar_valores(df, "Gobierno local")
+    return {
+        "Gobierno Regional": (gr_form, gr_pend),
+        "Gobierno Local": (gl_form, gl_pend)
+    }
+
+
+def get_pei_nivel_gobierno():
+    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
+    df = pd.read_csv(url, header=None).fillna("")
+
+    # ✅ Verifica visualmente qué datos está leyendo
+    print(df.head(20))  # Esto te permite ver si la fila es la correcta
+
+    def buscar_valores(df, nombre_nivel):
+        for i, row in df.iterrows():
+            if str(row[0]).strip().lower() == nombre_nivel.lower():
+                print(f"Encontrado: {nombre_nivel} ➤ fila {i} ➤ datos: {row[2]}, {row[3]}")
+                try:
+                    formulados = int(str(row[2]).replace(",", ""))
+                    pendientes = int(str(row[3]).replace(",", ""))
+                    return formulados, pendientes
+                except:
+                    print("⚠️ Error al convertir valores.")
+                    return 0, 0
+        print(f"❌ No se encontró: {nombre_nivel}")
+        return 0, 0
+
+    return {
+        "Gobierno Nacional": buscar_valores(df, "Gobierno nacional"),
+        "Gobierno Regional": buscar_valores(df, "Gobierno regional"),
+        "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
+        "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
+    }
+
+def get_poi_nivel_gobierno():
+    # Aquí colocas el código para leer desde Google Sheets
+    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&id=1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ&gid=1288416966"
+    df = pd.read_csv(url).fillna("")
+
+    # Extrae los valores correctos de POI según las cabeceras
+    # Usa la misma lógica que para PEI o PDC
     def buscar_valores(df, nombre_nivel):
         for i, row in df.iterrows():
             if str(row[0]).strip().lower() == nombre_nivel.lower():
@@ -177,24 +220,14 @@ def get_data_nivel_gobierno(tipo):
                     return formulados, pendientes
                 except:
                     return 0, 0
-        return 0, 0
+        return 0, 0 
 
-    if tipo == "PEI" or tipo == "POI":
-        return {
-            "Gobierno Nacional": buscar_valores(df, "Gobierno nacional"),
-            "Gobierno Regional": buscar_valores(df, "Gobierno regional"),
-            "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
-            "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
-        }
-    elif tipo == "PDC":
-        return {
-            "Gobierno Regional": buscar_valores(df, "Gobierno regional"),
-            "Gobierno Local": buscar_valores(df, "Gobierno local")
-        }
-    else:
-        return {}
-
-  
+    return {
+        "Gobierno Nacional": buscar_valores(df, "Gobierno nacional"),
+        "Gobierno Regional": buscar_valores(df, "Gobierno regional"),
+        "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
+        "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
+    }
 
 
 
@@ -500,7 +533,7 @@ def resumen_grafico(titulo, formulados, pendientes,
         textfont=dict(size=14)
     ))
 
-    # Anotaciones
+    # Añadir % como anotaciones arriba
     fig.add_annotation(
         x=formulados / 2,
         y=0,
@@ -532,26 +565,9 @@ def resumen_grafico(titulo, formulados, pendientes,
         yaxis=dict(title='', showticklabels=False)
     )
 
-    st.plotly_chart(fig)
+    st.plotly_chart(fig, use_container_width=True)
 
 
-    # -----------------------------
-# VISUALIZACIÓN DEL GRÁFICO
-# -----------------------------
-datos = get_data_nivel_gobierno(opcion)
-titulo = f"Estado de los {opcion} por Nivel de Gobierno"
-
-niveles = list(datos.keys())
-formulados = [val[0] for val in datos.values()]
-pendientes = [val[1] for val in datos.values()]
-
-fig = go.Figure(data=[
-    go.Bar(name='Formulados', x=niveles, y=formulados),
-    go.Bar(name='Pendientes', x=niveles, y=pendientes)
-])
-fig.update_layout(barmode='group', title=titulo)
-st.plotly_chart(fig, use_container_width=True)
-                    
 
 # -----------------------------
 # Mapa
@@ -956,20 +972,20 @@ with col1:
 with col2:
     if st.session_state.get("hover_pdc", False):
         st.markdown("### Estado PDC por Nivel de Gobierno")
-        datos_niveles = get_data_nivel_gobierno("PDC")
+        datos_niveles = get_pdc_nivel_gobierno()
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
 
     elif st.session_state.get("hover_pei", False):
         st.markdown("### Estado PEI por Nivel de Gobierno")
-        datos_niveles = get_data_nivel_gobierno("PEI")
+        datos_niveles = get_pei_nivel_gobierno()
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
 
 
     elif st.session_state.get("hover_poi", False):
         st.markdown("### Estado POI por Nivel de Gobierno")
-        datos_niveles = get_data_nivel_gobierno("POI")
+        datos_niveles = get_poi_nivel_gobierno()
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
    
