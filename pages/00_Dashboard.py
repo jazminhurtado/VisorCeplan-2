@@ -205,23 +205,45 @@ def get_poi_nivel_gobierno():
     url = _edit_to_csv(URL_PEI_POI_FILE_EDIT, GID_RESUMEN_NAC)
     df = pd.read_csv(url, header=None).fillna("")
 
-    def buscar_valores(df, nombre_nivel):
-        for i, row in df.iterrows():
-            if str(row[0]).strip().lower() == nombre_nivel.lower():
-                try:
-                    formulados = int(str(row[2]).replace(",", ""))
-                    pendientes = int(str(row[3]).replace(",", ""))
-                    return formulados, pendientes
-                except:
-                    return 0, 0
-        return 0, 0
+    # Buscamos primero la fila de encabezado específica del POI
+    poi_header_idx = None
+    for i, row in df.iterrows():
+        row_str = " ".join(str(v).lower() for v in row.tolist())
+        if "total ues" in row_str and "poi" in row_str:
+            poi_header_idx = i
+            break
 
-    return {
-        "Gobierno Nacional": buscar_valores(df, "Gobierno nacional"),
-        "Gobierno Regional": buscar_valores(df, "Gobierno regional"),
-        "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
-        "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
-    }
+    if poi_header_idx is None:
+        # No encontró sección POI
+        return {
+            "Gobierno Nacional": (0, 0),
+            "Gobierno Regional": (0, 0),
+            "Municipalidad Provincial": (0, 0),
+            "Municipalidad Distrital": (0, 0)
+        }
+
+    # A partir de esa fila, tomamos las filas siguientes para niveles
+    start = poi_header_idx + 1
+
+    resultados = {}
+    for nivel in ["Gobierno nacional", "Gobierno regional",
+                  "Municipalidad provincial", "Municipalidad distrital"]:
+        formulados = 0
+        pendientes = 0
+        for j in range(start, min(start + 10, len(df))):
+            cell = str(df.iat[j, 0]).strip().lower()
+            if nivel == cell:
+                try:
+                    # columnas POI: total UES suele estar en col1, formulados col2, pendientes col3
+                    formulados = int(str(df.iat[j, 2]).replace(",", "").strip())
+                    pendientes = int(str(df.iat[j, 3]).replace(",", "").strip())
+                except:
+                    formulados, pendientes = 0, 0
+                break
+        resultados[nivel.title()] = (formulados, pendientes)
+
+    return resultados
+
 
 
 def _edit_to_csv(file_edit: str, gid: str) -> str:
@@ -831,7 +853,6 @@ poi_e, poi_p = datos["POI"]
 
 hover_pdc = st.session_state.get("hover_pdc", False)
 
-# KPIs
 # KPIs
 c1, c2, c3 = st.columns([1, 1, 1], gap="small")
 
