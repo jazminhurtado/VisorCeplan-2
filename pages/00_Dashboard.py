@@ -156,61 +156,18 @@ a {
 """, unsafe_allow_html=True)
 
 # Función nueva para obtener datos de PDC por nivel de gobierno
-def get_pdc_nivel_gobierno():
+# -----------------------------
+# SELECTOR DE PLAN
+# -----------------------------
+opcion = st.sidebar.selectbox("Selecciona el plan:", ["PEI", "PDC", "POI"])
+
+# -----------------------------
+# FUNCIÓN UNIFICADA PARA OBTENER DATOS
+# -----------------------------
+def get_data_nivel_gobierno(tipo):
     url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
     df = pd.read_csv(url, header=None).fillna("")
 
-    def buscar_valores(df, nombre_nivel):
-        for i, row in df.iterrows():
-            if str(row[0]).strip().lower() == nombre_nivel.lower():
-                formulados = int(str(row[2]).replace(",", ""))
-                pendientes = int(str(row[3]).replace(",", ""))
-                return formulados, pendientes
-        return 0, 0
-
-    gr_form, gr_pend = buscar_valores(df, "Gobierno regional")
-    gl_form, gl_pend = buscar_valores(df, "Gobierno local")
-    return {
-        "Gobierno Regional": (gr_form, gr_pend),
-        "Gobierno Local": (gl_form, gl_pend)
-    }
-
-
-def get_pei_nivel_gobierno():
-    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
-    df = pd.read_csv(url, header=None).fillna("")
-
-    # ✅ Verifica visualmente qué datos está leyendo
-    print(df.head(20))  # Esto te permite ver si la fila es la correcta
-
-    def buscar_valores(df, nombre_nivel):
-        for i, row in df.iterrows():
-            if str(row[0]).strip().lower() == nombre_nivel.lower():
-                print(f"Encontrado: {nombre_nivel} ➤ fila {i} ➤ datos: {row[2]}, {row[3]}")
-                try:
-                    formulados = int(str(row[2]).replace(",", ""))
-                    pendientes = int(str(row[3]).replace(",", ""))
-                    return formulados, pendientes
-                except:
-                    print("⚠️ Error al convertir valores.")
-                    return 0, 0
-        print(f"❌ No se encontró: {nombre_nivel}")
-        return 0, 0
-
-    return {
-        "Gobierno Nacional": buscar_valores(df, "Gobierno nacional"),
-        "Gobierno Regional": buscar_valores(df, "Gobierno regional"),
-        "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
-        "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
-    }
-
-def get_poi_nivel_gobierno():
-    # Aquí colocas el código para leer desde Google Sheets
-    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&id=1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ&gid=1288416966"
-    df = pd.read_csv(url).fillna("")
-
-    # Extrae los valores correctos de POI según las cabeceras
-    # Usa la misma lógica que para PEI o PDC
     def buscar_valores(df, nombre_nivel):
         for i, row in df.iterrows():
             if str(row[0]).strip().lower() == nombre_nivel.lower():
@@ -220,14 +177,24 @@ def get_poi_nivel_gobierno():
                     return formulados, pendientes
                 except:
                     return 0, 0
-        return 0, 0 
+        return 0, 0
 
-    return {
-        "Gobierno Nacional": buscar_valores(df, "Gobierno nacional"),
-        "Gobierno Regional": buscar_valores(df, "Gobierno regional"),
-        "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
-        "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
-    }
+    if tipo == "PEI" or tipo == "POI":
+        return {
+            "Gobierno Nacional": buscar_valores(df, "Gobierno nacional"),
+            "Gobierno Regional": buscar_valores(df, "Gobierno regional"),
+            "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
+            "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
+        }
+    elif tipo == "PDC":
+        return {
+            "Gobierno Regional": buscar_valores(df, "Gobierno regional"),
+            "Gobierno Local": buscar_valores(df, "Gobierno local")
+        }
+    else:
+        return {}
+
+  
 
 
 
@@ -279,7 +246,7 @@ def load_resumen():
         return (0, 0)
     pdc = buscar_valores(df, "TOTAL", 1, 2)
     pei = buscar_valores(df, "TOTAL", 2, 3)
-    poi = buscar_valores(df, "TOTAL UES*", 3, 4)
+    poi = buscar_valores(df, "TOTAL UES*", 2, 3)
     return {"PDC": pdc, "PEI": pei, "POI": poi}
 
 @st.cache_data(ttl=600)
