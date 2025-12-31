@@ -532,7 +532,25 @@ def resumen_grafico(titulo, formulados, pendientes,
         yaxis=dict(title='', showticklabels=False)
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(go.Figure(...))
+
+    # -----------------------------
+# VISUALIZACIÓN DEL GRÁFICO
+# -----------------------------
+datos = get_data_nivel_gobierno(opcion)
+titulo = f"Estado de los {opcion} por Nivel de Gobierno"
+
+niveles = list(datos.keys())
+formulados = [val[0] for val in datos.values()]
+pendientes = [val[1] for val in datos.values()]
+
+fig = go.Figure(data=[
+    go.Bar(name='Formulados', x=niveles, y=formulados),
+    go.Bar(name='Pendientes', x=niveles, y=pendientes)
+])
+fig.update_layout(barmode='group', title=titulo)
+st.plotly_chart(fig, use_container_width=True)
+                    
 
 
 
