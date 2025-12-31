@@ -279,7 +279,7 @@ def load_resumen():
         return (0, 0)
     pdc = buscar_valores(df, "TOTAL", 1, 2)
     pei = buscar_valores(df, "TOTAL", 2, 3)
-    poi = buscar_valores(df, "TOTAL UES*", 2, 3)
+    poi = buscar_valores(df, "TOTAL UES*", 3, 4)
     return {"PDC": pdc, "PEI": pei, "POI": poi}
 
 @st.cache_data(ttl=600)
