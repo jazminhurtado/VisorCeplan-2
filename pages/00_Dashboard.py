@@ -209,7 +209,8 @@ def get_poi_nivel_gobierno():
     poi_header_idx = None
     for i, row in df.iterrows():
         row_str = " ".join(str(v).lower() for v in row.tolist())
-        if "total ues" in row_str and "poi" in row_str:
+        if "poi" in row_str and "nivel de gobierno" in row_str:
+    
             poi_header_idx = i
             break
 
