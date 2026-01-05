@@ -205,30 +205,39 @@ def get_poi_nivel_gobierno():
     url = _edit_to_csv(URL_PEI_POI_FILE_EDIT, GID_RESUMEN_NAC)
     df = pd.read_csv(url, header=None).fillna("")
 
-    resultados = {}
-    niveles = ["Gobierno nacional", "Gobierno regional", "Municipalidad provincial", "Municipalidad distrital"]
-
-    for i in range(len(df)):
-        first_cell = str(df.iat[i, 0]).strip().lower()
-        if "nivel de gobierno" in first_cell:
-            # Asumimos que los datos están en las siguientes 4 filas
-            for j in range(i + 1, i + 5):
-                nivel = str(df.iat[j, 0]).strip().lower()
-                if nivel in [n.lower() for n in niveles]:
-                    try:
-                        formulados = int(str(df.iat[j, 2]).replace(",", "").strip())
-                        pendientes = int(str(df.iat[j, 3]).replace(",", "").strip())
-                    except:
-                        formulados, pendientes = 0, 0
-                    resultados[nivel.title()] = (formulados, pendientes)
+    poi_header_idx = None
+    for i, row in df.iterrows():
+        row_str = str(row[0]).lower()
+        if "nivel de gobierno" in row_str and "ues" in " ".join(str(v).lower() for v in row.tolist()):
+            poi_header_idx = i
             break
 
-    # Rellenar si algún nivel faltara
-    for nivel in niveles:
-        if nivel not in resultados:
-            resultados[nivel] = (0, 0)
+    if poi_header_idx is None:
+        return {
+            "Gobierno Nacional": (0, 0),
+            "Gobierno Regional": (0, 0),
+            "Municipalidad Provincial": (0, 0),
+            "Municipalidad Distrital": (0, 0)
+        }
+
+    start = poi_header_idx + 1
+    resultados = {}
+    for nivel in ["gobierno nacional", "gobierno regional", "municipalidad provincial", "municipalidad distrital"]:
+        formulados = 0
+        pendientes = 0
+        for j in range(start, min(start + 10, len(df))):
+            cell = str(df.iat[j, 0]).strip().lower()
+            if nivel == cell:
+                try:
+                    formulados = int(str(df.iat[j, 2]).replace(",", "").strip())
+                    pendientes = int(str(df.iat[j, 3]).replace(",", "").strip())
+                except:
+                    formulados, pendientes = 0, 0
+                break
+        resultados[nivel.title()] = (formulados, pendientes)
 
     return resultados
+
 
 
 
