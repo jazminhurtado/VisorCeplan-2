@@ -207,9 +207,9 @@ def get_poi_nivel_gobierno():
 
     # Buscamos primero la fila de encabezado específica del POI
     poi_header_idx = None
-    for i, row in df.iterrows():
-        row_str = str(row[0]).lower()
-        if "nivel de gobierno" in row_str and "ues" in " ".join(str(v).lower() for v in row.tolist()):
+    for i in range(len(df)):
+        row_values = [str(v).lower() for v in df.iloc[i].tolist()]
+        if "nivel de gobierno" in row_values[0] and "total ues" in row_values:
     
             poi_header_idx = i
             break
