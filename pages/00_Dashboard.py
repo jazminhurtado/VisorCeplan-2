@@ -983,18 +983,20 @@ with col2:
     elif st.session_state.get("hover_poi", False):
         st.markdown("### Estado POI por Nivel de Gobierno")
         datos_niveles = get_poi_nivel_gobierno()
-        st.write(datos_niveles)
-        st.write("📋 Debug datos_niveles POI", datos_niveles)
 
-        
-       
-        for nivel, (form, pend) in datos_niveles.items():
-            try:
-                form = int(str(form).replace(",", "").strip())
-                pend = int(str(pend).replace(",", "").strip())
-            except:
-                form, pend = 0, 0
-            resumen_grafico(nivel, form, pend)
+# Depuración visual
+st.write("✅ Datos POI crudos:", datos_niveles)
+
+for nivel, valores in datos_niveles.items():
+    try:
+        # Soporte para tuplas tipo (int, int) o ('123', '456')
+        form = int(str(valores[0]).replace(",", "").strip())
+        pend = int(str(valores[1]).replace(",", "").strip())
+        resumen_grafico(nivel, form, pend)
+    except Exception as e:
+        st.error(f"❌ Error al procesar {nivel}: {e}")
+        resumen_grafico(nivel, 0, 0)
+
     
    
 
