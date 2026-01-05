@@ -884,11 +884,6 @@ with c1:
             st.session_state["hover_pei"] = False  # Asegura que PEI se apague
 
 
-
-
-
-
-
 with c2:
     if "hover_pei" not in st.session_state:
         st.session_state["hover_pei"] = False
@@ -912,8 +907,6 @@ with c2:
         if submitted:
             st.session_state["hover_pei"] = True
             st.session_state["hover_pdc"] = False  # Asegura que PDC se apague
-
-
 
 
 with c3:
@@ -995,6 +988,8 @@ with col2:
     elif st.session_state.get("hover_poi", False):
         st.markdown("### Estado POI por Nivel de Gobierno")
         datos_niveles = get_poi_nivel_gobierno()
+        st.write(datos_niveles)
+        
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
    
