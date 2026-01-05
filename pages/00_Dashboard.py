@@ -975,6 +975,8 @@ with col2:
         st.markdown("### Estado POI por Nivel de Gobierno")
         datos_niveles = get_poi_nivel_gobierno()
         st.write(datos_niveles)
+        st.write("📋 Debug datos_niveles POI", datos_niveles)
+
         
        
         for nivel, (form, pend) in datos_niveles.items():
