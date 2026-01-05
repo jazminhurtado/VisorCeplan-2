@@ -222,19 +222,27 @@ def get_poi_nivel_gobierno():
 
     start = poi_header_idx + 1
     resultados = {}
-    for nivel in ["gobierno nacional", "gobierno regional", "municipalidad provincial", "municipalidad distrital"]:
-        formulados = 0
-        pendientes = 0
-        for j in range(start, min(start + 10, len(df))):
-            cell = str(df.iat[j, 0]).strip().lower()
-            if nivel == cell:
-                try:
-                    formulados = int(str(df.iat[j, 2]).replace(",", "").strip())
-                    pendientes = int(str(df.iat[j, 3]).replace(",", "").strip())
-                except:
-                    formulados, pendientes = 0, 0
-                break
-        resultados[nivel.title()] = (formulados, pendientes)
+    niveles = {
+        "gobierno nacional": "Gobierno Nacional",
+        "gobierno regional": "Gobierno Regional",
+        "municipalidad provincial": "Municipalidad Provincial",
+        "municipalidad distrital": "Municipalidad Distrital"
+    }
+
+    for j in range(start, min(start + 10, len(df))):
+        fila = str(df.iat[j, 0]).strip().lower()
+        if fila in niveles:
+            try:
+                formulados = int(str(df.iat[j, 2]).replace(",", "").strip())
+                pendientes = int(str(df.iat[j, 3]).replace(",", "").strip())
+            except:
+                formulados, pendientes = 0, 0
+            resultados[niveles[fila]] = (formulados, pendientes)
+
+    # Asegurarse de que todos los niveles estén presentes
+    for nivel in niveles.values():
+        if nivel not in resultados:
+            resultados[nivel] = (0, 0)
 
     return resultados
 
