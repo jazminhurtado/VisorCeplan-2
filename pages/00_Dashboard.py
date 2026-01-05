@@ -205,43 +205,30 @@ def get_poi_nivel_gobierno():
     url = _edit_to_csv(URL_PEI_POI_FILE_EDIT, GID_RESUMEN_NAC)
     df = pd.read_csv(url, header=None).fillna("")
 
-    # Buscar la fila que contiene los encabezados de la tabla POI
-    poi_header_idx = None
+    resultados = {}
+    niveles = ["Gobierno nacional", "Gobierno regional", "Municipalidad provincial", "Municipalidad distrital"]
+
     for i in range(len(df)):
-        row_values = [str(v).lower() for v in df.iloc[i].tolist()]
-        if "nivel de gobierno" in row_values[0] and "total ues" in row_values:
-            poi_header_idx = i
+        first_cell = str(df.iat[i, 0]).strip().lower()
+        if "nivel de gobierno" in first_cell:
+            # Asumimos que los datos están en las siguientes 4 filas
+            for j in range(i + 1, i + 5):
+                nivel = str(df.iat[j, 0]).strip().lower()
+                if nivel in [n.lower() for n in niveles]:
+                    try:
+                        formulados = int(str(df.iat[j, 2]).replace(",", "").strip())
+                        pendientes = int(str(df.iat[j, 3]).replace(",", "").strip())
+                    except:
+                        formulados, pendientes = 0, 0
+                    resultados[nivel.title()] = (formulados, pendientes)
             break
 
-    if poi_header_idx is None:
-        return {
-            "Gobierno Nacional": (0, 0),
-            "Gobierno Regional": (0, 0),
-            "Municipalidad Provincial": (0, 0),
-            "Municipalidad Distrital": (0, 0)
-        }
-
-    resultados = {}
-    niveles = ["Gobierno nacional", "Gobierno regional",
-               "Municipalidad provincial", "Municipalidad distrital"]
-    for j in range(poi_header_idx + 1, poi_header_idx + 10):
-        nivel = str(df.iat[j, 0]).strip()
-        if nivel in niveles:
-            try:
-                formulados = int(str(df.iat[j, 2]).replace(",", "").strip())
-                pendientes = int(str(df.iat[j, 3]).replace(",", "").strip())
-            except:
-                formulados, pendientes = 0, 0
-            resultados[nivel] = (formulados, pendientes)
-
-    # Asegurarse de que estén todos los niveles
+    # Rellenar si algún nivel faltara
     for nivel in niveles:
         if nivel not in resultados:
             resultados[nivel] = (0, 0)
 
     return resultados
-
-
 
 
 
@@ -989,8 +976,15 @@ with col2:
         datos_niveles = get_poi_nivel_gobierno()
         st.write(datos_niveles)
         
+       
         for nivel, (form, pend) in datos_niveles.items():
+            try:
+                form = int(str(form).replace(",", "").strip())
+                pend = int(str(pend).replace(",", "").strip())
+            except:
+                form, pend = 0, 0
             resumen_grafico(nivel, form, pend)
+    
    
 
     else:
