@@ -203,23 +203,28 @@ def get_pei_nivel_gobierno():
         "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
         "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
     }
-
 def get_poi_nivel_gobierno():
-  
+    import pandas as pd
+    import streamlit as st
+
     try:
         url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
         df = pd.read_csv(url, header=None).fillna("")
 
-        # 🔐 Leer directamente las filas esperadas (ya corregido)
+        # 🔐 Leer directamente las filas esperadas (17 a 20)
         fila_nacional = df.iloc[17]
         fila_regional = df.iloc[18]
         fila_provincial = df.iloc[19]
         fila_distrital = df.iloc[20]
 
         def extraer(row):
+            def convertir(valor):
+                s = str(valor).replace(",", "").strip()
+                return int(s) if s.isdigit() else 0
+
             try:
-                formulados = int(str(row[5]).replace(",", "").strip())  # Columna F
-                pendientes = int(str(row[6]).replace(",", "").strip())  # Columna G
+                formulados = convertir(row[5])  # Columna F
+                pendientes = convertir(row[6])  # Columna G
                 return formulados, pendientes
             except Exception as e:
                 st.warning(f"⚠️ Error al procesar fila: {e}")
@@ -240,6 +245,7 @@ def get_poi_nivel_gobierno():
             "Municipalidad Provincial": (0, 0),
             "Municipalidad Distrital": (0, 0)
         }
+
 
 
 
