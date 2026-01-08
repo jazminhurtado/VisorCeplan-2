@@ -206,8 +206,11 @@ def get_pei_nivel_gobierno():
 
 def get_poi_nivel_gobierno():
     # Aquí colocas el código para leer desde Google Sheets
-    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&id=1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ&gid=1288416966"
+    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
     df = pd.read_csv(url).fillna("")
+
+    # ✅ Verifica visualmente qué datos está leyendo
+    print(df.head(20))  # Esto te permite ver si la fila es la correcta
 
     # Extrae los valores correctos de POI según las cabeceras
     # Usa la misma lógica que para PEI o PDC
@@ -228,13 +231,6 @@ def get_poi_nivel_gobierno():
         "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
         "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
     }
-
-
-
-
-
-
-
 
 def _edit_to_csv(file_edit: str, gid: str) -> str:
     file_id = file_edit.split("/d/")[1].split("/")[0]
@@ -497,8 +493,6 @@ def kpi_card(title, formulados, pendientes, unidad_label="entidades", nota=""):
     """, unsafe_allow_html=True)
 
 
-
-
 # -----------------------------
 # Gráfico de barras
 # -----------------------------
@@ -566,8 +560,6 @@ def resumen_grafico(titulo, formulados, pendientes,
     )
 
     st.plotly_chart(fig, use_container_width=True)
-
-
 
 # -----------------------------
 # Mapa
@@ -875,11 +867,6 @@ with c1:
             st.session_state["hover_pei"] = False  # Asegura que PEI se apague
 
 
-
-
-
-
-
 with c2:
     if "hover_pei" not in st.session_state:
         st.session_state["hover_pei"] = False
@@ -903,8 +890,6 @@ with c2:
         if submitted:
             st.session_state["hover_pei"] = True
             st.session_state["hover_pdc"] = False  # Asegura que PDC se apague
-
-
 
 
 with c3:
