@@ -959,7 +959,7 @@ with col1:
     # Radio funcional sin texto visible (ya lo pusimos arriba)
     plan_sel = st.radio(
         label="",
-        options=["PEI", "POI", "PDC"],
+        options=["PDC", "PEI", "POI"],
         horizontal=True,
         label_visibility="collapsed"
     )
