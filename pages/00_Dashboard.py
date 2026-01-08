@@ -177,32 +177,75 @@ def get_pdc_nivel_gobierno():
 
 
 def get_pei_nivel_gobierno():
-    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
-    df = pd.read_csv(url, header=None).fillna("")
+    import pandas as pd
+    import streamlit as st
 
-    # ✅ Verifica visualmente qué datos está leyendo
-    print(df.head(20))  # Esto te permite ver si la fila es la correcta
+    try:
+        url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
+        df_raw = pd.read_csv(url, header=None).fillna("")
 
-    def buscar_valores(df, nombre_nivel):
-        for i, row in df.iterrows():
-            if str(row[0]).strip().lower() == nombre_nivel.lower():
-                print(f"Encontrado: {nombre_nivel} ➤ fila {i} ➤ datos: {row[2]}, {row[3]}")
-                try:
-                    formulados = int(str(row[2]).replace(",", ""))
-                    pendientes = int(str(row[3]).replace(",", ""))
-                    return formulados, pendientes
-                except:
-                    print("⚠️ Error al convertir valores.")
-                    return 0, 0
-        print(f"❌ No se encontró: {nombre_nivel}")
-        return 0, 0
+        # 🔍 Buscar fila del encabezado PEI
+        fila_encabezado = None
+        for i, row in df_raw.iterrows():
+            row_text = " ".join(str(cell).lower() for cell in row)
+            if "pliegos con pei" in row_text and "sin pei" in row_text:
+                fila_encabezado = i
+                break
 
-    return {
-        "Gobierno Nacional": buscar_valores(df, "Gobierno nacional"),
-        "Gobierno Regional": buscar_valores(df, "Gobierno regional"),
-        "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
-        "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
-    }
+        if fila_encabezado is None:
+            st.warning("❌ No se encontró encabezado del bloque PEI.")
+            return {nivel: (0, 0) for nivel in [
+                "Gobierno Nacional", "Gobierno Regional", "Municipalidad Provincial", "Municipalidad Distrital"
+            ]}
+
+        # 🔁 Leer desde esa fila como encabezado
+        df = pd.read_csv(url, header=fila_encabezado).fillna("")
+
+        # Buscar columnas
+        col_nivel = col_formulados = col_pendientes = None
+        for col in df.columns:
+            col_str = str(col).lower()
+            if "nivel" in col_str and "gobierno" in col_str:
+                col_nivel = col
+            elif "pliegos con pei" in col_str and "formulados" in col_str:
+                col_formulados = col
+            elif "pendientes" in col_str and "sin pei" in col_str:
+                col_pendientes = col
+
+        if not col_nivel or not col_formulados or not col_pendientes:
+            st.warning("❌ No se encontraron columnas clave de PEI.")
+            return {nivel: (0, 0) for nivel in [
+                "Gobierno Nacional", "Gobierno Regional", "Municipalidad Provincial", "Municipalidad Distrital"
+            ]}
+
+        def extraer(nivel):
+            fila = df[df[col_nivel].str.strip().str.lower() == nivel.lower()]
+            if fila.empty:
+                return 0, 0
+            try:
+                formulados = int(str(fila.iloc[0][col_formulados]).replace(",", "").strip())
+                pendientes = int(str(fila.iloc[0][col_pendientes]).replace(",", "").strip())
+                return formulados, pendientes
+            except Exception as e:
+                st.warning(f"⚠️ Error en fila {nivel}: {e}")
+                return 0, 0
+
+        return {
+            "Gobierno Nacional": extraer("Gobierno nacional"),
+            "Gobierno Regional": extraer("Gobierno regional"),
+            "Municipalidad Provincial": extraer("Municipalidad provincial"),
+            "Municipalidad Distrital": extraer("Municipalidad distrital"),
+        }
+
+    except Exception as e:
+        st.error(f"❌ Error general al cargar PEI: {e}")
+        return {
+            "Gobierno Nacional": (0, 0),
+            "Gobierno Regional": (0, 0),
+            "Municipalidad Provincial": (0, 0),
+            "Municipalidad Distrital": (0, 0),
+        }
+
 
 def get_poi_nivel_gobierno():
     import pandas as pd
