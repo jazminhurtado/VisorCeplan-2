@@ -205,9 +205,7 @@ def get_pei_nivel_gobierno():
     }
 
 def get_poi_nivel_gobierno():
-    import pandas as pd
-    import streamlit as st
-
+  
     try:
         url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
         df = pd.read_csv(url, header=None).fillna("")
