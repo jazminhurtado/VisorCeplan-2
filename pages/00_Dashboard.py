@@ -211,16 +211,16 @@ def get_poi_nivel_gobierno():
     url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
     df = pd.read_csv(url, header=None).fillna("")
 
-    # ✅ Buscar fila que contiene encabezado del bloque POI
-    fila_inicio = None
+    fila_encabezado = None
+
+    # 🔍 Buscar encabezado que contenga palabras clave
     for i, row in df.iterrows():
-        celda_0 = str(row[0]).strip().lower()
-        celda_1 = str(row[1]).strip().lower()
-        if "ue" in celda_0 and "poi" in celda_1:
-            fila_inicio = i
+        texto_fila = " ".join([str(cell).lower().strip() for cell in row])
+        if "formulados" in texto_fila and "pendientes" in texto_fila and "poi" in texto_fila:
+            fila_encabezado = i
             break
 
-    if fila_inicio is None:
+    if fila_encabezado is None:
         st.warning("❌ No se encontró el bloque de POI en el archivo.")
         return {
             "Gobierno Nacional": (0, 0),
@@ -229,15 +229,37 @@ def get_poi_nivel_gobierno():
             "Municipalidad Distrital": (0, 0)
         }
 
-    # ✅ Extrae 4 filas siguientes (datos por nivel de gobierno)
-    df_poi = df.iloc[fila_inicio + 1 : fila_inicio + 5]
+    # ✅ Leer filas de datos (4 niveles de gobierno)
+    df_poi = df.iloc[fila_encabezado + 1 : fila_encabezado + 5]
+
+    # Detectar columnas con "Formulados" y "Pendientes"
+    encabezados = df.iloc[fila_encabezado].tolist()
+
+    col_formulados = None
+    col_pendientes = None
+
+    for idx, texto in enumerate(encabezados):
+        texto_limpio = str(texto).lower()
+        if "formulados" in texto_limpio and "poi" in texto_limpio:
+            col_formulados = idx
+        if "pendientes" in texto_limpio and "poi" in texto_limpio:
+            col_pendientes = idx
+
+    if col_formulados is None or col_pendientes is None:
+        st.warning("❌ No se encontraron columnas de formulados o pendientes.")
+        return {
+            "Gobierno Nacional": (0, 0),
+            "Gobierno Regional": (0, 0),
+            "Municipalidad Provincial": (0, 0),
+            "Municipalidad Distrital": (0, 0)
+        }
 
     def buscar_valores(df, nombre_nivel):
         for _, row in df.iterrows():
             if str(row[0]).strip().lower() == nombre_nivel.lower():
                 try:
-                    formulados = int(str(row[2]).replace(",", "").strip())
-                    pendientes = int(str(row[3]).replace(",", "").strip())
+                    formulados = int(str(row[col_formulados]).replace(",", "").strip())
+                    pendientes = int(str(row[col_pendientes]).replace(",", "").strip())
                     return formulados, pendientes
                 except:
                     return 0, 0
@@ -249,6 +271,7 @@ def get_poi_nivel_gobierno():
         "Municipalidad Provincial": buscar_valores(df_poi, "Municipalidad provincial"),
         "Municipalidad Distrital": buscar_valores(df_poi, "Municipalidad distrital")
     }
+
 
 
 
