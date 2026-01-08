@@ -978,7 +978,7 @@ with c2:
         <div class="clickable-kpi" onclick="document.forms['pei_kpi_form'].submit();">
         """, unsafe_allow_html=True)
 
-        kpi_card("PEI", pei_e, pei_p, "pliegos", "comprende los GN, GR, GL") 
+        kpi_card("PEI", pei_e, pei_p, "pliegos", "comprende los GN, GR, GL")
 
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -1018,6 +1018,17 @@ with c3:
 # Mapa y Gráficos
 col1, col2 = st.columns([2, 2])  
 
+
+# 🌍 Sincronizar mapa con KPI clickeado
+if st.session_state.get("hover_pdc", False):
+    plan_sel = "PDC"
+elif st.session_state.get("hover_pei", False):
+    plan_sel = "PEI"
+elif st.session_state.get("hover_poi", False):
+    plan_sel = "POI"
+else:
+    plan_sel = "PDC"
+
 with col1:
    with col1:
     # Agrupamos título + radio en una sola fila horizontal
@@ -1039,12 +1050,8 @@ with col1:
     """, unsafe_allow_html=True)
 
     # Radio funcional sin texto visible (ya lo pusimos arriba)
-    plan_sel = st.radio(
-        label="",
-        options=["PDC", "PEI", "POI"],
-        horizontal=True,
-        label_visibility="collapsed"
-    )
+    # 🔁 Radio desactivado para que mapa siga KPI
+# plan_sel = st.radio(...)
 
     render_map(plan_sel)
 
