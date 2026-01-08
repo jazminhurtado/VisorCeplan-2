@@ -205,13 +205,18 @@ def get_pei_nivel_gobierno():
     }
 
 def get_poi_nivel_gobierno():
+    import pandas as pd
+    import streamlit as st
+
     url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
     df = pd.read_csv(url, header=None).fillna("")
 
-    # ✅ Buscar fila donde comienza el bloque de POI (encabezado: "Total UEs*")
+    # ✅ Buscar fila que contiene encabezado del bloque POI
     fila_inicio = None
     for i, row in df.iterrows():
-        if "total ues" in str(row[0]).strip().lower():
+        celda_0 = str(row[0]).strip().lower()
+        celda_1 = str(row[1]).strip().lower()
+        if "ue" in celda_0 and "poi" in celda_1:
             fila_inicio = i
             break
 
@@ -224,7 +229,7 @@ def get_poi_nivel_gobierno():
             "Municipalidad Distrital": (0, 0)
         }
 
-    # Tomar las siguientes 4 filas del bloque POI
+    # ✅ Extrae 4 filas siguientes (datos por nivel de gobierno)
     df_poi = df.iloc[fila_inicio + 1 : fila_inicio + 5]
 
     def buscar_valores(df, nombre_nivel):
@@ -244,6 +249,7 @@ def get_poi_nivel_gobierno():
         "Municipalidad Provincial": buscar_valores(df_poi, "Municipalidad provincial"),
         "Municipalidad Distrital": buscar_valores(df_poi, "Municipalidad distrital")
     }
+
 
 
 
