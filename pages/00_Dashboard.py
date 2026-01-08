@@ -203,38 +203,60 @@ def get_pei_nivel_gobierno():
         "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
         "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
     }
+
 def get_poi_nivel_gobierno():
     import pandas as pd
     import streamlit as st
 
     try:
         url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
+        df = pd.read_csv(url, header=None).fillna("")
 
-        # Cargar archivo sin encabezado
-        raw_df = pd.read_csv(url, header=None).fillna("")
-
-        # Detectar la fila de encabezado que contiene "Formulados En Elaborado"
-        header_row_index = None
-        for i, row in raw_df.iterrows():
-            row_text = " ".join(str(cell).lower() for cell in row)
-            if "formulados en elaborado" in row_text and "pendientes" in row_text:
-                header_row_index = i
+        # 🔍 Buscar la fila de encabezado de POI por contenido flexible
+        fila_encabezado = None
+        for i, row in df.iterrows():
+            fila = [str(cell).strip().lower() for cell in row]
+            if any("formulados" in cel and "elaborado" in cel for cel in fila) and \
+               any("pendientes" in cel and "poi" in cel for cel in fila):
+                fila_encabezado = i
                 break
 
-        if header_row_index is None:
+        if fila_encabezado is None:
             st.warning("❌ No se encontró encabezado del bloque POI.")
-            return {nivel: (0, 0) for nivel in ["Gobierno Nacional", "Gobierno Regional", "Municipalidad Provincial", "Municipalidad Distrital"]}
+            return {nivel: (0, 0) for nivel in [
+                "Gobierno Nacional", "Gobierno Regional", "Municipalidad Provincial", "Municipalidad Distrital"
+            ]}
 
-        # Leer el dataframe desde esa fila como encabezado real
-        df = pd.read_csv(url, header=header_row_index).fillna("")
+        # 🔁 Leer el dataframe real desde esa fila
+        df = pd.read_csv(url, header=fila_encabezado).fillna("")
+
+        # 🔍 Detectar columnas correctas de manera flexible
+        col_nivel = None
+        col_formulados = None
+        col_pendientes = None
+
+        for col in df.columns:
+            nombre = str(col).strip().lower()
+            if "nivel" in nombre and "gobierno" in nombre:
+                col_nivel = col
+            elif "formulados" in nombre and "elaborado" in nombre:
+                col_formulados = col
+            elif "pendientes" in nombre and "poi" in nombre:
+                col_pendientes = col
+
+        if not col_nivel or not col_formulados or not col_pendientes:
+            st.warning("❌ No se encontraron columnas clave para POI.")
+            return {nivel: (0, 0) for nivel in [
+                "Gobierno Nacional", "Gobierno Regional", "Municipalidad Provincial", "Municipalidad Distrital"
+            ]}
 
         def extraer(nivel):
-            fila = df[df["Nivel de Gobierno"].str.strip().str.lower() == nivel.lower()]
+            fila = df[df[col_nivel].str.strip().str.lower() == nivel.lower()]
             if fila.empty:
                 return 0, 0
             try:
-                formulados = int(str(fila.iloc[0]["Formulados En Elaborado"]).replace(",", "").strip())
-                pendientes = int(str(fila.iloc[0]["Pendientes UEs sin POI 2026-2028"]).replace(",", "").strip())
+                formulados = int(str(fila.iloc[0][col_formulados]).replace(",", "").strip())
+                pendientes = int(str(fila.iloc[0][col_pendientes]).replace(",", "").strip())
                 return formulados, pendientes
             except Exception as e:
                 st.warning(f"⚠️ Error en fila {nivel}: {e}")
