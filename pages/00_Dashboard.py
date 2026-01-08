@@ -212,34 +212,35 @@ def get_poi_nivel_gobierno():
         url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
         df = pd.read_csv(url, header=None).fillna("")
 
-        # 🔥 EXTRAER FILAS EXACTAS (basado en observación visual y prueba real)
-        nacional = df.iloc[17]
-        regional = df.iloc[18]
-        provincial = df.iloc[19]
-        distrital = df.iloc[20]
+        # 🔐 Leer directamente las filas esperadas (ya corregido)
+        fila_nacional = df.iloc[17]
+        fila_regional = df.iloc[18]
+        fila_provincial = df.iloc[19]
+        fila_distrital = df.iloc[20]
 
         def extraer(row):
             try:
-                formulados = int(str(row[5]).replace(",", "").strip())
-                pendientes = int(str(row[6]).replace(",", "").strip())
+                formulados = int(str(row[5]).replace(",", "").strip())  # Columna F
+                pendientes = int(str(row[6]).replace(",", "").strip())  # Columna G
                 return formulados, pendientes
-            except:
+            except Exception as e:
+                st.warning(f"⚠️ Error al procesar fila: {e}")
                 return 0, 0
 
         return {
-            "Gobierno Nacional": extraer(nacional),
-            "Gobierno Regional": extraer(regional),
-            "Municipalidad Provincial": extraer(provincial),
-            "Municipalidad Distrital": extraer(distrital),
+            "Gobierno Nacional": extraer(fila_nacional),
+            "Gobierno Regional": extraer(fila_regional),
+            "Municipalidad Provincial": extraer(fila_provincial),
+            "Municipalidad Distrital": extraer(fila_distrital)
         }
 
     except Exception as e:
-        st.error(f"❌ Error al leer POI: {e}")
+        st.error(f"❌ Error al cargar POI: {e}")
         return {
             "Gobierno Nacional": (0, 0),
             "Gobierno Regional": (0, 0),
             "Municipalidad Provincial": (0, 0),
-            "Municipalidad Distrital": (0, 0),
+            "Municipalidad Distrital": (0, 0)
         }
 
 
