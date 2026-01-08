@@ -205,15 +205,27 @@ def get_pei_nivel_gobierno():
     }
 
 def get_poi_nivel_gobierno():
-    # Aquí colocas el código para leer desde Google Sheets
     url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
-    df = pd.read_csv(url).fillna("")
+    df = pd.read_csv(url, header=None).fillna("")
 
-    # ✅ Verifica visualmente qué datos está leyendo
-    print(df.head(20))  # Esto te permite ver si la fila es la correcta
+    # ✅ Busca desde donde comienzan los datos de POI
+    fila_inicio = None
+    for i, row in df.iterrows():
+        if str(row[0]).strip().lower() == "gobierno nacional":
+            fila_inicio = i
+            break
 
-    # Extrae los valores correctos de POI según las cabeceras
-    # Usa la misma lógica que para PEI o PDC
+    if fila_inicio is None:
+        print("❌ No se encontró inicio de POI")
+        return {
+            "Gobierno Nacional": (0, 0),
+            "Gobierno Regional": (0, 0),
+            "Municipalidad Provincial": (0, 0),
+            "Municipalidad Distrital": (0, 0)
+        }
+
+    df_poi = df.iloc[fila_inicio:fila_inicio + 4]  # toma solo las 4 filas de POI
+
     def buscar_valores(df, nombre_nivel):
         for i, row in df.iterrows():
             if str(row[0]).strip().lower() == nombre_nivel.lower():
@@ -223,14 +235,15 @@ def get_poi_nivel_gobierno():
                     return formulados, pendientes
                 except:
                     return 0, 0
-        return 0, 0 
+        return 0, 0
 
     return {
-        "Gobierno Nacional": buscar_valores(df, "Gobierno nacional"),
-        "Gobierno Regional": buscar_valores(df, "Gobierno regional"),
-        "Municipalidad Provincial": buscar_valores(df, "Municipalidad provincial"),
-        "Municipalidad Distrital": buscar_valores(df, "Municipalidad distrital")
+        "Gobierno Nacional": buscar_valores(df_poi, "Gobierno nacional"),
+        "Gobierno Regional": buscar_valores(df_poi, "Gobierno regional"),
+        "Municipalidad Provincial": buscar_valores(df_poi, "Municipalidad provincial"),
+        "Municipalidad Distrital": buscar_valores(df_poi, "Municipalidad distrital")
     }
+
 
 def _edit_to_csv(file_edit: str, gid: str) -> str:
     file_id = file_edit.split("/d/")[1].split("/")[0]
