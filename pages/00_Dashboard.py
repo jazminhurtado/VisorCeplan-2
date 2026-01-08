@@ -208,15 +208,15 @@ def get_poi_nivel_gobierno():
     url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
     df = pd.read_csv(url, header=None).fillna("")
 
-    # ✅ Busca desde donde comienzan los datos de POI
+    # ✅ Buscar fila donde comienza el bloque de POI (encabezado: "Total UEs*")
     fila_inicio = None
     for i, row in df.iterrows():
-        if str(row[0]).strip().lower() == "gobierno nacional":
+        if "total ues" in str(row[0]).strip().lower():
             fila_inicio = i
             break
 
     if fila_inicio is None:
-        print("❌ No se encontró inicio de POI")
+        st.warning("❌ No se encontró el bloque de POI en el archivo.")
         return {
             "Gobierno Nacional": (0, 0),
             "Gobierno Regional": (0, 0),
@@ -224,14 +224,15 @@ def get_poi_nivel_gobierno():
             "Municipalidad Distrital": (0, 0)
         }
 
-    df_poi = df.iloc[fila_inicio:fila_inicio + 4]  # toma solo las 4 filas de POI
+    # Tomar las siguientes 4 filas del bloque POI
+    df_poi = df.iloc[fila_inicio + 1 : fila_inicio + 5]
 
     def buscar_valores(df, nombre_nivel):
-        for i, row in df.iterrows():
+        for _, row in df.iterrows():
             if str(row[0]).strip().lower() == nombre_nivel.lower():
                 try:
-                    formulados = int(str(row[2]).replace(",", ""))
-                    pendientes = int(str(row[3]).replace(",", ""))
+                    formulados = int(str(row[2]).replace(",", "").strip())
+                    pendientes = int(str(row[3]).replace(",", "").strip())
                     return formulados, pendientes
                 except:
                     return 0, 0
@@ -243,6 +244,7 @@ def get_poi_nivel_gobierno():
         "Municipalidad Provincial": buscar_valores(df_poi, "Municipalidad provincial"),
         "Municipalidad Distrital": buscar_valores(df_poi, "Municipalidad distrital")
     }
+
 
 
 def _edit_to_csv(file_edit: str, gid: str) -> str:
