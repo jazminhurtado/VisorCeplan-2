@@ -208,30 +208,40 @@ def get_poi_nivel_gobierno():
     import pandas as pd
     import streamlit as st
 
-    # URL de la hoja resumen
-    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
-    df = pd.read_csv(url, header=None).fillna("")
+    try:
+        url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
+        df = pd.read_csv(url, header=None).fillna("")
 
-    # Filas 17 a 21 del archivo contienen el bloque POI
-    df_poi = df.iloc[17:21]  # filas con niveles de gobierno
+        # 🔥 EXTRAER FILAS EXACTAS (basado en observación visual y prueba real)
+        nacional = df.iloc[17]
+        regional = df.iloc[18]
+        provincial = df.iloc[19]
+        distrital = df.iloc[20]
 
-    def buscar_valores(df, nombre_nivel):
-        for _, row in df.iterrows():
-            if str(row[0]).strip().lower() == nombre_nivel.lower():
-                try:
-                    formulados = int(str(row[5]).replace(",", "").strip())  # columna F
-                    pendientes = int(str(row[6]).replace(",", "").strip())  # columna G
-                    return formulados, pendientes
-                except:
-                    return 0, 0
-        return 0, 0
+        def extraer(row):
+            try:
+                formulados = int(str(row[5]).replace(",", "").strip())
+                pendientes = int(str(row[6]).replace(",", "").strip())
+                return formulados, pendientes
+            except:
+                return 0, 0
 
-    return {
-        "Gobierno Nacional": buscar_valores(df_poi, "Gobierno nacional"),
-        "Gobierno Regional": buscar_valores(df_poi, "Gobierno regional"),
-        "Municipalidad Provincial": buscar_valores(df_poi, "Municipalidad provincial"),
-        "Municipalidad Distrital": buscar_valores(df_poi, "Municipalidad distrital")
-    }
+        return {
+            "Gobierno Nacional": extraer(nacional),
+            "Gobierno Regional": extraer(regional),
+            "Municipalidad Provincial": extraer(provincial),
+            "Municipalidad Distrital": extraer(distrital),
+        }
+
+    except Exception as e:
+        st.error(f"❌ Error al leer POI: {e}")
+        return {
+            "Gobierno Nacional": (0, 0),
+            "Gobierno Regional": (0, 0),
+            "Municipalidad Provincial": (0, 0),
+            "Municipalidad Distrital": (0, 0),
+        }
+
 
 
 
