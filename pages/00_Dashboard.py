@@ -209,42 +209,53 @@ def get_poi_nivel_gobierno():
 
     try:
         url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/export?format=csv&gid=1288416966"
-        df = pd.read_csv(url, header=None).fillna("")
 
-        # 🔐 Leer directamente las filas esperadas (17 a 20)
-        fila_nacional = df.iloc[17]
-        fila_regional = df.iloc[18]
-        fila_provincial = df.iloc[19]
-        fila_distrital = df.iloc[20]
+        # Cargar archivo sin encabezado
+        raw_df = pd.read_csv(url, header=None).fillna("")
 
-        def extraer(row):
-            def convertir(valor):
-                s = str(valor).replace(",", "").strip()
-                return int(s) if s.isdigit() else 0
+        # Detectar la fila de encabezado que contiene "Formulados En Elaborado"
+        header_row_index = None
+        for i, row in raw_df.iterrows():
+            row_text = " ".join(str(cell).lower() for cell in row)
+            if "formulados en elaborado" in row_text and "pendientes" in row_text:
+                header_row_index = i
+                break
 
+        if header_row_index is None:
+            st.warning("❌ No se encontró encabezado del bloque POI.")
+            return {nivel: (0, 0) for nivel in ["Gobierno Nacional", "Gobierno Regional", "Municipalidad Provincial", "Municipalidad Distrital"]}
+
+        # Leer el dataframe desde esa fila como encabezado real
+        df = pd.read_csv(url, header=header_row_index).fillna("")
+
+        def extraer(nivel):
+            fila = df[df["Nivel de Gobierno"].str.strip().str.lower() == nivel.lower()]
+            if fila.empty:
+                return 0, 0
             try:
-                formulados = convertir(row[5])  # Columna F
-                pendientes = convertir(row[6])  # Columna G
+                formulados = int(str(fila.iloc[0]["Formulados En Elaborado"]).replace(",", "").strip())
+                pendientes = int(str(fila.iloc[0]["Pendientes UEs sin POI 2026-2028"]).replace(",", "").strip())
                 return formulados, pendientes
             except Exception as e:
-                st.warning(f"⚠️ Error al procesar fila: {e}")
+                st.warning(f"⚠️ Error en fila {nivel}: {e}")
                 return 0, 0
 
         return {
-            "Gobierno Nacional": extraer(fila_nacional),
-            "Gobierno Regional": extraer(fila_regional),
-            "Municipalidad Provincial": extraer(fila_provincial),
-            "Municipalidad Distrital": extraer(fila_distrital)
+            "Gobierno Nacional": extraer("Gobierno nacional"),
+            "Gobierno Regional": extraer("Gobierno regional"),
+            "Municipalidad Provincial": extraer("Municipalidad provincial"),
+            "Municipalidad Distrital": extraer("Municipalidad distrital"),
         }
 
     except Exception as e:
-        st.error(f"❌ Error al cargar POI: {e}")
+        st.error(f"❌ Error general al cargar POI: {e}")
         return {
             "Gobierno Nacional": (0, 0),
             "Gobierno Regional": (0, 0),
             "Municipalidad Provincial": (0, 0),
-            "Municipalidad Distrital": (0, 0)
+            "Municipalidad Distrital": (0, 0),
         }
+
 
 
 
