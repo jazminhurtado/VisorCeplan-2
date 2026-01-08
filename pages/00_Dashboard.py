@@ -978,7 +978,7 @@ with c2:
         <div class="clickable-kpi" onclick="document.forms['pei_kpi_form'].submit();">
         """, unsafe_allow_html=True)
 
-        kpi_card("PEI", pei_e, pei_p, "pliegos", "comprende los GN, GR, GL")
+        kpi_card("PEI", pei_e, pei_p, "pliegos", "comprende los GN, GR, GL") 
 
         st.markdown("</div>", unsafe_allow_html=True)
 
