@@ -1015,16 +1015,6 @@ with c3:
             st.session_state["hover_pdc"] = False
 
 
-# Mapa y Gráficos
-# Verificar si hay KPI seleccionado
-mostrar_mapa = (
-    st.session_state.get("hover_pdc", False)
-    or st.session_state.get("hover_pei", False)
-    or st.session_state.get("hover_poi", False)
-)
-
-if mostrar_mapa:
-    # Mapa + gráficos (vista dividida)
    # ---------------------------------------
 # 🔁 Determinar el plan seleccionado según el KPI clickeado
 # ---------------------------------------
