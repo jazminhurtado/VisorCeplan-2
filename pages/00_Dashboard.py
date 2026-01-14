@@ -9,7 +9,6 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit.components.v1 as components
-import geopandas as gpd
 
 # --------------------------------------
 # CONFIGURACIÓN GENERAL
@@ -1015,43 +1014,6 @@ with c3:
             st.session_state["hover_pei"] = False
             st.session_state["hover_pdc"] = False
 
-from pathlib import Path
-import geopandas as gpd
-import plotly.express as px
-
-# --- Ruta y carga del archivo GeoJSON ---
-geojson_path = "peru_departa.geojson"
-gdf = None
-
-if Path(geojson_path).exists():
-    gdf = gpd.read_file(geojson_path)
-else:
-    st.warning("⚠ No se encontró el archivo 'peru_departa.geojson'. Verifica la ubicación.")
-
-# --- Selector del KPI ---
-plan_sel = st.radio("Selecciona instrumento", ["-", "PDC", "PEI", "POI"], index=0)
-
-# --- Mapa neutro (solo si hay gdf cargado y no hay selección) ---
-if plan_sel == "-" and gdf is not None:
-    gdf["valor"] = 1
-    mapa_neutro = px.choropleth(
-        gdf,
-        geojson=gdf.geometry,
-        locations=gdf.index,
-        color="valor",
-        color_continuous_scale=["#d3d3d3", "#d3d3d3"],
-        labels={"valor": ""},
-        title="Vista general del territorio nacional"
-    )
-    mapa_neutro.update_geos(fitbounds="locations", visible=False)
-    mapa_neutro.update_layout(coloraxis_showscale=False)
-    st.plotly_chart(mapa_neutro, use_container_width=True)
-
-elif plan_sel in ["PDC", "PEI", "POI"] and gdf is not None:
-    render_map(plan_sel)
-
-
-
 
 # Mapa y Gráficos
 col1, col2 = st.columns([2, 2])  
@@ -1065,23 +1027,30 @@ elif st.session_state.get("hover_pei", False):
 elif st.session_state.get("hover_poi", False):
     plan_sel = "POI"
 else:
-    plan_sel = "PDC"
+    plan_sel = "NINGUNO"
 
 with col1:
-    if not (
-        st.session_state.get("hover_pdc", False)
-        or st.session_state.get("hover_pei", False)
-        or st.session_state.get("hover_poi", False)
-    ):
-        # Mostrar imagen CEPLAN centrada
-        st.markdown("<br><br>", unsafe_allow_html=True)
-
-        col_img1, col_img2, col_img3 = st.columns([1, 2, 1])
-        with col_img2:
-            st.image("personita7.JPG", width=280)
-
+  with col1:
+    if plan_sel == "NINGUNO":
+        # Mostrar mapa neutral con un solo color
+        df_base = load_resumen_departamental()["PDC"].copy()
+        df_base["avance"] = 0  # Todos al 0%
+        df_base["color"] = "#D3D3D3"  # gris claro
+        gj = load_geojson()
+        fig = px.choropleth(
+            df_base,
+            geojson=gj,
+            locations="departamento",
+            featureidkey="properties.dep_key",
+            color="departamento",
+            color_discrete_map={row["departamento"]: "#D3D3D3" for _, row in df_base.iterrows()},
+            custom_data=["departamento"]
+        )
+        fig.update_geos(fitbounds="locations", visible=False)
+        fig.update_layout(height=700, margin=dict(l=0, r=0, t=10, b=0))
+        fig.update_traces(hovertemplate="<b>%{customdata[0]}</b><extra></extra>")
+        st.plotly_chart(fig, use_container_width=True)
     else:
-        # Mostrar mapa según KPI seleccionado
         render_map(plan_sel)
 
 
