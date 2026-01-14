@@ -1015,23 +1015,24 @@ with c3:
             st.session_state["hover_pei"] = False
             st.session_state["hover_pdc"] = False
 
-# --- CARGA DEL MAPA BASE ---
 from pathlib import Path
+import geopandas as gpd
+import plotly.express as px
 
+# --- Ruta y carga del archivo GeoJSON ---
 geojson_path = "peru_departa.geojson"
+gdf = None
 
 if Path(geojson_path).exists():
     gdf = gpd.read_file(geojson_path)
 else:
     st.warning("⚠ No se encontró el archivo 'peru_departa.geojson'. Verifica la ubicación.")
 
-
-# --- SELECCIÓN DEL KPI ---
+# --- Selector del KPI ---
 plan_sel = st.radio("Selecciona instrumento", ["-", "PDC", "PEI", "POI"], index=0)
 
-# --- LÓGICA PARA MOSTRAR MAPA NEUTRO O DINÁMICO ---
-if plan_sel == "-":
-    # Mapa en tono gris claro uniforme
+# --- Mapa neutro (solo si hay gdf cargado y no hay selección) ---
+if plan_sel == "-" and gdf is not None:
     gdf["valor"] = 1
     mapa_neutro = px.choropleth(
         gdf,
@@ -1046,8 +1047,9 @@ if plan_sel == "-":
     mapa_neutro.update_layout(coloraxis_showscale=False)
     st.plotly_chart(mapa_neutro, use_container_width=True)
 
-else:
-    render_map(plan_sel)  # Asegúrate que esta función está definida más arriba
+elif plan_sel in ["PDC", "PEI", "POI"] and gdf is not None:
+    render_map(plan_sel)
+
 
 
 
