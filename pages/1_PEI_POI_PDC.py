@@ -178,6 +178,39 @@ elif plan == "PDC":
         st.warning("No se cargaron datos de PDC. Verifica que **monitoreoPDC.xlsx** exista en la raíz del repo y la hoja **pdc**.")
     else:
         st.subheader("Visor PDC - Plan de Desarrollo Concertado")
+        # ─── TABLA RESUMEN PDC ────────────────────────────────────
+url_pdc = _edit_to_csv(URL_PEI_POI_FILE_EDIT, GID_RESUMEN_NAC)
+df_resumen_raw = pd.read_csv(url_pdc, header=None).fillna("")
+
+# Función para extraer datos desde hoja resumen
+def buscar_pdc_resumen(df, nivel_buscado):
+    for i, row in df.iterrows():
+        if str(row[0]).strip().lower() == nivel_buscado.lower():
+            try:
+                formulados = int(str(df.iloc[i, 2]).replace(",", ""))
+                pendientes = int(str(df.iloc[i, 3]).replace(",", ""))
+                return formulados, pendientes
+            except:
+                return 0, 0
+    return 0, 0
+
+# Obtener datos por nivel
+gr_form, gr_pend = buscar_pdc_resumen(df_resumen_raw, "Gobierno regional")
+gl_form, gl_pend = buscar_pdc_resumen(df_resumen_raw, "Gobierno local")
+tot_form = gr_form + gl_form
+tot_pend = gr_pend + gl_pend
+
+# Construir DataFrame
+resumen_pdc = pd.DataFrame({
+    "Nivel de Gobierno": ["Gobierno Regional", "Gobierno Local", "Total"],
+    "Formulados": [gr_form, gl_form, tot_form],
+    "Pendientes": [gr_pend, gl_pend, tot_pend],
+    "Total": [gr_form + gr_pend, gl_form + gl_pend, tot_form + tot_pend]
+})
+
+# Mostrar tabla
+st.dataframe(resumen_pdc, use_container_width=True)
+
         opciones = [""] + sorted(pdc_df["codigo_nombre"].dropna().unique())
         unidad = st.selectbox("🔍 Buscar o seleccionar unidad ejecutora:", options=opciones, key="unidad_pdc")
         st.button("🪑 Limpiar búsqueda", on_click=limpiar_busqueda_pdc)
