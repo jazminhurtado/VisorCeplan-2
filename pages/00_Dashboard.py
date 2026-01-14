@@ -1040,7 +1040,7 @@ with col1:
         fig = px.choropleth(
             df_base,
             geojson=gj,
-            locations="Departamento",
+            locations="departamento",
             featureidkey="properties.dep_key",
             color="departamento",
             color_discrete_map={row["departamento"]: "#A7C7E7" for _, row in df_base.iterrows()},
