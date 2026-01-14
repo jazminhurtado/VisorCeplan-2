@@ -1032,22 +1032,22 @@ else:
 with col1:
    with col1:
     # Agrupamos título + radio en una sola fila horizontal
-    st.markdown("""
-    <style>
-    .radio-label-inline {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        font-size: 18px;
-        font-weight: 600;
-        margin-bottom: -10px;
-    }
-    </style>
+    #st.markdown("""
+    #<style>
+    #.radio-label-inline {
+        #display: flex;
+        #align-items: center;
+        #gap: 12px;
+        #font-size: 18px;
+        #font-weight: 600;
+        #margin-bottom: -10px;
+    #}
+    #</style>
 
-    <div class="radio-label-inline">
-        <span>Selecciona plan para mapa:</span>
-    </div>
-    """, unsafe_allow_html=True)
+    #<div class="radio-label-inline">
+        #<span>Selecciona plan para mapa:</span>
+    #</div>
+    #""", unsafe_allow_html=True)
 
     # Radio funcional sin texto visible (ya lo pusimos arriba)
     # 🔁 Radio desactivado para que mapa siga KPI
