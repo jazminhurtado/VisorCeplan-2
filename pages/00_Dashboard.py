@@ -1015,37 +1015,32 @@ with c3:
             st.session_state["hover_pei"] = False
             st.session_state["hover_pdc"] = False
 
-# Cargar GeoJSON de departamentos si no existe
-geojson_path = "data/mapa_departamental.geojson"
-if Path(geojson_path).exists():
-gdf = gpd.read_file(geojson_path)
-else:
-gdf = None
+# --- CARGA DEL MAPA BASE ---
+gdf = gpd.read_file("data/mapa_departamental.geojson")
 
-
-# Agregar selección para ver el mapa neutro por defecto
+# --- SELECCIÓN DEL KPI ---
 plan_sel = st.radio("Selecciona instrumento", ["-", "PDC", "PEI", "POI"], index=0)
 
+# --- LÓGICA PARA MOSTRAR MAPA NEUTRO O DINÁMICO ---
+if plan_sel == "-":
+    # Mapa en tono gris claro uniforme
+    gdf["valor"] = 1
+    mapa_neutro = px.choropleth(
+        gdf,
+        geojson=gdf.geometry,
+        locations=gdf.index,
+        color="valor",
+        color_continuous_scale=["#d3d3d3", "#d3d3d3"],
+        labels={"valor": ""},
+        title="Vista general del territorio nacional"
+    )
+    mapa_neutro.update_geos(fitbounds="locations", visible=False)
+    mapa_neutro.update_layout(coloraxis_showscale=False)
+    st.plotly_chart(mapa_neutro, use_container_width=True)
 
-if plan_sel == "-" and gdf is not None:
-# Mapa neutro en gris claro uniforme
-gdf["valor"] = 1
-mapa_neutro = px.choropleth(
-gdf,
-geojson=gdf.geometry,
-locations=gdf.index,
-color="valor",
-color_continuous_scale=["#d3d3d3", "#d3d3d3"],
-labels={"valor": ""},
-title="Vista general del territorio nacional"
-)
-mapa_neutro.update_geos(fitbounds="locations", visible=False)
-mapa_neutro.update_layout(coloraxis_showscale=False)
-st.plotly_chart(mapa_neutro, use_container_width=True)
+else:
+    render_map(plan_sel)  # Asegúrate que esta función está definida más arriba
 
-
-elif plan_sel in ["PDC", "PEI", "POI"]:
-render_map(plan_sel)
 
 
 # Mapa y Gráficos
