@@ -1030,9 +1030,22 @@ else:
     plan_sel = "PDC"
 
 with col1:
-   with col1:
- 
-    render_map(plan_sel)
+    if not (
+        st.session_state.get("hover_pdc", False)
+        or st.session_state.get("hover_pei", False)
+        or st.session_state.get("hover_poi", False)
+    ):
+        # Mostrar imagen CEPLAN centrada
+        st.markdown("<br><br>", unsafe_allow_html=True)
+
+        col_img1, col_img2, col_img3 = st.columns([1, 2, 1])
+        with col_img2:
+            st.image("personita7.JPG", width=280)
+
+    else:
+        # Mostrar mapa según KPI seleccionado
+        render_map(plan_sel)
+
 
 with col2:
     if st.session_state.get("hover_pdc", False):
