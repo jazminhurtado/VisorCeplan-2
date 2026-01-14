@@ -3,20 +3,18 @@ import pandas as pd
 import re
 from pathlib import Path
 
-# Opcional: si ya lo pones en Inicio.py, puedes quitar esta línea.
-#st.set_page_config(page_title="Monitoreo Institucional", layout="wide")
-# --------------------------------------
+# ----------------------------
 # CONFIGURACIÓN GENERAL
-# --------------------------------------
+# ----------------------------
 st.set_page_config(
     page_title="Seguimiento POI-PEI-PDC",
-    page_icon="logo_icon.png",  # Asegúrate que el ícono esté en raíz
+    page_icon="logo_icon.png",
     layout="wide"
 )
 
-# --------------------------------------
-# ESTILOS PERSONALIZADOS 
-# --------------------------------------
+# ----------------------------
+# ESTILOS PERSONALIZADOS
+# ----------------------------
 st.markdown("""
 <style>
 body, .stApp {
@@ -48,24 +46,22 @@ a {
 </style>
 """, unsafe_allow_html=True)
 
+# ----------------------------
+# TÍTULO
+# ----------------------------
 st.image("pe.JPG", width=150)
 st.title("Visor Institucional de Monitoreo")
 st.markdown("Consulta unificada del estado de los planes PEI–POI y PDC por unidad ejecutora o región.")
 
-# -------------------------
-# CARGA DE ARCHIVOS (LOCAL)
-# -------------------------
+# ----------------------------
+# CARGA DE ARCHIVOS
+# ----------------------------
 @st.cache_data
 def cargar_excel_local(path, **read_kwargs):
-    """Lee un Excel local con manejo de errores y cache."""
     f = Path(path)
     if not f.exists():
         raise FileNotFoundError(f"No se encontró el archivo: {f.resolve()}")
-    try:
-        # engine se detecta, pero si diera problema, usa engine="openpyxl"
-        return pd.read_excel(f, **read_kwargs)
-    except Exception as e:
-        raise RuntimeError(f"Error leyendo {f.name}: {e}")
+    return pd.read_excel(f, **read_kwargs)
 
 pei_df = None
 pdc_df = None
@@ -73,23 +69,28 @@ errores = []
 
 # PEI–POI
 try:
-    # OJO: respeta exactamente el nombre y mayúsculas/minúsculas
     pei_df = cargar_excel_local("monitoreoPEI-POI.xlsx", sheet_name=0)
 except Exception as e:
     errores.append(f"PEI–POI: {e}")
 
-# PDC
+# PDC - desde Google Sheets
 try:
-  
-# ID del documento y nombre o número de hoja
-sheet_id = "1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ"
-sheet_gid = "1288416966"  # Esto es el gid de la hoja
+    sheet_id = "1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ"
+    sheet_gid = "1288416966"
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={sheet_gid}"
+    pdc_df = pd.read_csv(url)
 
-# URL de exportación en formato CSV
-url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={sheet_gid}"
+    # Renombrar columnas si tienen títulos diferentes
+    rename_map = {
+        "Nivel de Gobierno": "nivel_gobierno",
+        "Total Pliegos": "total",
+        "Formulados Entidades Con PDC": "formulados",
+        "Pendientes Entidades Sin PDC": "pendientes"
+    }
+    pdc_df.rename(columns=rename_map, inplace=True)
 
-# Leer la hoja directamente desde el enlace
-pdc_df = pd.read_csv(url)
+    # Crear columna "tiene_pdc" basada en los datos
+    pdc_df["tiene_pdc"] = pdc_df["formulados"].apply(lambda x: 1 if x > 0 else 0)
 
 except Exception as e:
     errores.append(f"PDC: {e}")
@@ -98,9 +99,9 @@ if errores:
     for msg in errores:
         st.error(f"No se pudo cargar {msg}")
 
-# -------------------------
-# PREPARACIÓN DE DATOS
-# -------------------------
+# ----------------------------
+# FUNCIONES AUXILIARES
+# ----------------------------
 def preparar_datos(df):
     df = df.copy()
     df.columns = (
@@ -110,12 +111,10 @@ def preparar_datos(df):
           .str.replace(" ", "_")
           .str.replace("-", "_")
     )
-    # Normalizar id_ue
     if "id_ue" in df.columns:
         df["id_ue"] = df["id_ue"].astype(str).str.replace(".0", "", regex=False)
     else:
         df["id_ue"] = ""
-    # Construir etiqueta de búsqueda
     for col in ["nombre_departamento", "nombre_provincia", "nombre_unidad_ejecutora"]:
         if col not in df.columns:
             df[col] = ""
@@ -129,12 +128,13 @@ def preparar_datos(df):
 
 if pei_df is not None:
     pei_df = preparar_datos(pei_df)
-if pdc_df is not None:
+
+if pdc_df is not None and "nombre_departamento" in pdc_df.columns:
     pdc_df = preparar_datos(pdc_df)
 
-# -------------------------
+# ----------------------------
 # UI
-# -------------------------
+# ----------------------------
 plan = st.selectbox("Selecciona el plan a visualizar", ["PEI–POI", "PDC"])
 
 def limpiar_busqueda_pei():
@@ -143,18 +143,20 @@ def limpiar_busqueda_pei():
 def limpiar_busqueda_pdc():
     st.session_state["unidad_pdc"] = ""
 
-# --------- PEI–POI ---------
+# ----------------------------
+# PEI–POI
+# ----------------------------
 if plan == "PEI–POI":
     if pei_df is None:
-        st.warning("No se cargaron datos de PEI–POI. Verifica que el archivo **monitoreoPEI-POI.xlsx** esté en la raíz del repo.")
+        st.warning("No se cargaron datos de PEI–POI.")
     else:
         opciones = [""] + sorted(pei_df["codigo_nombre"].dropna().unique())
         unidad = st.selectbox("🔍 Buscar o seleccionar unidad ejecutora:", options=opciones, key="unidad_pei")
         st.button("🪑 Limpiar búsqueda", on_click=limpiar_busqueda_pei)
 
         if unidad:
-            codigo_match = re.search(r"\[(\d+)\]", unidad)
-            codigo = codigo_match.group(1) if codigo_match else ""
+            codigo = re.search(r"\[(\d+)\]", unidad)
+            codigo = codigo.group(1) if codigo else ""
             filtro = pei_df[pei_df["id_ue"] == codigo]
 
             if not filtro.empty:
@@ -182,35 +184,31 @@ if plan == "PEI–POI":
                         etiqueta = col.replace("_", " ").capitalize().replace("Poi", "POI")
                         st.markdown(f"{icono} **{etiqueta}:** {filtro[col].values[0]}")
 
-# ----------- PDC -----------
+# ----------------------------
+# PDC
+# ----------------------------
 elif plan == "PDC":
     if pdc_df is None:
-        st.warning("No se cargaron datos de PDC. Verifica que **monitoreoPDC.xlsx** exista en la raíz del repo y la hoja **pdc**.")
+        st.warning("No se cargaron datos de PDC.")
     else:
         st.subheader("Visor PDC - Plan de Desarrollo Concertado")
 
-        # Mostrar resumen por nivel de gobierno
-        resumen_pdc = pdc_df.groupby("nivel_gobierno")["tiene_pdc"].agg([
-            ("Formulados", lambda x: (x == 1).sum()),
-            ("Pendientes", lambda x: (x == 0).sum()),
-        ]).reset_index()
-        resumen_pdc["Total"] = resumen_pdc["Formulados"] + resumen_pdc["Pendientes"]
-        resumen_total = pd.DataFrame({
-            "nivel_gobierno": ["Total"],
-            "Formulados": [resumen_pdc["Formulados"].sum()],
-            "Pendientes": [resumen_pdc["Pendientes"].sum()],
-            "Total": [resumen_pdc["Total"].sum()],
-        })
-        resumen_pdc = pd.concat([resumen_pdc, resumen_total], ignore_index=True)
-        st.dataframe(resumen_pdc, hide_index=True, use_container_width=True)
+        if "nivel_gobierno" in pdc_df.columns and "formulados" in pdc_df.columns:
+            resumen = pdc_df[["nivel_gobierno", "formulados", "pendientes"]].copy()
+            resumen["Total"] = resumen["formulados"] + resumen["pendientes"]
+            total_row = resumen[["formulados", "pendientes", "Total"]].sum().to_frame().T
+            total_row["nivel_gobierno"] = "Total"
+            resumen = pd.concat([resumen, total_row], ignore_index=True)
+            resumen = resumen[["nivel_gobierno", "formulados", "pendientes", "Total"]]
+            st.dataframe(resumen, use_container_width=True, hide_index=True)
 
         opciones = [""] + sorted(pdc_df["codigo_nombre"].dropna().unique())
         unidad = st.selectbox("🔍 Buscar o seleccionar unidad ejecutora:", options=opciones, key="unidad_pdc")
         st.button("🪑 Limpiar búsqueda", on_click=limpiar_busqueda_pdc)
 
         if unidad:
-            codigo_match = re.search(r"\[(\d+)\]", unidad)
-            codigo = codigo_match.group(1) if codigo_match else ""
+            codigo = re.search(r"\[(\d+)\]", unidad)
+            codigo = codigo.group(1) if codigo else ""
             filtro = pdc_df[pdc_df["id_ue"] == codigo]
 
             if not filtro.empty:
@@ -226,6 +224,9 @@ elif plan == "PDC":
                     if col in filtro.columns and pd.notna(filtro[col].values[0]):
                         st.write(f"**{col.replace('_',' ').capitalize()}:** {filtro[col].values[0]}")
 
+# ----------------------------
+# PIE DE PÁGINA
+# ----------------------------
 st.markdown(
     "<center><small>App elaborada por la Dirección Nacional de Coordinación y Planeamiento (DNCP) - CEPLAN</small></center>",
     unsafe_allow_html=True
