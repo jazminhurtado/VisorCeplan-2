@@ -178,42 +178,31 @@ elif plan == "PDC":
         st.warning("No se cargaron datos de PDC. Verifica que **monitoreoPDC.xlsx** exista en la raíz del repo y la hoja **pdc**.")
     else:
         st.subheader("Visor PDC - Plan de Desarrollo Concertado")
-        # ─── TABLA RESUMEN PDC ────────────────────────────────────
-url_pdc = _edit_to_csv(URL_PEI_POI_FILE_EDIT, GID_RESUMEN_NAC)
-df_resumen_raw = pd.read_csv(url_pdc, header=None).fillna("")
+        # ----------- PDC -----------
+elif plan == "PDC":
+    if pdc_df is None:
+        st.warning("No se cargaron datos de PDC. Verifique que **monitoreoPDC.xlsx** exista en la raíz del repo y la hoja **pdc** esté bien nombrada.")
+    else:
+        st.subheader("Visor PDC - Plan de Desarrollo Concertado")
 
-# Función para extraer datos desde hoja resumen
-def buscar_pdc_resumen(df, nivel_buscado):
-    for i, row in df.iterrows():
-        if str(row[0]).strip().lower() == nivel_buscado.lower():
-            try:
-                formulados = int(str(df.iloc[i, 2]).replace(",", ""))
-                pendientes = int(str(df.iloc[i, 3]).replace(",", ""))
-                return formulados, pendientes
-            except:
-                return 0, 0
-    return 0, 0
-
-# Obtener datos por nivel
-gr_form, gr_pend = buscar_pdc_resumen(df_resumen_raw, "Gobierno regional")
-gl_form, gl_pend = buscar_pdc_resumen(df_resumen_raw, "Gobierno local")
-tot_form = gr_form + gl_form
-tot_pend = gr_pend + gl_pend
-
-# Construir DataFrame
-resumen_pdc = pd.DataFrame({
-    "Nivel de Gobierno": ["Gobierno Regional", "Gobierno Local", "Total"],
-    "Formulados": [gr_form, gl_form, tot_form],
-    "Pendientes": [gr_pend, gl_pend, tot_pend],
-    "Total": [gr_form + gr_pend, gl_form + gl_pend, tot_form + tot_pend]
-})
-
-# Mostrar tabla
-st.dataframe(resumen_pdc, use_container_width=True)
+        # NUEVO BLOQUE PARA TABLA DE RESUMEN
+        resumen_pdc = pdc_df.groupby("nivel_gobierno")["tiene_pdc"].agg([
+            ("Formulados", lambda x: (x == 1).sum()),
+            ("Pendientes", lambda x: (x == 0).sum()),
+        ]).reset_index()
+        resumen_pdc["Total"] = resumen_pdc["Formulados"] + resumen_pdc["Pendientes"]
+        resumen_total = pd.DataFrame({
+            "nivel_gobierno": ["Total"],
+            "Formulados": [resumen_pdc["Formulados"].sum()],
+            "Pendientes": [resumen_pdc["Pendientes"].sum()],
+            "Total": [resumen_pdc["Total"].sum()],
+        })
+        resumen_pdc = pd.concat([resumen_pdc, resumen_total], ignore_index=True)
+        st.dataframe(resumen_pdc, hide_index=True, use_container_width=True)
 
         opciones = [""] + sorted(pdc_df["codigo_nombre"].dropna().unique())
         unidad = st.selectbox("🔍 Buscar o seleccionar unidad ejecutora:", options=opciones, key="unidad_pdc")
-        st.button("🪑 Limpiar búsqueda", on_click=limpiar_busqueda_pdc)
+        st.button("🧹 Limpiar búsqueda", on_click=limpiar_busqueda_pdc)
 
         if unidad:
             codigo_match = re.search(r"\[(\d+)\]", unidad)
@@ -231,9 +220,8 @@ st.dataframe(resumen_pdc, use_container_width=True)
                 ]
                 for col in columnas_pdc:
                     if col in filtro.columns and pd.notna(filtro[col].values[0]):
-                        st.write(f"**{col.replace('_',' ').capitalize()}:** {filtro[col].values[0]}")
+                        st.write(f"**{col.replace('_', ' ').capitalize()}:** {filtro[col].values[0]}")
 
-st.markdown(
-    "<center><small>App elaborada por la Dirección Nacional de Coordinación y Planeamiento (DNCP) - CEPLAN</small></center>",
-    unsafe_allow_html=True
-)
+    st.markdown("<center><small>App elaborada por la Dirección Nacional de Coordinación y Planeamiento (DNCP) - CEPLAN</small></center>", unsafe_allow_html=True)
+
+    
