@@ -1025,28 +1025,49 @@ mostrar_mapa = (
 
 if mostrar_mapa:
     # Mapa + gráficos (vista dividida)
+   # ---------------------------------------
+# 🔁 Determinar el plan seleccionado según el KPI clickeado
+# ---------------------------------------
+if st.session_state.get("hover_pdc", False):
+    plan_sel = "PDC"
+elif st.session_state.get("hover_pei", False):
+    plan_sel = "PEI"
+elif st.session_state.get("hover_poi", False):
+    plan_sel = "POI"
+else:
+    plan_sel = "PDC"  # Valor por defecto
+
+# ---------------------------------------
+# 🔀 Mostrar mapa + gráficos o solo gráficos
+# ---------------------------------------
+mostrar_mapa = (
+    st.session_state.get("hover_pdc", False)
+    or st.session_state.get("hover_pei", False)
+    or st.session_state.get("hover_poi", False)
+)
+
+if mostrar_mapa:
+    # 👉 Mostrar mapa y gráfico lado a lado
     col1, col2 = st.columns([2, 2])
 
     with col1:
         render_map(plan_sel)
 
     with col2:
-        if st.session_state.get("hover_pdc", False):
-            st.markdown("### Estado PDC por Nivel de Gobierno")
+        st.markdown(f"### Estado {plan_sel} por Nivel de Gobierno")
+
+        if plan_sel == "PDC":
             datos_niveles = get_pdc_nivel_gobierno()
-        elif st.session_state.get("hover_pei", False):
-            st.markdown("### Estado PEI por Nivel de Gobierno")
+        elif plan_sel == "PEI":
             datos_niveles = get_pei_nivel_gobierno()
-        elif st.session_state.get("hover_poi", False):
-            st.markdown("### Estado POI por Nivel de Gobierno")
+        else:
             datos_niveles = get_poi_nivel_gobierno()
 
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
 
 else:
-    # Solo mostrar los gráficos a todo lo ancho
-    st.markdown("<br><br>", unsafe_allow_html=True)
+    # 👉 Cuando no se ha hecho clic: mostrar todos los gráficos en pantalla completa
     st.markdown("### Estado por Nivel Nacional")
 
     resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
