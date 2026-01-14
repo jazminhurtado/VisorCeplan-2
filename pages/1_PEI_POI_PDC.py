@@ -178,14 +178,8 @@ elif plan == "PDC":
         st.warning("No se cargaron datos de PDC. Verifica que **monitoreoPDC.xlsx** exista en la raíz del repo y la hoja **pdc**.")
     else:
         st.subheader("Visor PDC - Plan de Desarrollo Concertado")
-        # ----------- PDC -----------
-elif plan == "PDC":
-    if pdc_df is None:
-        st.warning("No se cargaron datos de PDC. Verifique que **monitoreoPDC.xlsx** exista en la raíz del repo y la hoja **pdc** esté bien nombrada.")
-    else:
-        st.subheader("Visor PDC - Plan de Desarrollo Concertado")
 
-        # NUEVO BLOQUE PARA TABLA DE RESUMEN
+        # Mostrar resumen por nivel de gobierno
         resumen_pdc = pdc_df.groupby("nivel_gobierno")["tiene_pdc"].agg([
             ("Formulados", lambda x: (x == 1).sum()),
             ("Pendientes", lambda x: (x == 0).sum()),
@@ -202,7 +196,7 @@ elif plan == "PDC":
 
         opciones = [""] + sorted(pdc_df["codigo_nombre"].dropna().unique())
         unidad = st.selectbox("🔍 Buscar o seleccionar unidad ejecutora:", options=opciones, key="unidad_pdc")
-        st.button("🧹 Limpiar búsqueda", on_click=limpiar_busqueda_pdc)
+        st.button("🪑 Limpiar búsqueda", on_click=limpiar_busqueda_pdc)
 
         if unidad:
             codigo_match = re.search(r"\[(\d+)\]", unidad)
@@ -220,8 +214,9 @@ elif plan == "PDC":
                 ]
                 for col in columnas_pdc:
                     if col in filtro.columns and pd.notna(filtro[col].values[0]):
-                        st.write(f"**{col.replace('_', ' ').capitalize()}:** {filtro[col].values[0]}")
+                        st.write(f"**{col.replace('_',' ').capitalize()}:** {filtro[col].values[0]}")
 
-    st.markdown("<center><small>App elaborada por la Dirección Nacional de Coordinación y Planeamiento (DNCP) - CEPLAN</small></center>", unsafe_allow_html=True)
-
-    
+st.markdown(
+    "<center><small>App elaborada por la Dirección Nacional de Coordinación y Planeamiento (DNCP) - CEPLAN</small></center>",
+    unsafe_allow_html=True
+)
