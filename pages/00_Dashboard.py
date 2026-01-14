@@ -1016,48 +1016,42 @@ with c3:
 
 
 # Mapa y Gráficos
-col1, col2 = st.columns([2, 2])  
+# Verificar si hay KPI seleccionado
+mostrar_mapa = (
+    st.session_state.get("hover_pdc", False)
+    or st.session_state.get("hover_pei", False)
+    or st.session_state.get("hover_poi", False)
+)
 
+if mostrar_mapa:
+    # Mapa + gráficos (vista dividida)
+    col1, col2 = st.columns([2, 2])
 
-# 🌍 Sincronizar mapa con KPI clickeado
-if st.session_state.get("hover_pdc", False):
-    plan_sel = "PDC"
-elif st.session_state.get("hover_pei", False):
-    plan_sel = "PEI"
-elif st.session_state.get("hover_poi", False):
-    plan_sel = "POI"
+    with col1:
+        render_map(plan_sel)
+
+    with col2:
+        if st.session_state.get("hover_pdc", False):
+            st.markdown("### Estado PDC por Nivel de Gobierno")
+            datos_niveles = get_pdc_nivel_gobierno()
+        elif st.session_state.get("hover_pei", False):
+            st.markdown("### Estado PEI por Nivel de Gobierno")
+            datos_niveles = get_pei_nivel_gobierno()
+        elif st.session_state.get("hover_poi", False):
+            st.markdown("### Estado POI por Nivel de Gobierno")
+            datos_niveles = get_poi_nivel_gobierno()
+
+        for nivel, (form, pend) in datos_niveles.items():
+            resumen_grafico(nivel, form, pend)
+
 else:
-    plan_sel = "PDC"
+    # Solo mostrar los gráficos a todo lo ancho
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown("### Estado por Nivel Nacional")
 
-with col1:
-   with col1:
-   
-    render_map(plan_sel)
-
-with col2:
-    if st.session_state.get("hover_pdc", False):
-        st.markdown("### Estado PDC por Nivel de Gobierno")
-        datos_niveles = get_pdc_nivel_gobierno()
-        for nivel, (form, pend) in datos_niveles.items():
-            resumen_grafico(nivel, form, pend)
-
-    elif st.session_state.get("hover_pei", False):
-        st.markdown("### Estado PEI por Nivel de Gobierno")
-        datos_niveles = get_pei_nivel_gobierno()
-        for nivel, (form, pend) in datos_niveles.items():
-            resumen_grafico(nivel, form, pend)
-
-    elif st.session_state.get("hover_poi", False):
-        st.markdown("### Estado POI por Nivel de Gobierno")
-        datos_niveles = get_poi_nivel_gobierno()
-        for nivel, (form, pend) in datos_niveles.items():
-            resumen_grafico(nivel, form, pend)
- 
-    else:
-        resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
-        resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
-        resumen_grafico("Estado POI a Nivel Nacional", poi_e, poi_p)
-
+    resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
+    resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
+    resumen_grafico("Estado POI a Nivel Nacional", poi_e, poi_p)
 
 
 
