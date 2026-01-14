@@ -1035,7 +1035,7 @@ with col1:
         # Mostrar mapa neutral con un solo color
         df_base = load_resumen_departamental()["PDC"].copy()
         df_base["avance"] = 0  # Todos al 0%
-        df_base["color"] = "#D3D3D3"  # gris claro
+        df_base["color"] = "#B3DDF2"  # celeste pasterl
         gj = load_geojson()
         fig = px.choropleth(
             df_base,
@@ -1043,11 +1043,21 @@ with col1:
             locations="departamento",
             featureidkey="properties.dep_key",
             color="departamento",
-            color_discrete_map={row["departamento"]: "#D3D3D3" for _, row in df_base.iterrows()},
+            color_discrete_map={row["departamento"]: "#B3DDF2" for _, row in df_base.iterrows()},
             custom_data=["departamento"]
         )
         fig.update_geos(fitbounds="locations", visible=False)
-        fig.update_layout(height=700, margin=dict(l=0, r=0, t=10, b=0))
+        fig.update_layout(
+            height=700, 
+            margin=dict(l=0, r=0, t=10, b=0),
+            legend=dict(
+                orientation="v",
+                yanchor="middle",
+                y=0.5,
+                xanchor="left",
+                x=-0.15 # esto empuja la leyenda a la izquierda
+            )
+        )    
         fig.update_traces(hovertemplate="<b>%{customdata[0]}</b><extra></extra>")
         st.plotly_chart(fig, use_container_width=True)
     else:
