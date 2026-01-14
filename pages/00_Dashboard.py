@@ -1024,7 +1024,7 @@ if st.session_state.get("hover_pdc", False):
     plan_sel = "PDC"
 elif st.session_state.get("hover_pei", False):
     plan_sel = "PEI"
-elif st.session_state.get("hover_poi", False):
+elif st.session_state.get("hover_poi", False): 
     plan_sel = "POI"
 else:
     plan_sel = "NINGUNO"
