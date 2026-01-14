@@ -80,7 +80,17 @@ except Exception as e:
 
 # PDC
 try:
-    pdc_df = cargar_excel_local("monitoreoPDC.xlsx", sheet_name="pdc")
+  
+# ID del documento y nombre o número de hoja
+sheet_id = "1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ"
+sheet_gid = "1288416966"  # Esto es el gid de la hoja
+
+# URL de exportación en formato CSV
+url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={sheet_gid}"
+
+# Leer la hoja directamente desde el enlace
+pdc_df = pd.read_csv(url)
+
 except Exception as e:
     errores.append(f"PDC: {e}")
 
