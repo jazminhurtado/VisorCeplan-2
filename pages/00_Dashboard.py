@@ -1016,7 +1016,7 @@ with c3:
             st.session_state["hover_pdc"] = False
 
 # --- CARGA DEL MAPA BASE ---
-gdf = gpd.read_file("peru_departa.geojson")
+gdf = gpd.read_file("data/mapa_departamental.geojson")
 
 # --- SELECCIÓN DEL KPI ---
 plan_sel = st.radio("Selecciona instrumento", ["-", "PDC", "PEI", "POI"], index=0)
