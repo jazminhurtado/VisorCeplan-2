@@ -1016,7 +1016,15 @@ with c3:
             st.session_state["hover_pdc"] = False
 
 # --- CARGA DEL MAPA BASE ---
-gdf = gpd.read_file("peru_departa.geojson")
+from pathlib import Path
+
+geojson_path = "peru_departa.geojson"
+
+if Path(geojson_path).exists():
+    gdf = gpd.read_file(geojson_path)
+else:
+    st.warning("⚠ No se encontró el archivo 'peru_departa.geojson'. Verifica la ubicación.")
+
 
 # --- SELECCIÓN DEL KPI ---
 plan_sel = st.radio("Selecciona instrumento", ["-", "PDC", "PEI", "POI"], index=0)
