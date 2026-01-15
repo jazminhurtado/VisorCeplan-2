@@ -126,6 +126,90 @@ if pdc_df is not None:
 # UI
 # -------------------------
 plan = st.selectbox("Selecciona el plan a visualizar", ["PEI–POI", "PDC"])
+# ================================
+# TABLAS RESUMEN PEI – POI – PDC DINÁMICAS
+# ================================
+
+def mostrar_tabla_resumen(df, titulo):
+    st.markdown(f"### 📊 {titulo}")
+    
+    st.markdown("""
+    <style>
+    .resumen-table td, .resumen-table th {
+        border: 1px solid #ccc;
+        padding: 8px 12px;
+        text-align: center;
+    }
+    .resumen-table {
+        border-collapse: collapse;
+        width: 80%;
+        margin-top: 10px;
+        margin-bottom: 30px;
+    }
+    .resumen-table thead {
+        background-color: #1e293b;
+        color: white;
+    }
+    .resumen-table tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    html = "<table class='resumen-table'><thead><tr>"
+    for col in df.columns:
+        html += f"<th>{col}</th>"
+    html += "</tr></thead><tbody>"
+    for _, row in df.iterrows():
+        html += "<tr>"
+        for val in row:
+            html += f"<td>{val}</td>"
+        html += "</tr>"
+    html += "</tbody></table>"
+    st.markdown(html, unsafe_allow_html=True)
+
+# --------------------------------
+# MOSTRAR TABLAS RESUMEN SEGÚN PLAN
+# --------------------------------
+if plan == "PEI–POI" and pei_df is not None:
+    resumen_pei = pei_df.groupby("nivel_de_gobierno", dropna=False).agg({
+        "formulados_pliegos_con_pei": "sum",
+        "pendientes_pliegos_sin_pei": "sum",
+        "total_pliegos": "sum"
+    }).reset_index()
+
+    resumen_pei.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
+    resumen_pei.loc["Total"] = resumen_pei[["Formulados", "Pendientes", "Total"]].sum(numeric_only=True)
+    resumen_pei.at["Total", "Nivel de Gobierno"] = "Total"
+
+    resumen_poi = pei_df.groupby("nivel_de_gobierno", dropna=False).agg({
+        "formulados_en_elaborado": "sum",
+        "pendientes_ues_sin_poi_2026_2028": "sum",
+        "total_ues*": "sum"
+    }).reset_index()
+
+    resumen_poi.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
+    resumen_poi.loc["Total"] = resumen_poi[["Formulados", "Pendientes", "Total"]].sum(numeric_only=True)
+    resumen_poi.at["Total", "Nivel de Gobierno"] = "Total"
+
+    mostrar_tabla_resumen(resumen_pei, "Resumen PEI")
+    mostrar_tabla_resumen(resumen_poi, "Resumen POI")
+
+elif plan == "PDC" and pdc_df is not None:
+    resumen_pdc = pdc_df.groupby("nivel_de_gobierno", dropna=False).agg({
+        "formulados_entidades_con_pdc": "sum",
+        "pendientes_entidades_sin_pdc": "sum",
+        "total_pliegos": "sum"
+    }).reset_index()
+
+    resumen_pdc.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
+    resumen_pdc.loc["Total"] = resumen_pdc[["Formulados", "Pendientes", "Total"]].sum(numeric_only=True)
+    resumen_pdc.at["Total", "Nivel de Gobierno"] = "Total"
+
+    mostrar_tabla_resumen(resumen_pdc, "Resumen PDC")
+
+
+
 
 def limpiar_busqueda_pei():
     st.session_state["unidad_pei"] = ""
