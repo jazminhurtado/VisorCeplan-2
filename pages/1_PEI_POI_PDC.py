@@ -161,7 +161,7 @@ df_pdc_sheet = cargar_excel_google(
 resumen_pdc = construir_tabla(
     df_pdc_sheet,
     filas=slice(1, 4),
-    nombres=["Nivel de Gobierno", "Formulados", "Pendientes", "Total Pliegos"]
+    nombres=["Total Pliegos", "Formulados", "Pendientes"]
 )
 
 
