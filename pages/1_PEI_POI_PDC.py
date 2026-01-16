@@ -33,22 +33,52 @@ st.markdown(
     "Consulta unificada del estado de los planes **PEI–POI y PDC** por unidad ejecutora o región."
 )
 
-# --------------------------------------
-# CARGA DESDE GOOGLE SHEETS (RESÚMENES)
-# --------------------------------------
+# -------------------------------
+# FUNCIONES
+# -------------------------------
 @st.cache_data
 def cargar_excel_google(url):
     try:
         file_id = url.split("/d/")[1].split("/")[0]
-        url_descarga = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx" 
+        url_descarga = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx"
         df = pd.read_excel(url_descarga, sheet_name=0, header=None)
         return df
     except Exception as e:
         st.error(f"❌ Error al cargar Google Sheet: {e}")
         return pd.DataFrame()
 
-URL_SHEET = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit?usp=sharing"
-df_resumen = cargar_excel_google(URL_SHEET)
+def construir_tabla(df, filas, nombres):
+    tabla = df.iloc[filas, 0:len(nombres)].copy()
+    tabla.columns = nombres
+    return tabla
+
+def mostrar_tabla_resumen(df, titulo):
+    st.subheader(f"📊 {titulo}")
+    st.dataframe(df, use_container_width=True, hide_index=True)
+# --------------------------------------
+# CARGA DESDE GOOGLE SHEETS (RESÚMENES)
+# --------------------------------------
+url_sheet = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit?usp=sharing"
+df = cargar_excel_google(url_sheet)
+
+# -------------------------------
+# DEFINIR TABLAS
+# -------------------------------
+# PDC (filas 2-4 en Excel, índice 1:4)
+resumen_pdc = construir_tabla(df, range(1, 4), [
+    "Nivel de Gobierno", "Total Pliegos", "Formulados", "Pendientes"
+])
+
+# PEI (filas 8-12 en Excel, índice 7:12)
+resumen_pei = construir_tabla(df, range(7, 12), [
+    "Nivel de Gobierno", "Total Pliegos", "Formulados", "Pendientes"
+])
+
+# POI (filas 17-21 en Excel, índice 16:21)
+resumen_poi = construir_tabla(df, range(16, 21), [
+    "Nivel de Gobierno", "Total UEs", "Formulados", "Pendientes"
+])
+
 
 # --------------------------------------
 # FUNCIÓN SEGURA PARA ARMAR TABLAS
@@ -90,6 +120,17 @@ resumen_poi = construir_tabla(
     columnas=slice(0, 4),
     nombres=["Nivel de Gobierno", "Total UEs", "Formulados", "Pendientes"]
 )
+
+# -------------------------------
+# SELECCIÓN DE PLAN
+# -------------------------------
+plan = st.selectbox("Selecciona el plan a visualizar", ["PEI–POI", "PDC"])
+
+if plan == "PEI–POI":
+    mostrar_tabla_resumen(resumen_pei, "Resumen PEI")
+    mostrar_tabla_resumen(resumen_poi, "Resumen POI")
+elif plan == "PDC":
+    mostrar_tabla_resumen(resumen_pdc, "Resumen PDC")
 
 # --------------------------------------
 # UI
