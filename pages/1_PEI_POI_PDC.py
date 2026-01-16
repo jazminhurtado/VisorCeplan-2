@@ -44,15 +44,16 @@ def cargar_excel_local(path, **kwargs):
         return pd.DataFrame()
 
 @st.cache_data
-def cargar_excel_google(url):
+def cargar_excel_google(url, hoja=0):
     try:
         file_id = url.split("/d/")[1].split("/")[0]
         url_xlsx = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx"
-        df = pd.read_excel(url_xlsx, sheet_name=0, header=None)
+        df = pd.read_excel(url_xlsx, sheet_name=hoja, header=None)
         return df
     except Exception as e:
         st.error(f"❌ Error al cargar Google Sheet: {e}")
         return pd.DataFrame()
+
 
 
 def construir_tabla(df, filas, nombres):
