@@ -172,45 +172,16 @@ resumen_pdc = construir_tabla(
 # -------------------------
 # UI PRINCIPAL
 # -------------------------
-plan = st.selectbox("Selecciona el plan a visualizar", ["", "PDC", "PEI–POI"])
+plan = st.selectbox("Selecciona el plan a visualizar", ["PDC", "PEI–POI"])
 
-if plan:
-    if plan == "PDC":
-        mostrar_tabla_resumen(resumen_pdc, "Tabla Resumen PDC (Google Sheet)")
+if plan == "PDC":
+    mostrar_tabla_resumen(resumen_pdc, "Tabla Resumen PDC (Google Sheet)")
 
-        def limpiar_busqueda_pei(): st.session_state["unidad_pei"] = ""
-        def limpiar_busqueda_pdc(): st.session_state["unidad_pdc"] = ""
+def limpiar_busqueda_pei(): st.session_state["unidad_pei"] = ""
+def limpiar_busqueda_pdc(): st.session_state["unidad_pdc"] = ""
 
-        if pdc_df.empty:
-            st.warning("No se cargaron datos de PDC.")
-        else:
-            st.subheader("Visor PDC - Plan de Desarrollo Concertado")
-            opciones = [""] + sorted(pdc_df["codigo_nombre"].dropna().unique())
-            unidad = st.selectbox("🔍 Buscar o seleccionar unidad ejecutora:", options=opciones, key="unidad_pdc")
-            st.button("🪑 Limpiar búsqueda", on_click=limpiar_busqueda_pdc)
-
-            if unidad:
-                match = re.search(r"\[(\d+)\]", unidad)
-                codigo = match.group(1) if match else ""
-                filtro = pdc_df[pdc_df["id_ue"] == codigo]
-                if not filtro.empty:
-                    st.subheader("Información del PDC")
-                    columnas_pdc = [
-                        "tiene_pdc", "tipo_pdc", "periodo_ultimo_pdc",
-                        "pdc_vigente", "estado_pdc", "fase_pdc",
-                        "expediente_pdc", "fecha_informe_tecnico_pdc",
-                        "nro_informe_tecnico_pdc", "especialista_asignado_pdc",
-                        "correo_electronico_especialista_pdc"
-                    ]
-                    for col in columnas_pdc:
-                        if col in filtro.columns and pd.notna(filtro[col].values[0]):
-                            st.write(f"**{col.replace('_',' ').capitalize()}:** {filtro[col].values[0]}")
-
-    elif plan == "PEI–POI":
-        # Aquí va todo tu bloque PEI-POI con la subheader y las dos tablas alineadas
-        #st.subheader("📊 Tablas Resumen PEI y POI")
-        # ... (resto del código para PEI–POI que ya tienes)
-
+if plan == "PEI–POI":
+    #st.subheader("📊 Tablas Resumen PEI y POI")
 
     hoja = "Dash_Data_UEs"
     url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit?usp=sharing"
@@ -275,7 +246,7 @@ if plan:
     
 
     #st.markdown("<div class='tabla-container'>", unsafe_allow_html=True)
-    #st.markdown("<div><h4 style='text-align:center'>PEI</h4>" + html_pei + "</div>", unsafe_allow_html=True) 
+    #st.markdown("<div><h4 style='text-align:center'>PEI</h4>" + html_pei + "</div>", unsafe_allow_html=True)
     #st.markdown("<div><h4 style='text-align:center'>POI</h4>" + html_poi + "</div>", unsafe_allow_html=True)
     #st.markdown("</div>", unsafe_allow_html=True)
 
