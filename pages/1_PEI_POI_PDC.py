@@ -3,14 +3,12 @@ import pandas as pd
 import re
 from pathlib import Path
 
-# Opcional: si ya lo pones en Inicio.py, puedes quitar esta línea.
-#st.set_page_config(page_title="Monitoreo Institucional", layout="wide")
 # --------------------------------------
 # CONFIGURACIÓN GENERAL
 # --------------------------------------
 st.set_page_config(
     page_title="Seguimiento POI-PEI-PDC",
-    page_icon="logo_icon.png",  # Asegúrate que el ícono esté en raíz
+    page_icon="logo_icon.png",
     layout="wide"
 )
 
@@ -53,16 +51,14 @@ st.title("Visor Institucional de Monitoreo")
 st.markdown("Consulta unificada del estado de los planes PEI–POI y PDC por unidad ejecutora o región.")
 
 # -------------------------
-# CARGA DE ARCHIVOS (LOCAL)
+# CARGA DE ARCHIVOS
 # -------------------------
 @st.cache_data
 def cargar_excel_local(path, **read_kwargs):
-    """Lee un Excel local con manejo de errores y cache."""
     f = Path(path)
     if not f.exists():
         raise FileNotFoundError(f"No se encontró el archivo: {f.resolve()}")
     try:
-        # engine se detecta, pero si diera problema, usa engine="openpyxl"
         return pd.read_excel(f, **read_kwargs)
     except Exception as e:
         raise RuntimeError(f"Error leyendo {f.name}: {e}")
@@ -71,14 +67,11 @@ pei_df = None
 pdc_df = None
 errores = []
 
-# PEI–POI
 try:
-    # OJO: respeta exactamente el nombre y mayúsculas/minúsculas
     pei_df = cargar_excel_local("monitoreoPEI-POI.xlsx", sheet_name=0)
 except Exception as e:
     errores.append(f"PEI–POI: {e}")
 
-# PDC
 try:
     pdc_df = cargar_excel_local("monitoreoPDC.xlsx", sheet_name="pdc")
 except Exception as e:
@@ -93,8 +86,6 @@ if errores:
 # -------------------------
 def preparar_datos(df):
     df = df.copy()
-    
-    # Normaliza los nombres de columnas
     df.columns = (
         df.columns
           .str.strip()
@@ -102,28 +93,20 @@ def preparar_datos(df):
           .str.replace(" ", "_")
           .str.replace("-", "_")
     )
-    
-    # Asegura la existencia de la columna id_ue
     if "id_ue" in df.columns:
         df["id_ue"] = df["id_ue"].astype(str).str.replace(".0", "", regex=False)
     else:
         df["id_ue"] = ""
-    
-    # Construye la columna para búsqueda por combo
     for col in ["nombre_departamento", "nombre_provincia", "nombre_unidad_ejecutora"]:
         if col not in df.columns:
             df[col] = ""
-    
     df["codigo_nombre"] = (
         df["nombre_departamento"].astype(str).str.upper().fillna("SIN DEPTO") + " - " +
         df["nombre_provincia"].astype(str).str.upper().fillna("SIN PROV") + " - [" +
         df["id_ue"] + "] " +
         df["nombre_unidad_ejecutora"].astype(str)
     )
-
-    # ===============================
-    # Reconstruir "nivel_de_gobierno"
-    # ===============================
+    # Generar nivel de gobierno si no existe
     if "nivel_de_gobierno" not in df.columns:
         condiciones = [
             df["nombre_unidad_ejecutora"].str.contains("MINISTERIO|NACIONAL|SECTOR", case=False, na=False),
@@ -135,21 +118,23 @@ def preparar_datos(df):
         df["nivel_de_gobierno"] = "Otro"
         for cond, val in zip(condiciones, opciones):
             df.loc[cond, "nivel_de_gobierno"] = val
-
     return df
 
+if pei_df is not None:
+    pei_df = preparar_datos(pei_df)
+if pdc_df is not None:
+    pdc_df = preparar_datos(pdc_df)
 
 # -------------------------
 # UI
 # -------------------------
 plan = st.selectbox("Selecciona el plan a visualizar", ["PEI–POI", "PDC"])
-# ================================
-# TABLAS RESUMEN PEI – POI – PDC DINÁMICAS
-# ================================
 
+# ================================
+# TABLAS RESUMEN DINÁMICAS
+# ================================
 def mostrar_tabla_resumen(df, titulo):
     st.markdown(f"### 📊 {titulo}")
-    
     st.markdown("""
     <style>
     .resumen-table td, .resumen-table th {
@@ -185,16 +170,12 @@ def mostrar_tabla_resumen(df, titulo):
     html += "</tbody></table>"
     st.markdown(html, unsafe_allow_html=True)
 
-# --------------------------------
-# MOSTRAR TABLAS RESUMEN SEGÚN PLAN
-# --------------------------------
 if plan == "PEI–POI" and pei_df is not None:
     resumen_pei = pei_df.groupby("nivel_de_gobierno", dropna=False).agg({
         "formulados_pliegos_con_pei": "sum",
         "pendientes_pliegos_sin_pei": "sum",
         "total_pliegos": "sum"
     }).reset_index()
-
     resumen_pei.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
     resumen_pei.loc["Total"] = resumen_pei[["Formulados", "Pendientes", "Total"]].sum(numeric_only=True)
     resumen_pei.at["Total", "Nivel de Gobierno"] = "Total"
@@ -204,7 +185,6 @@ if plan == "PEI–POI" and pei_df is not None:
         "pendientes_ues_sin_poi_2026_2028": "sum",
         "total_ues*": "sum"
     }).reset_index()
-
     resumen_poi.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
     resumen_poi.loc["Total"] = resumen_poi[["Formulados", "Pendientes", "Total"]].sum(numeric_only=True)
     resumen_poi.at["Total", "Nivel de Gobierno"] = "Total"
@@ -218,16 +198,14 @@ elif plan == "PDC" and pdc_df is not None:
         "pendientes_entidades_sin_pdc": "sum",
         "total_pliegos": "sum"
     }).reset_index()
-
     resumen_pdc.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
     resumen_pdc.loc["Total"] = resumen_pdc[["Formulados", "Pendientes", "Total"]].sum(numeric_only=True)
     resumen_pdc.at["Total", "Nivel de Gobierno"] = "Total"
-
     mostrar_tabla_resumen(resumen_pdc, "Resumen PDC")
 
-
-
-
+# -------------------------
+# BÚSQUEDA DETALLADA POR UE
+# -------------------------
 def limpiar_busqueda_pei():
     st.session_state["unidad_pei"] = ""
 
@@ -237,7 +215,7 @@ def limpiar_busqueda_pdc():
 # --------- PEI–POI ---------
 if plan == "PEI–POI":
     if pei_df is None:
-        st.warning("No se cargaron datos de PEI–POI. Verifica que el archivo **monitoreoPEI-POI.xlsx** esté en la raíz del repo.")
+        st.warning("No se cargaron datos de PEI–POI.")
     else:
         opciones = [""] + sorted(pei_df["codigo_nombre"].dropna().unique())
         unidad = st.selectbox("🔍 Buscar o seleccionar unidad ejecutora:", options=opciones, key="unidad_pei")
@@ -276,7 +254,7 @@ if plan == "PEI–POI":
 # ----------- PDC -----------
 elif plan == "PDC":
     if pdc_df is None:
-        st.warning("No se cargaron datos de PDC. Verifica que **monitoreoPDC.xlsx** exista en la raíz del repo y la hoja **pdc**.")
+        st.warning("No se cargaron datos de PDC.")
     else:
         st.subheader("Visor PDC - Plan de Desarrollo Concertado")
         opciones = [""] + sorted(pdc_df["codigo_nombre"].dropna().unique())
@@ -301,7 +279,5 @@ elif plan == "PDC":
                     if col in filtro.columns and pd.notna(filtro[col].values[0]):
                         st.write(f"**{col.replace('_',' ').capitalize()}:** {filtro[col].values[0]}")
 
-st.markdown(
-    "<center><small>App elaborada por la Dirección Nacional de Coordinación y Planeamiento (DNCP) - CEPLAN</small></center>",
-    unsafe_allow_html=True
-)
+# Pie
+st.markdown("<center><small>App elaborada por la Dirección Nacional de Coordinación y Planeamiento (DNCP) - CEPLAN</small></center>", unsafe_allow_html=True)
