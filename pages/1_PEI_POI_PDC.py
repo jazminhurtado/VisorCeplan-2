@@ -70,12 +70,16 @@ def construir_tabla(df, filas, nombres):
 def mostrar_tabla_resumen(df, titulo):
     st.subheader(f"📊 {titulo}")
 
-    # Aplicar negrita a la fila 'Total'
-    df_estilado = df.copy()
-    df_estilado.loc[df_estilado.iloc[:, 0].str.lower().str.strip() == "total"] = df_estilado.loc[df_estilado.iloc[:, 0].str.lower().str.strip() == "total"].apply(lambda x: [f"<strong>{v}</strong>" for v in x], axis=1)
+    # Aplicar negrita solo a la fila "Total"
+    df_styled = df.copy()
+    df_styled.iloc[:, :] = df_styled.astype(str)  # Convertir todo a str
+    df_styled.loc[df_styled.iloc[:, 0].str.lower().str.strip() == "total"] = \
+        df_styled.loc[df_styled.iloc[:, 0].str.lower().str.strip() == "total"].apply(
+            lambda row: [f"<strong>{val}</strong>" for val in row], axis=1
+        )
 
-    # Convertir DataFrame a HTML
-    tabla_html = df_estilado.to_html(escape=False, index=False)
+    # Convertir a HTML con formato limpio
+    table_html = df_styled.to_html(escape=False, index=False, border=0)
 
     # CSS personalizado
     estilo_css = """
@@ -99,13 +103,14 @@ def mostrar_tabla_resumen(df, titulo):
         padding: 8px;
     }
     tbody tr:nth-child(even) {
-        background-color: #f2f2f2;
+        background-color: #f9f9f9;
     }
     </style>
     """
 
-    # Mostrar en Streamlit
-    st.markdown(estilo_css + tabla_html, unsafe_allow_html=True)
+    # Mostrar tabla con estilo en Streamlit
+    st.markdown(estilo_css + table_html, unsafe_allow_html=True)
+
 
 
 
