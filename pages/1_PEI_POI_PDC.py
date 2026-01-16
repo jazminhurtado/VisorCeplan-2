@@ -181,7 +181,7 @@ def limpiar_busqueda_pei(): st.session_state["unidad_pei"] = ""
 def limpiar_busqueda_pdc(): st.session_state["unidad_pdc"] = ""
 
 if plan == "PEI–POI":
-    st.subheader("📊 Tablas Resumen PEI y POI")
+    #st.subheader("📊 Tablas Resumen PEI y POI")
 
     hoja = "Dash_Data_UEs"
     url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit?usp=sharing"
