@@ -133,6 +133,9 @@ plan = st.selectbox("Selecciona el plan a visualizar", ["PEI–POI", "PDC"])
 # ================================
 # TABLAS RESUMEN DINÁMICAS
 # ================================
+# ================================
+# TABLAS RESUMEN DINÁMICAS
+# ================================
 def mostrar_tabla_resumen(df, titulo):
     st.markdown(f"### 📊 {titulo}")
     st.markdown("""
@@ -170,43 +173,46 @@ def mostrar_tabla_resumen(df, titulo):
     html += "</tbody></table>"
     st.markdown(html, unsafe_allow_html=True)
 
-if plan == "PEI–POI" and pei_df is not None:
 def pick_column(df, nombre_parcial):
     return next((col for col in df.columns if nombre_parcial in col), None)
 
-col_gob = pick_column(pei_df, "nivel_de_gobierno")
-col_for = pick_column(pei_df, "formulados_pliegos_con_pei")
-col_pen = pick_column(pei_df, "pendientes_pliegos_sin_pei")
-col_tot = pick_column(pei_df, "total_pliegos")
+if plan == "PEI–POI" and pei_df is not None:
+    # ---- RESUMEN PEI ----
+    col_gob = pick_column(pei_df, "nivel_de_gobierno")
+    col_for_pei = pick_column(pei_df, "formulados_pliegos_con_pei")
+    col_pen_pei = pick_column(pei_df, "pendientes_pliegos_sin_pei")
+    col_tot_pei = pick_column(pei_df, "total_pliegos")
 
-if all([col_gob, col_for, col_pen, col_tot]):
-    resumen_pei = pei_df.groupby(col_gob, dropna=False).agg({
-        col_for: "sum",
-        col_pen: "sum",
-        col_tot: "sum"
-    }).reset_index()
-    resumen_pei.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
-    resumen_pei.loc["Total"] = resumen_pei[["Formulados", "Pendientes", "Total"]].sum(numeric_only=True)
-    resumen_pei.at["Total", "Nivel de Gobierno"] = "Total"
-    mostrar_tabla_resumen(resumen_pei, "Resumen PEI")
-else:
-    st.warning("❌ No se encontraron todas las columnas necesarias para el resumen PEI.")
+    if all([col_gob, col_for_pei, col_pen_pei, col_tot_pei]):
+        resumen_pei = pei_df.groupby(col_gob, dropna=False).agg({
+            col_for_pei: "sum",
+            col_pen_pei: "sum",
+            col_tot_pei: "sum"
+        }).reset_index()
+        resumen_pei.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
+        resumen_pei.loc["Total"] = resumen_pei[["Formulados", "Pendientes", "Total"]].sum(numeric_only=True)
+        resumen_pei.at["Total", "Nivel de Gobierno"] = "Total"
+        mostrar_tabla_resumen(resumen_pei, "Resumen PEI")
+    else:
+        st.warning("❌ No se encontraron todas las columnas necesarias para el resumen PEI.")
 
-    resumen_pei.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
-    resumen_pei.loc["Total"] = resumen_pei[["Formulados", "Pendientes", "Total"]].sum(numeric_only=True)
-    resumen_pei.at["Total", "Nivel de Gobierno"] = "Total"
+    # ---- RESUMEN POI ----
+    col_for_poi = pick_column(pei_df, "formulados_en_elaborado")
+    col_pen_poi = pick_column(pei_df, "pendientes_ues_sin_poi_2026_2028")
+    col_tot_poi = pick_column(pei_df, "total_ues")
 
-    resumen_poi = pei_df.groupby("nivel_de_gobierno", dropna=False).agg({
-        "formulados_en_elaborado": "sum",
-        "pendientes_ues_sin_poi_2026_2028": "sum",
-        "total_ues*": "sum"
-    }).reset_index()
-    resumen_poi.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
-    resumen_poi.loc["Total"] = resumen_poi[["Formulados", "Pendientes", "Total"]].sum(numeric_only=True)
-    resumen_poi.at["Total", "Nivel de Gobierno"] = "Total"
-
-    mostrar_tabla_resumen(resumen_pei, "Resumen PEI")
-    mostrar_tabla_resumen(resumen_poi, "Resumen POI")
+    if all([col_gob, col_for_poi, col_pen_poi, col_tot_poi]):
+        resumen_poi = pei_df.groupby(col_gob, dropna=False).agg({
+            col_for_poi: "sum",
+            col_pen_poi: "sum",
+            col_tot_poi: "sum"
+        }).reset_index()
+        resumen_poi.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
+        resumen_poi.loc["Total"] = resumen_poi[["Formulados", "Pendientes", "Total"]].sum(numeric_only=True)
+        resumen_poi.at["Total", "Nivel de Gobierno"] = "Total"
+        mostrar_tabla_resumen(resumen_poi, "Resumen POI")
+    else:
+        st.warning("❌ No se encontraron todas las columnas necesarias para el resumen POI.")
 
 elif plan == "PDC" and pdc_df is not None:
     resumen_pdc = pdc_df.groupby("nivel_de_gobierno", dropna=False).agg({
@@ -218,6 +224,7 @@ elif plan == "PDC" and pdc_df is not None:
     resumen_pdc.loc["Total"] = resumen_pdc[["Formulados", "Pendientes", "Total"]].sum(numeric_only=True)
     resumen_pdc.at["Total", "Nivel de Gobierno"] = "Total"
     mostrar_tabla_resumen(resumen_pdc, "Resumen PDC")
+
 
 # -------------------------
 # BÚSQUEDA DETALLADA POR UE
