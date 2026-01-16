@@ -81,7 +81,7 @@ def mostrar_tabla_resumen(df, titulo):
         font-size: 15px;
     }
     .tabla-resumen thead th {
-        background-color: #1E3A8A;
+        background-color: #1e293b;
         color: white;
         font-weight: bold;
         text-align: center;
