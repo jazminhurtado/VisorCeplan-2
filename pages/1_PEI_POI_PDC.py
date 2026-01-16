@@ -181,83 +181,85 @@ def limpiar_busqueda_pei(): st.session_state["unidad_pei"] = ""
 def limpiar_busqueda_pdc(): st.session_state["unidad_pdc"] = ""
 
 if plan == "PEI–POI":
-    pp.mostrar_tablas_pei_poi()
+    st.subheader("📊 Tablas Resumen PEI y POI")
 
-
-    # Link y hoja
-    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit?usp=sharing"
+    # Cargar hoja desde Google Sheets
     hoja = "Dash_Data_UEs"
+    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit?usp=sharing"
+    file_id = url.split("/d/")[1].split("/")[0]
+    url_xlsx = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx"
 
-    # Función para cargar rango específico
-    def cargar_rango_google(url, hoja, usecols, skiprows, nrows, nombres):
-        file_id = url.split("/d/")[1].split("/")[0]
-        url_xlsx = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx"
-        df = pd.read_excel(
-            url_xlsx,
-            sheet_name=hoja,
-            usecols=usecols,
-            skiprows=skiprows,
-            nrows=nrows,
-            header=None
-        )
-        df.columns = nombres
-        return df
+    # Cargar Excel completo
+    try:
+        df_all = pd.read_excel(url_xlsx, sheet_name=hoja, header=None)
+    except Exception as e:
+        st.error(f"❌ No se pudo cargar el archivo desde Google Sheets: {e}")
+        st.stop()
 
-    # Columnas comunes
-    nombres = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
+    # Extraer tabla PEI
+    pei = df_all.iloc[6:11, 0:4].copy()
+    pei.columns = pei.iloc[0]
+    pei = pei.drop(pei.index[0]).reset_index(drop=True)
 
-    # Cargar datos PEI (filas 7 a 11 => skiprows=6, nrows=5)
-    pei_df = cargar_rango_google(url, hoja, "A:D", skiprows=6, nrows=5, nombres=nombres)
+    # Extraer tabla POI
+    poi = df_all.iloc[15:20, 0:4].copy()
+    poi.columns = poi.iloc[0]
+    poi = poi.drop(poi.index[0]).reset_index(drop=True)
 
-    # Cargar datos POI (filas 16 a 20 => skiprows=15, nrows=5)
-    poi_df = cargar_rango_google(url, hoja, "A:D", skiprows=15, nrows=5, nombres=nombres)
+    # Reordenar columnas: "Total" al final
+    def reordenar(df):
+        cols = [col for col in df.columns if col.lower() != "total"]
+        if "Total" in df.columns:
+            cols.append("Total")
+        return df[cols]
 
-    # Estilos CSS para las tablas
+    pei = reordenar(pei)
+    poi = reordenar(poi)
+
+    # Convertir a HTML
+    html_pei = pei.to_html(index=False, border=0, classes='tabla-resumen')
+    html_poi = poi.to_html(index=False, border=0, classes='tabla-resumen')
+
+    # Mostrar lado a lado con estilos
     st.markdown("""
     <style>
-    .tabla-pp {
+    .tabla-resumen {
+        width: 100%;
         border-collapse: collapse;
+        font-family: sans-serif;
         font-size: 14px;
-        font-family: Arial, sans-serif;
-        margin: auto;
+        margin: 0 10px;
     }
-    .tabla-pp thead th {
+    .tabla-resumen thead th {
         background-color: #1e293b;
         color: white;
-        padding: 8px;
-        text-align: center;
         font-weight: bold;
-    }
-    .tabla-pp td {
-        padding: 8px;
         text-align: center;
+        padding: 8px;
+    }
+    .tabla-resumen tbody td {
+        text-align: center;
+        padding: 8px;
     }
     .tabla-container {
         display: flex;
-        justify-content: space-evenly;
-        gap: 50px;
-        margin-top: 10px;
+        justify-content: space-around;
+        gap: 30px;
+        margin-top: 20px;
     }
     </style>
-    """, unsafe_allow_html=True)
-
-    # Convertir DataFrames en HTML
-    tabla_pei = pei_df.to_html(index=False, classes="tabla-pp", border=0)
-    tabla_poi = poi_df.to_html(index=False, classes="tabla-pp", border=0)
-
-    # Mostrar ambas tablas alineadas
-    st.markdown(f"""
     <div class="tabla-container">
         <div>
-            <h4 style='text-align:center;'>Tabla PEI</h4>
-            {tabla_pei}
+            <h4 style='text-align:center'>PEI</h4>
+            {0}
         </div>
         <div>
-            <h4 style='text-align:center;'>Tabla POI</h4>
-            {tabla_poi}
+            <h4 style='text-align:center'>POI</h4>
+            {1}
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """.format(html_pei, html_poi), unsafe_allow_html=True)
+
 
 
 elif plan == "PDC":
