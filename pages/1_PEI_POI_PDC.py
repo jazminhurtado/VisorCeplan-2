@@ -189,40 +189,27 @@ if plan == "PEI–POI":
     file_id = url.split("/d/")[1].split("/")[0]
     url_xlsx = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx"
 
-    # Cargar Excel completo
     try:
         df_all = pd.read_excel(url_xlsx, sheet_name=hoja, header=None)
     except Exception as e:
         st.error(f"❌ No se pudo cargar el archivo desde Google Sheets: {e}")
         st.stop()
 
- # Extraer tabla PEI
-pei = df_all.iloc[7:12, 0:4].copy()
-pei.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
-pei = pei.reset_index(drop=True)
+    # Tabla PEI
+    pei = df_all.iloc[7:12, 0:4].copy()
+    pei.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
+    pei = pei.reset_index(drop=True)
 
-# Extraer tabla POI
-poi = df_all.iloc[16:21, 0:4].copy()
-poi.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
-poi = poi.reset_index(drop=True)
-
-
-
-    # Reordenar columnas: "Total" al final
-    def reordenar(df):
-        cols = [col for col in df.columns if col.lower() != "total"]
-        if "Total" in df.columns:
-            cols.append("Total")
-        return df[cols]
-
-    pei = reordenar(pei)
-    poi = reordenar(poi)
+    # Tabla POI
+    poi = df_all.iloc[16:21, 0:4].copy()
+    poi.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
+    poi = poi.reset_index(drop=True)
 
     # Convertir a HTML
     html_pei = pei.to_html(index=False, border=0, classes='tabla-resumen')
     html_poi = poi.to_html(index=False, border=0, classes='tabla-resumen')
 
-    # Mostrar lado a lado con estilos
+    # Mostrar lado a lado
     st.markdown("""
     <style>
     .tabla-resumen {
@@ -261,6 +248,8 @@ poi = poi.reset_index(drop=True)
         </div>
     </div>
     """.format(html_pei, html_poi), unsafe_allow_html=True)
+
+
 
 
 
