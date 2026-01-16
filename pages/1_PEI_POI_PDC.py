@@ -194,19 +194,19 @@ if plan == "PEI–POI":
         st.error(f"❌ No se pudo cargar el archivo desde Google Sheets: {e}")
         st.stop()
 
-    # PEI: filas 7 a 12 (índices 6:11)
-    pei = df_all.iloc[7:12, 0:4].copy()
-    pei.columns = ["Nivel de Gobierno", "Total Pliegos", "Formulados", "Pendientes"]
-    pei = pei[["Nivel de Gobierno", "Formulados", "Pendientes", "Total Pliegos"]]  # Total al final
-    html_pei = pei.to_html(index=False, border=0, classes='tabla-resumen')
+    # PEI: filas 7 a 12
+    df_pei = df_all.iloc[7:12, 0:4].copy()
+    df_pei.columns = ["Nivel de Gobierno", "Total Pliegos", "Formulados", "Pendientes"]
+    df_pei = df_pei[["Nivel de Gobierno", "Formulados", "Pendientes", "Total Pliegos"]]
+    html_pei = df_pei.to_html(index=False, border=0, classes="tabla-resumen")
 
-    # POI: filas 16 a 21 (índices 15:20)
-    poi = df_all.iloc[16:21, 0:4].copy()
-    poi.columns = ["Nivel de Gobierno", "Total UEs", "Formulados", "Pendientes"]
-    poi = poi[["Nivel de Gobierno", "Formulados", "Pendientes", "Total UEs"]]  # Total al final
-    html_poi = poi.to_html(index=False, border=0, classes='tabla-resumen')
+    # POI: filas 16 a 21
+    df_poi = df_all.iloc[16:21, 0:4].copy()
+    df_poi.columns = ["Nivel de Gobierno", "Total UEs", "Formulados", "Pendientes"]
+    df_poi = df_poi[["Nivel de Gobierno", "Formulados", "Pendientes", "Total UEs"]]
+    html_poi = df_poi.to_html(index=False, border=0, classes="tabla-resumen")
 
-    # Estilo + render HTML
+    # Mostrar ambas tablas con estilos
     st.markdown("""
     <style>
     .tabla-resumen {
@@ -234,17 +234,13 @@ if plan == "PEI–POI":
         margin-top: 20px;
     }
     </style>
-    <div class="tabla-container">
-        <div>
-            <h4 style='text-align:center'>PEI</h4>
-            {0}
-        </div>
-        <div>
-            <h4 style='text-align:center'>POI</h4>
-            {1}
-        </div>
-    </div>
-    """.format(html_pei, html_poi), unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+
+    st.markdown("<div class='tabla-container'>", unsafe_allow_html=True)
+    st.markdown("<div><h4 style='text-align:center'>PEI</h4>" + html_pei + "</div>", unsafe_allow_html=True)
+    st.markdown("<div><h4 style='text-align:center'>POI</h4>" + html_poi + "</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 
