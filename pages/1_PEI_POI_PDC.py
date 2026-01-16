@@ -67,7 +67,7 @@ def construir_tabla(df, filas, nombres):
     return tabla
 
 def mostrar_tabla_resumen(df, titulo):
-    st.subheader(f"📊 {titulo}")
+    #st.subheader(f"📊 {titulo}")
 
     html_table = df.to_html(index=False, border=0, classes='tabla-resumen')
 
