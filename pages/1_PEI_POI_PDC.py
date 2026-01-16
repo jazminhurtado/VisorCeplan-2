@@ -44,41 +44,18 @@ def cargar_excel_local(path, **kwargs):
         return pd.DataFrame()
 
 @st.cache_data
-def cargar_excel_google(url, hoja=0):
+def cargar_excel_google(url):
     try:
         file_id = url.split("/d/")[1].split("/")[0]
-        url_xlsx = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx"
-        df = pd.read_excel(url_xlsx, sheet_name=hoja, header=None)
+        url_csv = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=csv"
+        df = pd.read_csv(url_csv, header=None)
+
+        if df.shape[1] == 1:
+            df = df[0].str.split(",", expand=True)
         return df
     except Exception as e:
         st.error(f"❌ Error al cargar Google Sheet: {e}")
         return pd.DataFrame()
-
-# --- URL de Google Sheet
-url_sheet = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit?usp=sharing"
-
-# --- Cargar hoja por nombre o índice (revisar cuál contiene el resumen)
-df_pdc_sheet = cargar_excel_google(url_sheet, hoja=0)  # Intenta hoja 0, 1, 2... o su nombre
-
-# --- Mostrar preview para depurar si falla
-if df_pdc_sheet.empty:
-    st.warning("⚠️ El archivo cargado está vacío. Verifica la hoja y URL.")
-else:
-    st.write("📄 Vista previa de la hoja cargada desde Google Sheets:")
-    st.dataframe(df_pdc_sheet.head(10))
-
-# --- Construcción de tabla si hay contenido
-if not df_pdc_sheet.empty:
-    try:
-        resumen_pdc = df_pdc_sheet.iloc[1:4, 0:4].copy()
-        resumen_pdc.columns = ["Nivel de Gobierno", "Total Pliegos", "Formulados", "Pendientes"]
-        st.subheader("📊 Tabla Resumen PDC (Google Sheet)")
-        st.dataframe(resumen_pdc, use_container_width=True, hide_index=True)
-    except Exception as e:
-        st.error(f"❌ Error al construir la tabla: {e}")
-
-
-
 
 def construir_tabla(df, filas, nombres):
     tabla = df.iloc[filas].copy()
