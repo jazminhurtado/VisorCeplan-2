@@ -20,13 +20,21 @@ st.markdown("""
 <style>
 body, .stApp { background-color: #ffffff; }
 [data-testid="stSidebar"] { background-color: #1e293b !important; }
-[data-testid="stSidebar"] * { 
+[data-testid="stSidebar"] * {
     color: white !important;
     font-weight: 500;
     font-size: 15px;
 }
+
+/* Aumentar tamaño de fuente del label del selectbox */
+label[data-testid="stSelectboxLabel"] {
+    font-size: 18px !important;
+    font-weight: 600;
+    color: #1e293b; /* opcional: azul oscuro como en la cabecera */
+}
 </style>
 """, unsafe_allow_html=True)
+
 
 st.image("pe.JPG", width=150)
 st.title("Visor Institucional de Monitoreo - Consulta del estado de los planes PDC, PEI-POI")
