@@ -27,7 +27,8 @@ body, .stApp { background-color: #ffffff; }
 }
 
 /* Aumentar tamaño de fuente del label del selectbox */
-label[data-testid="stSelectboxLabel"] {
+div[data-baseweb="select"] > div:first-child {
+#label[data-testid="stSelectboxLabel"] {
     font-size: 18px !important;
     font-weight: 600;
     color: #1e293b; /* opcional: azul oscuro como en la cabecera */
