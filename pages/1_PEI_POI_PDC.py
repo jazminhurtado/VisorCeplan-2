@@ -40,7 +40,7 @@ st.markdown(
 def cargar_excel_google(url):
     try:
         file_id = url.split("/d/")[1].split("/")[0]
-        url_descarga = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx"
+        url_descarga = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx" 
         df = pd.read_excel(url_descarga, sheet_name=0, header=None)
         return df
     except Exception as e:
