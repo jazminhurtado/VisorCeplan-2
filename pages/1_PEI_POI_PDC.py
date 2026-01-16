@@ -23,7 +23,7 @@ body, .stApp { background-color: #ffffff; }
 [data-testid="stSidebar"] * {
     color: white !important;
     font-weight: 500;
-    font-size: 15px;
+    font-size: 18px;
 }
 
 /* Aumentar tamaño de fuente del label del selectbox */
