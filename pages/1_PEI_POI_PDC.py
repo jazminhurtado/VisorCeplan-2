@@ -109,13 +109,14 @@ if not pdc_df.empty:
 # GOOGLE SHEET PDC RESUMEN
 # -------------------------
 # Nombre exacto de la hoja donde está la tabla resumen
-nombre_hoja_pdc = "1.inf tecnicos PEI 2016-2017-2018-2019-2020-2021-2022...V4"
+nombre_hoja_pdc = "Dash_Data_UEs"
 
 # Cargar hoja correcta desde Google Sheets
-df = cargar_excel_google(
+df_pdc_sheet = cargar_excel_google(
     "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit?usp=sharing",
-    hoja_nombre=nombre_hoja_pdc
+    hoja=nombre_hoja_pdc
 )
+
 
 # Construir la tabla resumen desde filas correctas
 resumen_pdc = construir_tabla(
