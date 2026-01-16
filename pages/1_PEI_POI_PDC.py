@@ -44,18 +44,16 @@ def cargar_excel_local(path, **kwargs):
         return pd.DataFrame()
 
 @st.cache_data
-def cargar_excel_google(url):
+def cargar_excel_google(url, hoja_nombre=None):
     try:
         file_id = url.split("/d/")[1].split("/")[0]
-        url_csv = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=csv"
-        df = pd.read_csv(url_csv, header=None)
-
-        if df.shape[1] == 1:
-            df = df[0].str.split(",", expand=True)
+        url_xlsx = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx"
+        df = pd.read_excel(url_xlsx, sheet_name=hoja_nombre, header=None)
         return df
     except Exception as e:
         st.error(f"❌ Error al cargar Google Sheet: {e}")
         return pd.DataFrame()
+
 
 def construir_tabla(df, filas, nombres):
     tabla = df.iloc[filas].copy()
@@ -110,14 +108,23 @@ if not pdc_df.empty:
 # -------------------------
 # GOOGLE SHEET PDC RESUMEN
 # -------------------------
-url_sheet = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit?usp=sharing"
-df = cargar_excel_google(url_sheet)
+# Nombre exacto de la hoja donde está la tabla resumen
+nombre_hoja_pdc = "1.inf tecnicos PEI 2016-2017-2018-2019-2020-2021-2022...V4"
 
+# Cargar hoja correcta desde Google Sheets
+df = cargar_excel_google(
+    "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit?usp=sharing",
+    hoja_nombre=nombre_hoja_pdc
+)
+
+# Construir la tabla resumen desde filas correctas
 resumen_pdc = construir_tabla(
     df,
     filas=slice(1, 4),
     nombres=["Nivel de Gobierno", "Total Pliegos", "Formulados", "Pendientes"]
 )
+
+
 
 # -------------------------
 # UI PRINCIPAL
