@@ -44,26 +44,42 @@ def cargar_excel_local(path, **kwargs):
         return pd.DataFrame()
 
 @st.cache_data
-def cargar_resumen_google(url):
+def cargar_excel_google(url):
     try:
         file_id = url.split("/d/")[1].split("/")[0]
-        export_url = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx"
-        df = pd.read_excel(export_url, sheet_name=0, header=None)
-        resumen = df.iloc[1:4, 0:4].copy()
-        resumen.columns = ["Nivel de Gobierno", "Total Pliegos", "Formulados", "Pendientes"]
-        return resumen
+        url_csv = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=csv"
+        df = pd.read_csv(url_csv, header=None)
+
+        if df.shape[1] == 1:
+            df = df[0].str.split(",", expand=True)
+        return df
     except Exception as e:
         st.error(f"❌ Error al cargar Google Sheet: {e}")
         return pd.DataFrame()
+
+def construir_tabla(df, filas, nombres):
+    tabla = df.iloc[filas].copy()
+    tabla = tabla.dropna(axis=1, how="all")
+    if tabla.shape[1] < len(nombres):
+        st.error(f"❌ La tabla no tiene suficientes columnas. Se esperaban {len(nombres)}, pero solo hay {tabla.shape[1]}.")
+        st.dataframe(tabla)
+        return pd.DataFrame(columns=nombres)
+    tabla = tabla.iloc[:, :len(nombres)]
+    tabla.columns = nombres
+    return tabla
+
+def mostrar_tabla_resumen(df, titulo):
+    st.subheader(f"📊 {titulo}")
+    st.dataframe(df, use_container_width=True, hide_index=True)
 
 def preparar_datos(df):
     df = df.copy()
     df.columns = (
         df.columns
-          .str.strip()
-          .str.lower()
-          .str.replace(" ", "_")
-          .str.replace("-", "_")
+        .str.strip()
+        .str.lower()
+        .str.replace(" ", "_")
+        .str.replace("-", "_")
     )
     if "id_ue" in df.columns:
         df["id_ue"] = df["id_ue"].astype(str).str.replace(".0", "", regex=False)
@@ -88,29 +104,29 @@ pdc_df = cargar_excel_local("monitoreoPDC.xlsx", sheet_name="pdc")
 
 if not pei_df.empty:
     pei_df = preparar_datos(pei_df)
-
 if not pdc_df.empty:
     pdc_df = preparar_datos(pdc_df)
 
 # -------------------------
-# TABLA RESUMEN DESDE GOOGLE
+# GOOGLE SHEET PDC RESUMEN
 # -------------------------
-url_sheet = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit"
-resumen_pdc = cargar_resumen_google(url_sheet)
+url_sheet = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit?usp=sharing"
+df = cargar_excel_google(url_sheet)
 
-# Mostrar tabla resumen PDC si se selecciona
-st.subheader("📋 Tabla Resumen PDC (Google Sheet)")
-if not resumen_pdc.empty:
-    st.dataframe(resumen_pdc, use_container_width=True, hide_index=True)
-
-# -------------------------
-# UI - Selector principal
-# -------------------------
-plan = st.selectbox("Selecciona el plan a visualizar", ["PEI–POI", "PDC"])
+resumen_pdc = construir_tabla(
+    df,
+    filas=slice(1, 4),
+    nombres=["Nivel de Gobierno", "Total Pliegos", "Formulados", "Pendientes"]
+)
 
 # -------------------------
-# Búsqueda por UE
+# UI PRINCIPAL
 # -------------------------
+plan = st.selectbox("Selecciona el plan a visualizar", ["PDC", "PEI–POI"])
+
+if plan == "PDC":
+    mostrar_tabla_resumen(resumen_pdc, "Tabla Resumen PDC (Google Sheet)")
+
 def limpiar_busqueda_pei(): st.session_state["unidad_pei"] = ""
 def limpiar_busqueda_pdc(): st.session_state["unidad_pdc"] = ""
 
@@ -174,4 +190,7 @@ elif plan == "PDC":
                     if col in filtro.columns and pd.notna(filtro[col].values[0]):
                         st.write(f"**{col.replace('_',' ').capitalize()}:** {filtro[col].values[0]}")
 
+# -------------------------
+# PIE
+# -------------------------
 st.markdown("<center><small>App elaborada por la Dirección Nacional de Coordinación y Planeamiento (DNCP) - CEPLAN</small></center>", unsafe_allow_html=True)
