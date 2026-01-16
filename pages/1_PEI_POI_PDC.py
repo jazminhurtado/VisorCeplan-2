@@ -68,35 +68,34 @@ def construir_tabla(df, filas, nombres):
 
 def mostrar_tabla_resumen(df, titulo):
     st.subheader(f"📊 {titulo}")
-    
-    def resaltar_fila_total(fila):
-        if str(fila["Nivel de Gobierno"]).strip().lower() == "total":
-            return ['font-weight: bold'] * len(fila)
-        return [''] * len(fila)
-    
-    styled_df = df.style.apply(resaltar_fila_total, axis=1)
-    
+
+    html_table = df.to_html(index=False, border=0, classes='tabla-resumen')
+
     st.markdown("""
     <style>
-    div[data-testid="stDataFrame"] table {
-        width: 65% !important;
-        margin-left: auto;
-        margin-right: auto;
+    .tabla-resumen {
+        width: 60%;
+        margin: auto;
+        border-collapse: collapse;
+        font-family: sans-serif;
         font-size: 15px;
     }
-    thead tr th {
-        background-color: #1e3a8a !important;
-        color: white !important;
+    .tabla-resumen thead th {
+        background-color: #1E3A8A;
+        color: white;
         font-weight: bold;
-        text-align: center !important;
+        text-align: center;
+        padding: 8px;
     }
-    tbody tr td {
-        text-align: center !important;
+    .tabla-resumen tbody td {
+        text-align: center;
+        padding: 8px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    st.dataframe(styled_df, use_container_width=False, hide_index=True)
+    st.markdown(html_table, unsafe_allow_html=True)
+
 
 
 def preparar_datos(df):
