@@ -93,6 +93,8 @@ if errores:
 # -------------------------
 def preparar_datos(df):
     df = df.copy()
+    
+    # Normaliza los nombres de columnas
     df.columns = (
         df.columns
           .str.strip()
@@ -100,27 +102,42 @@ def preparar_datos(df):
           .str.replace(" ", "_")
           .str.replace("-", "_")
     )
-    # Normalizar id_ue
+    
+    # Asegura la existencia de la columna id_ue
     if "id_ue" in df.columns:
         df["id_ue"] = df["id_ue"].astype(str).str.replace(".0", "", regex=False)
     else:
         df["id_ue"] = ""
-    # Construir etiqueta de búsqueda
+    
+    # Construye la columna para búsqueda por combo
     for col in ["nombre_departamento", "nombre_provincia", "nombre_unidad_ejecutora"]:
         if col not in df.columns:
             df[col] = ""
+    
     df["codigo_nombre"] = (
         df["nombre_departamento"].astype(str).str.upper().fillna("SIN DEPTO") + " - " +
         df["nombre_provincia"].astype(str).str.upper().fillna("SIN PROV") + " - [" +
         df["id_ue"] + "] " +
         df["nombre_unidad_ejecutora"].astype(str)
     )
+
+    # ===============================
+    # Reconstruir "nivel_de_gobierno"
+    # ===============================
+    if "nivel_de_gobierno" not in df.columns:
+        condiciones = [
+            df["nombre_unidad_ejecutora"].str.contains("MINISTERIO|NACIONAL|SECTOR", case=False, na=False),
+            df["nombre_unidad_ejecutora"].str.contains("GOBIERNO REGIONAL", case=False, na=False),
+            df["nombre_unidad_ejecutora"].str.contains("MUNICIPALIDAD PROVINCIAL", case=False, na=False),
+            df["nombre_unidad_ejecutora"].str.contains("MUNICIPALIDAD DISTRITAL", case=False, na=False),
+        ]
+        opciones = ["Gobierno nacional", "Gobierno regional", "Municipalidad provincial", "Municipalidad distrital"]
+        df["nivel_de_gobierno"] = "Otro"
+        for cond, val in zip(condiciones, opciones):
+            df.loc[cond, "nivel_de_gobierno"] = val
+
     return df
 
-if pei_df is not None:
-    pei_df = preparar_datos(pei_df)
-if pdc_df is not None:
-    pdc_df = preparar_datos(pdc_df)
 
 # -------------------------
 # UI
