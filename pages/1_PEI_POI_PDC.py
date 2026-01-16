@@ -135,7 +135,30 @@ resumen_pdc = construir_tabla(
 plan = st.selectbox("Selecciona el plan a visualizar", ["PDC", "PEI–POI"])
 
 if plan == "PDC":
-    mostrar_tabla_resumen(resumen_pdc, "Tabla Resumen PDC (Google Sheet)")
+    # Estilos personalizados SOLO para la tabla resumen PDC
+    st.markdown("""
+    <style>
+    div[data-testid="stDataFrame"] table {
+        width: 60% !important;
+        margin-left: auto;
+        margin-right: auto;
+        font-size: 15px;
+    }
+    thead tr th {
+        background-color: #1e3a8a !important;
+        color: white !important;
+        text-align: center !important;
+    }
+    tbody tr td {
+        text-align: center !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Mostrar tabla con estilo
+    st.subheader("📊 Tabla Resumen PDC (Google Sheet)")
+    st.dataframe(resumen_pdc, use_container_width=False, hide_index=True)
+
 
 def limpiar_busqueda_pei(): st.session_state["unidad_pei"] = ""
 def limpiar_busqueda_pdc(): st.session_state["unidad_pdc"] = ""
