@@ -36,12 +36,34 @@ st.markdown("Consulta unificada del estado de los planes **PEI–POI y PDC** por
 # FUNCIONES
 # -------------------------
 @st.cache_data
-def cargar_excel_local(path, **kwargs):
+def cargar_excel_google(url):
     try:
-        return pd.read_excel(path, **kwargs)
+        file_id = url.split("/d/")[1].split("/")[0]
+        url_csv = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=csv"
+        df = pd.read_csv(url_csv, header=None)
+
+        if df.shape[1] == 1:
+            df = df[0].str.split(",", expand=True)
+
+        return df
     except Exception as e:
-        st.error(f"❌ Error al cargar archivo local: {e}")
+        st.error(f"❌ Error al cargar Google Sheet: {e}")
         return pd.DataFrame()
+
+def construir_tabla(df, filas, nombres):
+    tabla = df.iloc[filas].copy()
+    tabla = tabla.dropna(axis=1, how="all")
+    if tabla.shape[1] < len(nombres):
+        st.error(f"❌ La tabla no tiene suficientes columnas. Se esperaban {len(nombres)}, pero solo hay {tabla.shape[1]}.")
+        st.dataframe(tabla)
+        return pd.DataFrame(columns=nombres)
+    tabla = tabla.iloc[:, :len(nombres)]
+    tabla.columns = nombres
+    return tabla
+
+def mostrar_tabla_resumen(df, titulo):
+    st.subheader(f"📊 {titulo}")
+    st.dataframe(df, use_container_width=True, hide_index=True)
 
 @st.cache_data
 def cargar_excel_google(url):
@@ -110,12 +132,16 @@ if not pdc_df.empty:
 # -------------------------
 # GOOGLE SHEET PDC RESUMEN
 # -------------------------
+st.title("Visor Institucional de Monitoreo")
+st.markdown("Consulta unificada del estado de los planes **PEI–POI y PDC** por unidad ejecutora o región.")
+
 url_sheet = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit?usp=sharing"
 df = cargar_excel_google(url_sheet)
 
+# ✅ Ajuste de fila correcto: datos están en fila 3-5 (índices 2,3,4)
 resumen_pdc = construir_tabla(
     df,
-    filas=slice(2, 5),  # Filas reales: 3 a 5 del sheet
+    filas=slice(2, 5),
     nombres=["Nivel de Gobierno", "Total Pliegos", "Formulados", "Pendientes"]
 )
 
