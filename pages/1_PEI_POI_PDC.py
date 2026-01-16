@@ -120,10 +120,11 @@ df_pdc_sheet = cargar_excel_google(
 
 # Construir la tabla resumen desde filas correctas
 resumen_pdc = construir_tabla(
-    df,
+    df_pdc_sheet,
     filas=slice(1, 4),
     nombres=["Nivel de Gobierno", "Total Pliegos", "Formulados", "Pendientes"]
 )
+
 
 
 
