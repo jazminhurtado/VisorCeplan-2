@@ -55,10 +55,17 @@ df_resumen = cargar_excel_google(URL_SHEET)
 # --------------------------------------
 def construir_tabla(df, filas, columnas, nombres):
     tabla = df.iloc[filas, columnas].copy()
-    tabla = tabla.dropna(axis=1, how="all")
+    tabla = tabla.dropna(axis=1, how="all")  # quitar columnas vacías
+    
+    if tabla.shape[1] < len(nombres):
+        st.error(f"❌ La tabla no tiene suficientes columnas. Se esperaban {len(nombres)}, pero solo hay {tabla.shape[1]}.")
+        st.dataframe(tabla)
+        return pd.DataFrame(columns=nombres)
+    
     tabla = tabla.iloc[:, :len(nombres)]
     tabla.columns = nombres
     return tabla
+
 
 # --------------------------------------
 # TABLAS RESUMEN (SEGÚN TU EXCEL)
