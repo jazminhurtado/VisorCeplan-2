@@ -107,10 +107,14 @@ def mostrar_tabla_resumen(df, titulo):
 pei_df = cargar_excel_local("monitoreoPEI-POI.xlsx", sheet_name=0)
 pdc_df = cargar_excel_local("monitoreoPDC.xlsx", sheet_name="pdc")
 
+pei_df = cargar_excel_local("monitoreoPEI-POI.xlsx", sheet_name=0)
 if not pei_df.empty:
     pei_df = preparar_datos(pei_df)
+
+pdc_df = cargar_excel_local("monitoreoPDC.xlsx", sheet_name="pdc")
 if not pdc_df.empty:
     pdc_df = preparar_datos(pdc_df)
+
 
 # -------------------------
 # GOOGLE SHEET PDC RESUMEN
