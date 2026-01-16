@@ -126,45 +126,38 @@ resumen_pdc = construir_tabla(
     nombres=["Nivel de Gobierno", "Total Pliegos", "Formulados", "Pendientes"]
 )
 # Estilo para resaltar la fila "Total"
-def resaltar_total(fila):
-    if fila["Nivel de Gobierno"].strip().lower() == "total":
-        return ["font-weight: bold; background-color: #e0e7ff"] * len(fila)
+
+def resaltar_fila_total(fila):
+    if str(fila["Nivel de Gobierno"]).strip().lower() == "total":
+        return ["font-weight: bold"] * len(fila)
     return [""] * len(fila)
 
-resumen_pdc_style = resumen_pdc.style.apply(resaltar_total, axis=1)
+# Aplicar estilo
+resumen_pdc_style = resumen_pdc.style.apply(resaltar_fila_total, axis=1)
 
+# --- Estilo para cabecera azul, tabla centrada ---
+st.markdown("""
+<style>
+div[data-testid="stDataFrame"] table {
+    width: 60% !important;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 15px;
+}
+thead tr th {
+    background-color: #1e3a8a !important;
+    color: white !important;
+    text-align: center !important;
+}
+tbody tr td {
+    text-align: center !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
-
-
-# -------------------------
-# UI PRINCIPAL
-# -------------------------
-plan = st.selectbox("Selecciona el plan a visualizar", ["PDC", "PEI–POI"])
-
-if plan == "PDC":
-    # Estilos personalizados SOLO para la tabla resumen PDC
-    st.markdown("""
-    <style>
-    div[data-testid="stDataFrame"] table {
-        width: 60% !important;
-        margin-left: auto;
-        margin-right: auto;
-        font-size: 15px;
-    }
-    thead tr th {
-        background-color: #1e3a8a !important;
-        color: white !important;
-        text-align: center !important;
-    }
-    tbody tr td {
-        text-align: center !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    # Mostrar tabla con estilo
-    #st.subheader("📊 Tabla Resumen PDC (Google Sheet)")
-    st.dataframe(resumen_pdc_style, use_container_width=False, hide_index=True)
+# Mostrar tabla estilizada
+st.subheader("📊 Tabla Resumen PDC (Google Sheet)")
+st.dataframe(resumen_pdc_style, use_container_width=False, hide_index=True)
 
 
 def limpiar_busqueda_pei(): st.session_state["unidad_pei"] = ""
