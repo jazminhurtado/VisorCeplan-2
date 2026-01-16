@@ -47,15 +47,13 @@ def cargar_excel_local(path, **kwargs):
 def cargar_excel_google(url):
     try:
         file_id = url.split("/d/")[1].split("/")[0]
-        url_csv = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=csv"
-        df = pd.read_csv(url_csv, header=None)
-
-        if df.shape[1] == 1:
-            df = df[0].str.split(",", expand=True)
+        url_xlsx = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx"
+        df = pd.read_excel(url_xlsx, sheet_name=0, header=None)
         return df
     except Exception as e:
         st.error(f"❌ Error al cargar Google Sheet: {e}")
         return pd.DataFrame()
+
 
 def construir_tabla(df, filas, nombres):
     tabla = df.iloc[filas].copy()
