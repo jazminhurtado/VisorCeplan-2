@@ -1,9 +1,9 @@
-
 import streamlit as st
 import pandas as pd
 import re
 from pathlib import Path
-import pei_poi_tablas_alineadas as pp
+# import pei_poi_tablas_alineadas as pp  ← ELIMINA o COMENTA ESTA LÍNEA
+
 
 
 # -------------------------
