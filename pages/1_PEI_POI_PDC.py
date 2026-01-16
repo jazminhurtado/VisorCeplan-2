@@ -63,76 +63,42 @@ def cargar_excel_local(path, **read_kwargs):
     except Exception as e:
         raise RuntimeError(f"Error leyendo {f.name}: {e}")
 
-pei_df = None
-pdc_df = None
-errores = []
-
-try:
-    pei_df = cargar_excel_local("monitoreoPEI-POI.xlsx", sheet_name=0)
-except Exception as e:
-    errores.append(f"PEI–POI: {e}")
-
-try:
-    pdc_df = cargar_excel_local("monitoreoPDC.xlsx", sheet_name="pdc")
-except Exception as e:
-    errores.append(f"PDC: {e}")
-
-if errores:
-    for msg in errores:
-        st.error(f"No se pudo cargar {msg}")
+# -------------------------
+# CARGA DESDE GOOGLE SHEETS
+# -------------------------
+@st.cache_data
+def cargar_excel_google(url):
+    try:
+        # Transformar URL de edición a URL de descarga .xlsx
+        if "/edit" in url:
+            file_id = url.split("/d/")[1].split("/")[0]
+            url = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx"
+        df = pd.read_excel(url, sheet_name=0, header=None)
+        return df
+    except Exception as e:
+        st.error(f"❌ Error al cargar Google Sheet: {e}")
+        return pd.DataFrame()
 
 # -------------------------
-# PREPARACIÓN DE DATOS
+# CARGAR TABLA RESUMEN DESDE GOOGLE SHEET
 # -------------------------
-def preparar_datos(df):
-    df = df.copy()
-    df.columns = (
-        df.columns
-          .str.strip()
-          .str.lower()
-          .str.replace(" ", "_")
-          .str.replace("-", "_")
-    )
-    if "id_ue" in df.columns:
-        df["id_ue"] = df["id_ue"].astype(str).str.replace(".0", "", regex=False)
-    else:
-        df["id_ue"] = ""
-    for col in ["nombre_departamento", "nombre_provincia", "nombre_unidad_ejecutora"]:
-        if col not in df.columns:
-            df[col] = ""
-    df["codigo_nombre"] = (
-        df["nombre_departamento"].astype(str).str.upper().fillna("SIN DEPTO") + " - " +
-        df["nombre_provincia"].astype(str).str.upper().fillna("SIN PROV") + " - [" +
-        df["id_ue"] + "] " +
-        df["nombre_unidad_ejecutora"].astype(str)
-    )
-    # Generar nivel de gobierno si no existe
-    if "nivel_de_gobierno" not in df.columns:
-        condiciones = [
-            df["nombre_unidad_ejecutora"].str.contains("MINISTERIO|NACIONAL|SECTOR", case=False, na=False),
-            df["nombre_unidad_ejecutora"].str.contains("GOBIERNO REGIONAL", case=False, na=False),
-            df["nombre_unidad_ejecutora"].str.contains("MUNICIPALIDAD PROVINCIAL", case=False, na=False),
-            df["nombre_unidad_ejecutora"].str.contains("MUNICIPALIDAD DISTRITAL", case=False, na=False),
-        ]
-        opciones = ["Gobierno nacional", "Gobierno regional", "Municipalidad provincial", "Municipalidad distrital"]
-        df["nivel_de_gobierno"] = "Otro"
-        for cond, val in zip(condiciones, opciones):
-            df.loc[cond, "nivel_de_gobierno"] = val
-    return df
+url_google_sheet = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit?usp=sharing"
+df_resumen = cargar_excel_google(url_google_sheet)
 
-if pei_df is not None:
-    pei_df = preparar_datos(pei_df)
-if pdc_df is not None:
-    pdc_df = preparar_datos(pdc_df)
+resumen_pdc = df_resumen.iloc[1:4, 0:4]
+resumen_pei = df_resumen.iloc[8:13, 0:4]
+resumen_poi = df_resumen.iloc[16:21, 0:4]
+
+resumen_pdc.columns = ["Nivel de Gobierno", "Total Pliegos", "Formulados", "Pendientes"]
+resumen_pei.columns = ["Nivel de Gobierno", "Total Pliegos", "Formulados", "Pendientes"]
+resumen_poi.columns = ["Nivel de Gobierno", "Total UEs", "Formulados", "Pendientes"]
+
 
 # -------------------------
 # UI
 # -------------------------
 plan = st.selectbox("Selecciona el plan a visualizar", ["PEI–POI", "PDC"])
 
-# ================================
-# TABLAS RESUMEN DINÁMICAS
-# ================================
 # ================================
 # TABLAS RESUMEN DINÁMICAS
 # ================================
