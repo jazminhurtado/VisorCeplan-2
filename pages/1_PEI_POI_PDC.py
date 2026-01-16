@@ -100,6 +100,7 @@ def mostrar_tabla_resumen(df, titulo):
     st.dataframe(styled_df, use_container_width=False, hide_index=True)
 
 
+
 # -------------------------
 # CARGA DE ARCHIVOS
 # -------------------------
