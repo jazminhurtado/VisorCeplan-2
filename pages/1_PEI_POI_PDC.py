@@ -114,8 +114,9 @@ nombre_hoja_pdc = "Dash_Data_UEs"
 # Cargar hoja correcta desde Google Sheets
 df_pdc_sheet = cargar_excel_google(
     "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit?usp=sharing",
-    hoja=nombre_hoja_pdc
+    hoja_nombre=nombre_hoja_pdc
 )
+
 
 
 # Construir la tabla resumen desde filas correctas
