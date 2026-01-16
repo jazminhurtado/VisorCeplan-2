@@ -84,7 +84,8 @@ def mostrar_tabla_resumen(df, titulo):
     <style>
     .tabla-resumen {
         width: 60%;
-        margin: auto;
+        margin-left: 0;
+        margin-right: auto;
         border-collapse: collapse;
         font-family: sans-serif;
         font-size: 15px;
