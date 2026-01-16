@@ -115,9 +115,10 @@ df = cargar_excel_google(url_sheet)
 
 resumen_pdc = construir_tabla(
     df,
-    filas=slice(1, 4),
+    filas=slice(2, 5),  # Filas reales: 3 a 5 del sheet
     nombres=["Nivel de Gobierno", "Total Pliegos", "Formulados", "Pendientes"]
 )
+
 
 # -------------------------
 # UI PRINCIPAL
