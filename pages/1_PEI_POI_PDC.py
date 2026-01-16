@@ -3,6 +3,8 @@ import streamlit as st
 import pandas as pd
 import re
 from pathlib import Path
+import pei_poi_tablas_alineadas as pp
+
 
 # -------------------------
 # CONFIGURACIÓN GENERAL
@@ -179,38 +181,84 @@ def limpiar_busqueda_pei(): st.session_state["unidad_pei"] = ""
 def limpiar_busqueda_pdc(): st.session_state["unidad_pdc"] = ""
 
 if plan == "PEI–POI":
-    if pei_df.empty:
-        st.warning("No se cargaron datos de PEI–POI.")
-    else:
-        opciones = [""] + sorted(pei_df["codigo_nombre"].dropna().unique())
-        unidad = st.selectbox("🔍 Buscar o seleccionar unidad ejecutora:", options=opciones, key="unidad_pei")
-        st.button("🪑 Limpiar búsqueda", on_click=limpiar_busqueda_pei)
+    pp.mostrar_tablas_pei_poi()
 
-        if unidad:
-            match = re.search(r"\[(\d+)\]", unidad)
-            codigo = match.group(1) if match else ""
-            filtro = pei_df[pei_df["id_ue"] == codigo]
-            if not filtro.empty:
-                st.subheader("Información PEI disponible:")
-                columnas_pei = [
-                    "tiene_pei", "tipo_pei", "periodo_ultimo_pei",
-                    "pei_vigente", "estado_pei", "fase_pei",
-                    "expediente", "nro_informe_tecnico", "fecha_informe_tecnico",
-                    "especialista_asignado", "correo_electronico_especialista"
-                ]
-                for col in columnas_pei:
-                    if col in filtro.columns and pd.notna(filtro[col].values[0]):
-                        st.write(f"**{col.replace('_',' ').capitalize()}:** {filtro[col].values[0]}")
 
-                st.subheader("Información POI disponible:")
-                columnas_poi = [
-                    "poi_2024_en_seguimiento", "poi_2025_en_seguimiento",
-                    "poi_2025_en_consistenciado", "poi_2025_2027_en_elaboración",
-                    "poi_2026_2028_en_elaboración", "poi_2026_2028_en_aprobado"
-                ]
-                for col in columnas_poi:
-                    if col in filtro.columns and pd.notna(filtro[col].values[0]):
-                        st.write(f"**{col.replace('_',' ').capitalize()}:** {filtro[col].values[0]}")
+    # Link y hoja
+    url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit?usp=sharing"
+    hoja = "Dash_Data_UEs"
+
+    # Función para cargar rango específico
+    def cargar_rango_google(url, hoja, usecols, skiprows, nrows, nombres):
+        file_id = url.split("/d/")[1].split("/")[0]
+        url_xlsx = f"https://docs.google.com/spreadsheets/d/{file_id}/export?format=xlsx"
+        df = pd.read_excel(
+            url_xlsx,
+            sheet_name=hoja,
+            usecols=usecols,
+            skiprows=skiprows,
+            nrows=nrows,
+            header=None
+        )
+        df.columns = nombres
+        return df
+
+    # Columnas comunes
+    nombres = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
+
+    # Cargar datos PEI (filas 7 a 11 => skiprows=6, nrows=5)
+    pei_df = cargar_rango_google(url, hoja, "A:D", skiprows=6, nrows=5, nombres=nombres)
+
+    # Cargar datos POI (filas 16 a 20 => skiprows=15, nrows=5)
+    poi_df = cargar_rango_google(url, hoja, "A:D", skiprows=15, nrows=5, nombres=nombres)
+
+    # Estilos CSS para las tablas
+    st.markdown("""
+    <style>
+    .tabla-pp {
+        border-collapse: collapse;
+        font-size: 14px;
+        font-family: Arial, sans-serif;
+        margin: auto;
+    }
+    .tabla-pp thead th {
+        background-color: #1e293b;
+        color: white;
+        padding: 8px;
+        text-align: center;
+        font-weight: bold;
+    }
+    .tabla-pp td {
+        padding: 8px;
+        text-align: center;
+    }
+    .tabla-container {
+        display: flex;
+        justify-content: space-evenly;
+        gap: 50px;
+        margin-top: 10px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Convertir DataFrames en HTML
+    tabla_pei = pei_df.to_html(index=False, classes="tabla-pp", border=0)
+    tabla_poi = poi_df.to_html(index=False, classes="tabla-pp", border=0)
+
+    # Mostrar ambas tablas alineadas
+    st.markdown(f"""
+    <div class="tabla-container">
+        <div>
+            <h4 style='text-align:center;'>Tabla PEI</h4>
+            {tabla_pei}
+        </div>
+        <div>
+            <h4 style='text-align:center;'>Tabla POI</h4>
+            {tabla_poi}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 
 elif plan == "PDC":
     if pdc_df.empty:
