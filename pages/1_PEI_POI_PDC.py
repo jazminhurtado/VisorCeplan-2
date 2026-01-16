@@ -171,11 +171,27 @@ def mostrar_tabla_resumen(df, titulo):
     st.markdown(html, unsafe_allow_html=True)
 
 if plan == "PEI–POI" and pei_df is not None:
-    resumen_pei = pei_df.groupby("nivel_de_gobierno", dropna=False).agg({
-        "formulados_pliegos_con_pei": "sum",
-        "pendientes_pliegos_sin_pei": "sum",
-        "total_pliegos": "sum"
+def pick_column(df, nombre_parcial):
+    return next((col for col in df.columns if nombre_parcial in col), None)
+
+col_gob = pick_column(pei_df, "nivel_de_gobierno")
+col_for = pick_column(pei_df, "formulados_pliegos_con_pei")
+col_pen = pick_column(pei_df, "pendientes_pliegos_sin_pei")
+col_tot = pick_column(pei_df, "total_pliegos")
+
+if all([col_gob, col_for, col_pen, col_tot]):
+    resumen_pei = pei_df.groupby(col_gob, dropna=False).agg({
+        col_for: "sum",
+        col_pen: "sum",
+        col_tot: "sum"
     }).reset_index()
+    resumen_pei.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
+    resumen_pei.loc["Total"] = resumen_pei[["Formulados", "Pendientes", "Total"]].sum(numeric_only=True)
+    resumen_pei.at["Total", "Nivel de Gobierno"] = "Total"
+    mostrar_tabla_resumen(resumen_pei, "Resumen PEI")
+else:
+    st.warning("❌ No se encontraron todas las columnas necesarias para el resumen PEI.")
+
     resumen_pei.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
     resumen_pei.loc["Total"] = resumen_pei[["Formulados", "Pendientes", "Total"]].sum(numeric_only=True)
     resumen_pei.at["Total", "Nivel de Gobierno"] = "Total"
