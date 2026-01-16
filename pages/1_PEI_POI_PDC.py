@@ -196,15 +196,17 @@ if plan == "PEI–POI":
         st.error(f"❌ No se pudo cargar el archivo desde Google Sheets: {e}")
         st.stop()
 
-    # Extraer tabla PEI
-    pei = df_all.iloc[6:11, 0:4].copy()
-    pei.columns = pei.iloc[0]
-    pei = pei.drop(pei.index[0]).reset_index(drop=True)
+ # Extraer tabla PEI
+pei = df_all.iloc[7:12, 0:4].copy()
+pei.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
+pei = pei.reset_index(drop=True)
 
-    # Extraer tabla POI
-    poi = df_all.iloc[15:20, 0:4].copy()
-    poi.columns = poi.iloc[0]
-    poi = poi.drop(poi.index[0]).reset_index(drop=True)
+# Extraer tabla POI
+poi = df_all.iloc[16:21, 0:4].copy()
+poi.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
+poi = poi.reset_index(drop=True)
+
+
 
     # Reordenar columnas: "Total" al final
     def reordenar(df):
