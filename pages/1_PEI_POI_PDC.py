@@ -38,7 +38,7 @@ div[data-baseweb="select"] > div:first-child {
 
 
 st.image("pe.JPG", width=150)
-st.title("Visor Institucional de Monitoreo - Consulta del estado de los planes PDC, PEI-POI")
+st.title("Visor Institucional de Monitoreo - Consulta del estado de los planes PDC-PEI-POI")
 #st.markdown("Consulta unificada del estado de los planes **PEI–POI y PDC** por unidad ejecutora o región.")
 
 # -------------------------
