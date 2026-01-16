@@ -210,11 +210,12 @@ if plan == "PEI–POI":
     st.markdown("""
     <style>
     .tabla-resumen {
-        width: 100%;
+        width: 60%;
         border-collapse: collapse;
         font-family: sans-serif;
         font-size: 14px;
-        margin: 0 10px;
+        margin-left: 0;  /* Alineado a la izquierda */
+        margin-top: 10px;
     }
     .tabla-resumen thead th {
         background-color: #1e293b;
