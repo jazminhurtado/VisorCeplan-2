@@ -75,7 +75,8 @@ def mostrar_tabla_resumen(df, titulo):
         return [''] * len(fila)
     
     styled_df = df.style.apply(resaltar_fila_total, axis=1)
-    
+
+    # Estilos: cabecera azul oscuro, texto blanco y centrado, tabla angosta
     st.markdown("""
     <style>
     div[data-testid="stDataFrame"] table {
@@ -84,14 +85,12 @@ def mostrar_tabla_resumen(df, titulo):
         margin-right: auto;
         font-size: 15px;
     }
-    /* Cabecera de la tabla */
     thead tr th {
-        background-color: #1e3a8a !important;
+        background-color: #1E293B !important;  /* Azul oscuro */
         color: white !important;
-        font-weight: bold;
+        font-weight: bold !important;
         text-align: center !important;
     }
-     /* Celdas del cuerpo */
     tbody tr td {
         text-align: center !important;
     }
@@ -99,6 +98,7 @@ def mostrar_tabla_resumen(df, titulo):
     """, unsafe_allow_html=True)
 
     st.dataframe(styled_df, use_container_width=False, hide_index=True)
+
 
 
 def preparar_datos(df):
