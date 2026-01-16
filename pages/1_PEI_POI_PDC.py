@@ -183,7 +183,6 @@ def limpiar_busqueda_pdc(): st.session_state["unidad_pdc"] = ""
 if plan == "PEI–POI":
     st.subheader("📊 Tablas Resumen PEI y POI")
 
-    # Cargar hoja desde Google Sheets
     hoja = "Dash_Data_UEs"
     url = "https://docs.google.com/spreadsheets/d/1bpzY7fYHQrwqjVKvOV0CpypzbJIPaNUQ/edit?usp=sharing"
     file_id = url.split("/d/")[1].split("/")[0]
@@ -195,21 +194,19 @@ if plan == "PEI–POI":
         st.error(f"❌ No se pudo cargar el archivo desde Google Sheets: {e}")
         st.stop()
 
-    # Tabla PEI
+    # PEI: filas 7 a 12 (índices 6:11)
     pei = df_all.iloc[7:12, 0:4].copy()
-    pei.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
-    pei = pei.reset_index(drop=True)
-
-    # Tabla POI
-    poi = df_all.iloc[16:21, 0:4].copy()
-    poi.columns = ["Nivel de Gobierno", "Formulados", "Pendientes", "Total"]
-    poi = poi.reset_index(drop=True)
-
-    # Convertir a HTML
+    pei.columns = ["Nivel de Gobierno", "Total Pliegos", "Formulados", "Pendientes"]
+    pei = pei[["Nivel de Gobierno", "Formulados", "Pendientes", "Total Pliegos"]]  # Total al final
     html_pei = pei.to_html(index=False, border=0, classes='tabla-resumen')
+
+    # POI: filas 16 a 21 (índices 15:20)
+    poi = df_all.iloc[16:21, 0:4].copy()
+    poi.columns = ["Nivel de Gobierno", "Total UEs", "Formulados", "Pendientes"]
+    poi = poi[["Nivel de Gobierno", "Formulados", "Pendientes", "Total UEs"]]  # Total al final
     html_poi = poi.to_html(index=False, border=0, classes='tabla-resumen')
 
-    # Mostrar lado a lado
+    # Estilo + render HTML
     st.markdown("""
     <style>
     .tabla-resumen {
@@ -248,6 +245,7 @@ if plan == "PEI–POI":
         </div>
     </div>
     """.format(html_pei, html_poi), unsafe_allow_html=True)
+
 
 
 
