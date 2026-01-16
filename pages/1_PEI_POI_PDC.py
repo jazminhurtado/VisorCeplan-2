@@ -156,7 +156,7 @@ if plan == "PDC":
     """, unsafe_allow_html=True)
 
     # Mostrar tabla con estilo
-    st.subheader("📊 Tabla Resumen PDC (Google Sheet)")
+    #st.subheader("📊 Tabla Resumen PDC (Google Sheet)")
     st.dataframe(resumen_pdc, use_container_width=False, hide_index=True)
 
 
