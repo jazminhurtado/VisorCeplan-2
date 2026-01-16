@@ -28,6 +28,21 @@ body, .stApp { background-color: #ffffff; }
 </style>
 """, unsafe_allow_html=True)
 
+# -------------------------
+# CARGA DE EXCEL LOCAL
+# -------------------------
+@st.cache_data
+def cargar_excel_local(path, **read_kwargs):
+    """Lee un Excel local con manejo de errores y cache."""
+    f = Path(path)
+    if not f.exists():
+        raise FileNotFoundError(f"No se encontró el archivo: {f.resolve()}")
+    try:
+        return pd.read_excel(f, **read_kwargs)
+    except Exception as e:
+        raise RuntimeError(f"Error leyendo {f.name}: {e}")
+
+
 st.image("pe.JPG", width=150)
 st.title("Visor Institucional de Monitoreo")
 st.markdown("Consulta unificada del estado de los planes **PEI–POI y PDC** por unidad ejecutora o región.")
