@@ -66,33 +66,39 @@ def construir_tabla(df, filas, nombres):
     tabla.columns = nombres
     return tabla
 
+# Estilo para fila "Total"
+def resaltar_fila_total(fila):
+    if str(fila["Nivel de Gobierno"]).strip().lower() == "total":
+        return ['font-weight: bold'] * len(fila)
+    return [''] * len(fila)
+
 def mostrar_tabla_resumen(df, titulo):
     st.subheader(f"📊 {titulo}")
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    
+    styled_df = df.style.apply(resaltar_fila_total, axis=1)
+    
+    st.markdown("""
+    <style>
+    div[data-testid="stDataFrame"] table {
+        width: 65% !important;
+        margin-left: auto;
+        margin-right: auto;
+        font-size: 15px;
+    }
+    thead tr th {
+        background-color: #1e3a8a !important;
+        color: white !important;
+        font-weight: bold;
+        text-align: center !important;
+    }
+    tbody tr td {
+        text-align: center !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-def preparar_datos(df):
-    df = df.copy()
-    df.columns = (
-        df.columns
-        .str.strip()
-        .str.lower()
-        .str.replace(" ", "_")
-        .str.replace("-", "_")
-    )
-    if "id_ue" in df.columns:
-        df["id_ue"] = df["id_ue"].astype(str).str.replace(".0", "", regex=False)
-    else:
-        df["id_ue"] = ""
-    for col in ["nombre_departamento", "nombre_provincia", "nombre_unidad_ejecutora"]:
-        if col not in df.columns:
-            df[col] = ""
-    df["codigo_nombre"] = (
-        df["nombre_departamento"].astype(str).str.upper().fillna("SIN DEPTO") + " - " +
-        df["nombre_provincia"].astype(str).str.upper().fillna("SIN PROV") + " - [" +
-        df["id_ue"] + "] " +
-        df["nombre_unidad_ejecutora"].astype(str)
-    )
-    return df
+    st.dataframe(styled_df, use_container_width=False, hide_index=True)
+
 
 # -------------------------
 # CARGA DE ARCHIVOS
