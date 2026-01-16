@@ -70,46 +70,47 @@ def construir_tabla(df, filas, nombres):
 def mostrar_tabla_resumen(df, titulo):
     st.subheader(f"📊 {titulo}")
 
-    # Aplicar negrita solo a la fila "Total"
+    # Fila "Total" en negrita
     df_styled = df.copy()
-    df_styled.iloc[:, :] = df_styled.astype(str)  # Convertir todo a str
+    df_styled = df_styled.astype(str)  # asegurar texto
     df_styled.loc[df_styled.iloc[:, 0].str.lower().str.strip() == "total"] = \
         df_styled.loc[df_styled.iloc[:, 0].str.lower().str.strip() == "total"].apply(
-            lambda row: [f"<strong>{val}</strong>" for val in row], axis=1
+            lambda row: [f"<b>{cell}</b>" for cell in row], axis=1
         )
 
-    # Convertir a HTML con formato limpio
-    table_html = df_styled.to_html(escape=False, index=False, border=0)
+    # Convertir tabla a HTML sin escapar
+    html_table = df_styled.to_html(escape=False, index=False, border=0, classes='tabla-resumen')
 
-    # CSS personalizado
-    estilo_css = """
+    # Estilos
+    estilos = """
     <style>
-    table {
-        width: 65%;
-        margin-left: auto;
-        margin-right: auto;
+    .tabla-resumen {
+        width: 60%;
+        margin: auto;
         border-collapse: collapse;
+        font-family: sans-serif;
         font-size: 15px;
     }
-    thead th {
+    .tabla-resumen thead th {
         background-color: #1E3A8A;
         color: white;
         font-weight: bold;
         text-align: center;
         padding: 8px;
     }
-    tbody td {
+    .tabla-resumen tbody td {
         text-align: center;
         padding: 8px;
     }
-    tbody tr:nth-child(even) {
+    .tabla-resumen tbody tr:nth-child(even) {
         background-color: #f9f9f9;
     }
     </style>
     """
 
-    # Mostrar tabla con estilo en Streamlit
-    st.markdown(estilo_css + table_html, unsafe_allow_html=True)
+    # Mostrar en Streamlit
+    st.markdown(estilos + html_table, unsafe_allow_html=True)
+
 
 
 
