@@ -66,14 +66,13 @@ def construir_tabla(df, filas, nombres):
     tabla.columns = nombres
     return tabla
 
-# Estilo para fila "Total"
-def resaltar_fila_total(fila):
-    if str(fila["Nivel de Gobierno"]).strip().lower() == "total":
-        return ['font-weight: bold'] * len(fila)
-    return [''] * len(fila)
-
 def mostrar_tabla_resumen(df, titulo):
     st.subheader(f"📊 {titulo}")
+    
+    def resaltar_fila_total(fila):
+        if str(fila["Nivel de Gobierno"]).strip().lower() == "total":
+            return ['font-weight: bold'] * len(fila)
+        return [''] * len(fila)
     
     styled_df = df.style.apply(resaltar_fila_total, axis=1)
     
@@ -100,18 +99,40 @@ def mostrar_tabla_resumen(df, titulo):
     st.dataframe(styled_df, use_container_width=False, hide_index=True)
 
 
+def preparar_datos(df):
+    df = df.copy()
+    df.columns = (
+        df.columns
+        .str.strip()
+        .str.lower()
+        .str.replace(" ", "_")
+        .str.replace("-", "_")
+    )
+    if "id_ue" in df.columns:
+        df["id_ue"] = df["id_ue"].astype(str).str.replace(".0", "", regex=False)
+    else:
+        df["id_ue"] = ""
+    for col in ["nombre_departamento", "nombre_provincia", "nombre_unidad_ejecutora"]:
+        if col not in df.columns:
+            df[col] = ""
+    df["codigo_nombre"] = (
+        df["nombre_departamento"].astype(str).str.upper().fillna("SIN DEPTO") + " - " +
+        df["nombre_provincia"].astype(str).str.upper().fillna("SIN PROV") + " - [" +
+        df["id_ue"] + "] " +
+        df["nombre_unidad_ejecutora"].astype(str)
+    )
+    return df
+
 # -------------------------
 # CARGA DE ARCHIVOS
 # -------------------------
 pei_df = cargar_excel_local("monitoreoPEI-POI.xlsx", sheet_name=0)
+pdc_df = cargar_excel_local("monitoreoPDC.xlsx", sheet_name="pdc")
+
 if not pei_df.empty:
     pei_df = preparar_datos(pei_df)
-
-pdc_df = cargar_excel_local("monitoreoPDC.xlsx", sheet_name="pdc")
 if not pdc_df.empty:
     pdc_df = preparar_datos(pdc_df)
-
-
 
 # -------------------------
 # GOOGLE SHEET PDC RESUMEN
