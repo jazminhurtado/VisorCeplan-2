@@ -20,7 +20,7 @@ st.markdown("""
 <style>
 body, .stApp { background-color: #ffffff; }
 [data-testid="stSidebar"] { background-color: #1e293b !important; }
-[data-testid="stSidebar"] * {
+[data-testid="stSidebar"] * { 
     color: white !important;
     font-weight: 500;
     font-size: 15px;
