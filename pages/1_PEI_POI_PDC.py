@@ -125,6 +125,13 @@ resumen_pdc = construir_tabla(
     filas=slice(1, 4),
     nombres=["Nivel de Gobierno", "Total Pliegos", "Formulados", "Pendientes"]
 )
+# Estilo para resaltar la fila "Total"
+def resaltar_total(fila):
+    if fila["Nivel de Gobierno"].strip().lower() == "total":
+        return ["font-weight: bold; background-color: #e0e7ff"] * len(fila)
+    return [""] * len(fila)
+
+resumen_pdc_style = resumen_pdc.style.apply(resaltar_total, axis=1)
 
 
 
@@ -157,7 +164,7 @@ if plan == "PDC":
 
     # Mostrar tabla con estilo
     #st.subheader("📊 Tabla Resumen PDC (Google Sheet)")
-    st.dataframe(resumen_pdc, use_container_width=False, hide_index=True)
+    st.dataframe(resumen_pdc_style, use_container_width=False, hide_index=True)
 
 
 def limpiar_busqueda_pei(): st.session_state["unidad_pei"] = ""
