@@ -66,56 +66,37 @@ def construir_tabla(df, filas, nombres):
     tabla.columns = nombres
     return tabla
 
-
 def mostrar_tabla_resumen(df, titulo):
     st.subheader(f"📊 {titulo}")
-
-    # Fila "Total" en negrita
-    df_styled = df.copy()
-    df_styled = df_styled.astype(str)  # asegurar texto
-    df_styled.loc[df_styled.iloc[:, 0].str.lower().str.strip() == "total"] = \
-        df_styled.loc[df_styled.iloc[:, 0].str.lower().str.strip() == "total"].apply(
-            lambda row: [f"<b>{cell}</b>" for cell in row], axis=1
-        )
-
-    # Convertir tabla a HTML sin escapar
-    html_table = df_styled.to_html(escape=False, index=False, border=0, classes='tabla-resumen')
-
-    # Estilos
-    estilos = """
+    
+    def resaltar_fila_total(fila):
+        if str(fila["Nivel de Gobierno"]).strip().lower() == "total":
+            return ['font-weight: bold'] * len(fila)
+        return [''] * len(fila)
+    
+    styled_df = df.style.apply(resaltar_fila_total, axis=1)
+    
+    st.markdown("""
     <style>
-    .tabla-resumen {
-        width: 60%;
-        margin: auto;
-        border-collapse: collapse;
-        font-family: sans-serif;
+    div[data-testid="stDataFrame"] table {
+        width: 65% !important;
+        margin-left: auto;
+        margin-right: auto;
         font-size: 15px;
     }
-    .tabla-resumen thead th {
-        background-color: #1E3A8A;
-        color: white;
+    thead tr th {
+        background-color: #1e3a8a !important;
+        color: white !important;
         font-weight: bold;
-        text-align: center;
-        padding: 8px;
+        text-align: center !important;
     }
-    .tabla-resumen tbody td {
-        text-align: center;
-        padding: 8px;
-    }
-    .tabla-resumen tbody tr:nth-child(even) {
-        background-color: #f9f9f9;
+    tbody tr td {
+        text-align: center !important;
     }
     </style>
-    """
+    """, unsafe_allow_html=True)
 
-    # Mostrar en Streamlit
-    st.markdown(estilos + html_table, unsafe_allow_html=True)
-
-
-
-
-
-
+    st.dataframe(styled_df, use_container_width=False, hide_index=True)
 
 
 def preparar_datos(df):
