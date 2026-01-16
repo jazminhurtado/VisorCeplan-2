@@ -84,12 +84,14 @@ def mostrar_tabla_resumen(df, titulo):
         margin-right: auto;
         font-size: 15px;
     }
+    /* Cabecera de la tabla */
     thead tr th {
         background-color: #1e3a8a !important;
         color: white !important;
         font-weight: bold;
         text-align: center !important;
     }
+     /* Celdas del cuerpo */
     tbody tr td {
         text-align: center !important;
     }
