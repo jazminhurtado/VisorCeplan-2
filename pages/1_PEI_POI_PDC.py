@@ -100,13 +100,9 @@ def mostrar_tabla_resumen(df, titulo):
     st.dataframe(styled_df, use_container_width=False, hide_index=True)
 
 
-
 # -------------------------
 # CARGA DE ARCHIVOS
 # -------------------------
-pei_df = cargar_excel_local("monitoreoPEI-POI.xlsx", sheet_name=0)
-pdc_df = cargar_excel_local("monitoreoPDC.xlsx", sheet_name="pdc")
-
 pei_df = cargar_excel_local("monitoreoPEI-POI.xlsx", sheet_name=0)
 if not pei_df.empty:
     pei_df = preparar_datos(pei_df)
@@ -114,6 +110,7 @@ if not pei_df.empty:
 pdc_df = cargar_excel_local("monitoreoPDC.xlsx", sheet_name="pdc")
 if not pdc_df.empty:
     pdc_df = preparar_datos(pdc_df)
+
 
 
 # -------------------------
