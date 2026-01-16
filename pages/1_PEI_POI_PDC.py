@@ -68,14 +68,14 @@ def construir_tabla(df, filas, nombres):
 
 def mostrar_tabla_resumen(df, titulo):
     st.subheader(f"📊 {titulo}")
-
-    # Resalta la fila "Total" en negrita
-    styled_df = df.style.apply(
-        lambda fila: ['font-weight: bold'] * len(fila) if str(fila["Nivel de Gobierno"]).strip().lower() == "total" else [''] * len(fila),
-        axis=1
-    )
-
-    # Estilo CSS personalizado para hacer la cabecera azul y letras blancas
+    
+    def resaltar_fila_total(fila):
+        if str(fila["Nivel de Gobierno"]).strip().lower() == "total":
+            return ['font-weight: bold'] * len(fila)
+        return [''] * len(fila)
+    
+    styled_df = df.style.apply(resaltar_fila_total, axis=1)
+    
     st.markdown("""
     <style>
     div[data-testid="stDataFrame"] table {
@@ -84,22 +84,20 @@ def mostrar_tabla_resumen(df, titulo):
         margin-right: auto;
         font-size: 15px;
     }
-    div[data-testid="stDataFrame"] thead tr {
-        background-color: #1e293b !important;
-    }
-    div[data-testid="stDataFrame"] thead th {
+    thead tr th {
+        background-color: #1e3a8a !important;
         color: white !important;
-        font-weight: bold !important;
+        font-weight: bold;
         text-align: center !important;
     }
-    div[data-testid="stDataFrame"] tbody td {
+    tbody tr td {
         text-align: center !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # Mostrar la tabla
     st.dataframe(styled_df, use_container_width=False, hide_index=True)
+
 
 
 
