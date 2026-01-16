@@ -66,37 +66,47 @@ def construir_tabla(df, filas, nombres):
     tabla.columns = nombres
     return tabla
 
+
 def mostrar_tabla_resumen(df, titulo):
     st.subheader(f"📊 {titulo}")
-    
-    def resaltar_fila_total(fila):
-        if str(fila["Nivel de Gobierno"]).strip().lower() == "total":
-            return ['font-weight: bold'] * len(fila)
-        return [''] * len(fila)
-    
-    styled_df = df.style.apply(resaltar_fila_total, axis=1)
-    
-    st.markdown("""
+
+    # Aplicar negrita a la fila 'Total'
+    df_estilado = df.copy()
+    df_estilado.loc[df_estilado.iloc[:, 0].str.lower().str.strip() == "total"] = df_estilado.loc[df_estilado.iloc[:, 0].str.lower().str.strip() == "total"].apply(lambda x: [f"<strong>{v}</strong>" for v in x], axis=1)
+
+    # Convertir DataFrame a HTML
+    tabla_html = df_estilado.to_html(escape=False, index=False)
+
+    # CSS personalizado
+    estilo_css = """
     <style>
-    div[data-testid="stDataFrame"] table {
-        width: 65% !important;
+    table {
+        width: 65%;
         margin-left: auto;
         margin-right: auto;
+        border-collapse: collapse;
         font-size: 15px;
     }
-    thead tr th {
-        background-color: #1e3a8a !important;
-        color: white !important;
+    thead th {
+        background-color: #1E3A8A;
+        color: white;
         font-weight: bold;
-        text-align: center !important;
+        text-align: center;
+        padding: 8px;
     }
-    tbody tr td {
-        text-align: center !important;
+    tbody td {
+        text-align: center;
+        padding: 8px;
+    }
+    tbody tr:nth-child(even) {
+        background-color: #f2f2f2;
     }
     </style>
-    """, unsafe_allow_html=True)
+    """
 
-    st.dataframe(styled_df, use_container_width=False, hide_index=True)
+    # Mostrar en Streamlit
+    st.markdown(estilo_css + tabla_html, unsafe_allow_html=True)
+
 
 
 
