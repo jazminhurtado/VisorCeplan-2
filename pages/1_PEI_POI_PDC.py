@@ -275,7 +275,7 @@ if plan:
     
 
     #st.markdown("<div class='tabla-container'>", unsafe_allow_html=True)
-    #st.markdown("<div><h4 style='text-align:center'>PEI</h4>" + html_pei + "</div>", unsafe_allow_html=True)
+    #st.markdown("<div><h4 style='text-align:center'>PEI</h4>" + html_pei + "</div>", unsafe_allow_html=True) 
     #st.markdown("<div><h4 style='text-align:center'>POI</h4>" + html_poi + "</div>", unsafe_allow_html=True)
     #st.markdown("</div>", unsafe_allow_html=True)
 
