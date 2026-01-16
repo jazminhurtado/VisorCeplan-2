@@ -241,6 +241,35 @@ if plan == "PEI–POI":
     st.markdown("<div><h4 style='text-align:center'>POI</h4>" + html_poi + "</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
+    opciones = [""] + sorted(pei_df["codigo_nombre"].dropna().unique())
+    unidad = st.selectbox("🔍 Buscar o seleccionar unidad ejecutora:", options=opciones, key="unidad_pei")
+    st.button("🪑 Limpiar búsqueda", on_click=limpiar_busqueda_pei)
+
+    if unidad:
+        match = re.search(r"\[(\d+)\]", unidad)
+        codigo = match.group(1) if match else ""
+        filtro = pei_df[pei_df["id_ue"] == codigo]
+        if not filtro.empty:
+            st.subheader("Información PEI disponible:")
+            columnas_pei = [
+                "tiene_pei", "tipo_pei", "periodo_ultimo_pei",
+                "pei_vigente", "estado_pei", "fase_pei",
+                "expediente", "nro_informe_tecnico", "fecha_informe_tecnico",
+                "especialista_asignado", "correo_electronico_especialista"
+            ]
+            for col in columnas_pei:
+                if col in filtro.columns and pd.notna(filtro[col].values[0]):
+                    st.write(f"**{col.replace('_',' ').capitalize()}:** {filtro[col].values[0]}")
+
+            st.subheader("Información POI disponible:")
+            columnas_poi = [
+                "poi_2024_en_seguimiento", "poi_2025_en_seguimiento",
+                "poi_2025_en_consistenciado", "poi_2025_2027_en_elaboración",
+                "poi_2026_2028_en_elaboración", "poi_2026_2028_en_aprobado"
+            ]
+            for col in columnas_poi:
+                if col in filtro.columns and pd.notna(filtro[col].values[0]):
+                    st.write(f"**{col.replace('_',' ').capitalize()}:** {filtro[col].values[0]}")
 
 
 
