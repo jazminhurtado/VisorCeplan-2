@@ -237,10 +237,18 @@ if plan == "PEI–POI":
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div class='tabla-container'>", unsafe_allow_html=True)
-    st.markdown("<div><h4 style='text-align:center'>PEI</h4>" + html_pei + "</div>", unsafe_allow_html=True)
-    st.markdown("<div><h4 style='text-align:center'>POI</h4>" + html_poi + "</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+    # Mostrar títulos y tablas una debajo de otra, alineadas a la izquierda
+    st.markdown("#### PEI")
+    st.markdown(html_pei, unsafe_allow_html=True)
+
+    st.markdown("#### POI")
+    st.markdown(html_poi, unsafe_allow_html=True)
+    
+
+    #st.markdown("<div class='tabla-container'>", unsafe_allow_html=True)
+    #st.markdown("<div><h4 style='text-align:center'>PEI</h4>" + html_pei + "</div>", unsafe_allow_html=True)
+    #st.markdown("<div><h4 style='text-align:center'>POI</h4>" + html_poi + "</div>", unsafe_allow_html=True)
+    #st.markdown("</div>", unsafe_allow_html=True)
 
     opciones = [""] + sorted(pei_df["codigo_nombre"].dropna().unique())
     unidad = st.selectbox("🔍 Buscar o seleccionar unidad ejecutora:", options=opciones, key="unidad_pei")
