@@ -755,7 +755,7 @@ def render_map(plan: str):
 
     fig_map.update_geos(fitbounds="locations", visible=False) 
     fig_map.update_layout(
-    height=700,
+    height=600,
     font=dict(size=16),
     margin=dict(l=0, r=0, t=10, b=0),
     legend=dict(
@@ -1073,11 +1073,17 @@ with col2:
             resumen_grafico(nivel, form, pend)
 
     elif st.session_state.get("hover_pei", False):
-        st.markdown("### Estado PEI por Nivel de Gobierno")
+        st.markdown(""""
+        <div style="margin-top: -80px;"></div>
+        <h4 style="margin-bottom: 5px;">Estado PEI por Nivel de Gobierno</h4>
+        """, unsafe_allow_html=True)
+        
         datos_niveles = get_pei_nivel_gobierno()
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
+        
 
+    
     elif st.session_state.get("hover_poi", False):
         st.markdown("### Estado POI por Nivel de Gobierno")
         datos_niveles = get_poi_nivel_gobierno()
