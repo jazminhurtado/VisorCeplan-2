@@ -1074,7 +1074,7 @@ with col2:
 
     elif st.session_state.get("hover_pei", False):
         st.markdown(""""
-        <div style="margin-top: -80px;"></div>
+        <div style="margin-top: -50px;"></div>
         <h4 style="margin-bottom: 5px;">Estado PEI por Nivel de Gobierno</h4>
         """, unsafe_allow_html=True)
         
