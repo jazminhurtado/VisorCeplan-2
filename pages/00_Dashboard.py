@@ -1016,63 +1016,79 @@ with c3:
 
 
 # Mapa y Gráficos
-# Verificar si hay KPI seleccionado
-mostrar_mapa = (
-    st.session_state.get("hover_pdc", False)
-    or st.session_state.get("hover_pei", False)
-    or st.session_state.get("hover_poi", False)
-)
+col1, col2 = st.columns([2, 2])  
 
-if mostrar_mapa:
-    # Mapa + gráficos (vista dividida)
-   # ---------------------------------------
-# 🔁 Determinar el plan seleccionado según el KPI clickeado
-# ---------------------------------------
+
+# 🌍 Sincronizar mapa con KPI clickeado
 if st.session_state.get("hover_pdc", False):
     plan_sel = "PDC"
 elif st.session_state.get("hover_pei", False):
     plan_sel = "PEI"
-elif st.session_state.get("hover_poi", False):
+elif st.session_state.get("hover_poi", False): 
     plan_sel = "POI"
 else:
-    plan_sel = "PDC"  # Valor por defecto
+    plan_sel = "NINGUNO"
 
-# ---------------------------------------
-# 🔀 Mostrar mapa + gráficos o solo gráficos
-# ---------------------------------------
-mostrar_mapa = (
-    st.session_state.get("hover_pdc", False)
-    or st.session_state.get("hover_pei", False)
-    or st.session_state.get("hover_poi", False)
-)
-
-if mostrar_mapa:
-    # 👉 Mostrar mapa y gráfico lado a lado
-    col1, col2 = st.columns([2, 2])
-
-    with col1:
+with col1:
+ with col1:
+    if plan_sel == "NINGUNO":
+        # Mostrar mapa neutral con un solo color
+        df_base = load_resumen_departamental()["PDC"].copy()
+        df_base["avance"] = 0  # Todos al 0%
+        df_base["color"] = "#A7C7E7"  # celeste pasterl
+        gj = load_geojson()
+        fig = px.choropleth(
+            df_base,
+            geojson=gj,
+            locations="departamento",
+            featureidkey="properties.dep_key",
+            color="departamento",
+            color_discrete_map={row["departamento"]: "#A7C7E7" for _, row in df_base.iterrows()},
+            custom_data=["departamento"]
+        )
+        fig.update_geos(fitbounds="locations", visible=False)
+        fig.update_layout(
+            height=700, 
+            margin=dict(l=0, r=0, t=10, b=0),
+            legend=dict(
+                orientation="v",
+                yanchor="middle",
+                y=0.5,
+                xanchor="left",
+                x=-0.15 # esto empuja la leyenda a la izquierda
+            )
+        )    
+        fig.update_traces(hovertemplate="<b>%{customdata[0]}</b><extra></extra>")
+        st.plotly_chart(fig, use_container_width=True)
+    else:
         render_map(plan_sel)
 
-    with col2:
-        st.markdown(f"### Estado {plan_sel} por Nivel de Gobierno")
 
-        if plan_sel == "PDC":
-            datos_niveles = get_pdc_nivel_gobierno()
-        elif plan_sel == "PEI":
-            datos_niveles = get_pei_nivel_gobierno()
-        else:
-            datos_niveles = get_poi_nivel_gobierno()
 
+with col2:
+    if st.session_state.get("hover_pdc", False):
+        st.markdown("### Estado PDC por Nivel de Gobierno")
+        datos_niveles = get_pdc_nivel_gobierno()
         for nivel, (form, pend) in datos_niveles.items():
             resumen_grafico(nivel, form, pend)
 
-else:
-    # 👉 Cuando no se ha hecho clic: mostrar todos los gráficos en pantalla completa
-    st.markdown("### Estado por Nivel Nacional")
+    elif st.session_state.get("hover_pei", False):
+        st.markdown("### Estado PEI por Nivel de Gobierno")
+        datos_niveles = get_pei_nivel_gobierno()
+        for nivel, (form, pend) in datos_niveles.items():
+            resumen_grafico(nivel, form, pend)
 
-    resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
-    resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
-    resumen_grafico("Estado POI a Nivel Nacional", poi_e, poi_p)
+    elif st.session_state.get("hover_poi", False):
+        st.markdown("### Estado POI por Nivel de Gobierno")
+        datos_niveles = get_poi_nivel_gobierno()
+        for nivel, (form, pend) in datos_niveles.items():
+            resumen_grafico(nivel, form, pend)
+ 
+    else:
+        resumen_grafico("Estado PDC a Nivel Nacional", pdc_e, pdc_p)
+        resumen_grafico("Estado PEI a Nivel Nacional", pei_e, pei_p)
+        resumen_grafico("Estado POI a Nivel Nacional", poi_e, poi_p)
+
 
 
 
