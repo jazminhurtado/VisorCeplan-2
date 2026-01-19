@@ -71,7 +71,7 @@ a {
 # --------------------------------------
 st.markdown("""
 <h1 style='
-    margin-top: -80px;
+    margin-top: -100px;
     font-size: 2.7rem;
     font-weight: bold;
     color: #212529;
